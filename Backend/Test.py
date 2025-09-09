@@ -10,6 +10,8 @@ from flask_cors import CORS
 
 from dataclasses import dataclass, asdict
 import json
+
+import prompting
     
 app = Flask(__name__, static_folder="../dist")
 CORS(app)
@@ -24,7 +26,7 @@ d = None
 
 active_prompting_threads = []
 class Prompting(Thread):
-    """ Class that provides a .frame and updates it as a parallel thread. """
+    """ Class that wraps prompting module """
     def __str__(self):
         return self.prompt
     
@@ -33,8 +35,22 @@ class Prompting(Thread):
         self.prompt = prompt
 
     def run(self):
-        time.sleep(10)
+        result = prompting.run_prompt(self.prompt)
+        print("Got:", result)
         
+class Correcting(Thread):
+    """ Class that wraps prompting module """
+    def __str__(self):
+        return "Corrections to " + self.path.split("Scenes/")[-1]
+    
+    def __init__(self, path, errors):
+        super().__init__()
+        self.errors = errors
+        self.path = path
+
+    def run(self):
+        result = prompting.run_correction(self.path, self.errors)
+        print("Got:", result)
 
 
 
@@ -59,6 +75,21 @@ def prompt():
     active_prompting_threads.append(new_thread)
     response = "prompting"
     return response    
+
+@app.route("/errors", methods=['POST'])
+def take_errors():
+    path = request.form["path"]
+    
+    errors = request.form["errors"]
+    print("Errors received")
+    # start prompting thread
+    new_thread = Correcting(path, errors)
+    
+    
+    new_thread.start()
+    active_prompting_threads.append(new_thread)
+    response = "prompting"
+    return response 
 
 """      
 @app.route("/prompt", methods=['POST'])

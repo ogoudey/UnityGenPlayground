@@ -7,6 +7,9 @@ using System.Collections.Generic;
 using UnityEngine.Networking;
 using System.Collections;
 using System.Threading;
+using System.Reflection;
+
+using System;
 
 public class MenuTest : EditorWindow
 {
@@ -36,13 +39,84 @@ public class MenuTest : EditorWindow
         */
         if (!string.IsNullOrEmpty(path))
         {
-            Debug.Log("Opening scene:");
-            EditorSceneManager.OpenScene(path);
-        }
+
+            Debug.Log("Waiting for warnings to manifest.");
+
+            
+            try
+            {
+                Debug.Log("Opening scene: " + path);
+                EditorSceneManager.OpenScene(path);
+                Debug.Log("Done opening scene.");
+            }
+            // warnings are caught here by the warningCatcher
+            catch (Exception ex)
+            {
+                Debug.Log("Errors caught.");
+                // Capture everything into one string
+                string errorDetails = $"Exception: {ex.Message}\n\nStack Trace:\n{ex.StackTrace}";
+
+                // Log to Unity console
+                Debug.LogError(errorDetails);
+            }
+            
+            Debug.Log("Catching warnings...");
+            EditorApplication.delayCall += () =>
+            {
+                List<string> messages = GetEditorConsoleLogs();
+
+                if (messages.Count > 0)
+                {
+                    var flaskObj = new GameObject("FlaskInterface");
+                    var flask = flaskObj.AddComponent<FlaskInterface>();
+                    flask.SendErrorsToFlask(path, string.Join("\n\n", messages));
+                    UnityEngine.Object.DestroyImmediate(flaskObj);
+                    Debug.Log("Warnings sent.");
+                }
+                else
+                {
+                    Debug.Log("No warnings manifest.");
+                }
+            };
+
+            
+        }    
         else
         {
             Debug.Log("No scene selected.");
         }
+    }
+
+    public static List<string> GetEditorConsoleLogs()
+    {
+        var logs = new List<string>();
+        Assembly editorAssembly = typeof(Editor).Assembly;
+        Type logEntriesType = editorAssembly.GetType("UnityEditor.LogEntries");
+        Type logEntryType = editorAssembly.GetType("UnityEditor.LogEntry");
+
+        MethodInfo getCount = logEntriesType.GetMethod("GetCount", BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic);
+        MethodInfo getEntryInternal = logEntriesType.GetMethod("GetEntryInternal", BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic);
+
+        int count = (int)getCount.Invoke(null, null);
+
+        object logEntry = Activator.CreateInstance(logEntryType);
+
+        for (int i = 0; i < count; i++)
+        {
+            // Pass row index and logEntry object
+            getEntryInternal.Invoke(null, new object[] { i, logEntry });
+
+            var binding = BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance;
+            
+
+            string message = logEntryType.GetField("message", binding).GetValue(logEntry) as string;
+            string file = logEntryType.GetField("file", binding).GetValue(logEntry) as string;
+            int line = (int)logEntryType.GetField("line", binding).GetValue(logEntry);
+
+            logs.Add($"[{file}:{line}] {message}");
+        }
+
+        return logs;
     }
 
     [MenuItem("Gen/Prompt")]
@@ -60,7 +134,7 @@ public class MenuTest : EditorWindow
         flask.SendPromptToFlask(prompt_buffer);
         Debug.Log("Prompt `" + prompt_buffer + "` sent.");
         flask.StartWaitOnFlask(); //Default arg permitted in ToFlask?
-        Object.DestroyImmediate(flask.gameObject);
+        UnityEngine.Object.DestroyImmediate(flask.gameObject);
         Load("last.unity");
     }
     
@@ -74,7 +148,7 @@ public class MenuTest : EditorWindow
             var flask = flaskObj.AddComponent<FlaskInterface>();
             flask.SendPromptToFlask(prompt_buffer);
             Debug.Log("Prompt `" + prompt_buffer + "` sent.");
-            Object.DestroyImmediate(flask.gameObject);
+            UnityEngine.Object.DestroyImmediate(flask.gameObject);
         });
         
     }
@@ -85,7 +159,38 @@ public class MenuTest : EditorWindow
         Debug.Log("Sends Scene to VR or something...");
     }
 }
+/*
+public class WarningCatcher : MonoBehaviour
+{
+    public List<string> logMessages = new List<string>();
+    
+    void OnEnable()
+    {
+        Application.logMessageReceived += HandleLog;
+    }
 
+    void OnDisable()
+    {
+        Application.logMessageReceived -= HandleLog;
+    }
+
+    public void HandleLog(string logString, string stackTrace, LogType type)
+    {
+        if (type == LogType.Warning)
+        {
+            string entry = $"[{type}] {logString}\n{stackTrace}";
+            logMessages.Add(entry);
+        }
+    }
+    
+    public List<string> GetLogsAndClear()
+    {
+        var copy = new List<string>(logMessages);
+        logMessages.Clear();
+        return copy;
+    }
+}
+*/
 public class FlaskInterface : MonoBehaviour
     {
         public void SendPromptToFlask(string prompt)
@@ -98,6 +203,38 @@ public class FlaskInterface : MonoBehaviour
             StartCoroutine(this.WaitOnFlask());
         }
         
+        public void SendErrorsToFlask(string path, string errorDetails)
+        {
+            StartCoroutine(this.ErrorsToFlask(path, errorDetails));
+        }
+        
+        IEnumerator ErrorsToFlask(string path, string errors)
+        {
+            WWWForm form = new WWWForm();
+            form.AddField("path", path);
+            form.AddField("errors", errors);
+
+            using UnityWebRequest www = UnityWebRequest.Post("http://localhost:5000/errors", form);
+            yield return www.SendWebRequest();
+
+            if (www.result != UnityWebRequest.Result.Success)
+            {
+                Debug.LogError(www.error);
+            }
+            else
+            {
+                string response = www.downloadHandler.text;
+                if (response == "prompting")
+                {
+                    Debug.Log("System is: " + response);
+                }
+                else
+                {
+                    Debug.Log("System failed to accept errors.");
+                    Debug.Log(response);
+                }
+            }
+        }
         
         IEnumerator PromptToFlask(string prompt)
         {
