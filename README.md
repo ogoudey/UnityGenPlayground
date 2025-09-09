@@ -7,3 +7,7 @@ python3 -m venv .venv
 # install requirements
 python3 Test.py
 ```
+
+
+Used assets:
+[Nature stuff](https://assetstore.unity.com/packages/3d/environments/unl-ultimate-nature-lite-176906)
