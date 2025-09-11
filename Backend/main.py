@@ -7,7 +7,6 @@ from flask import Flask, send_from_directory, jsonify, request
 from flask_cors import CORS
 
 
-
 from dataclasses import dataclass, asdict
 import json
 
@@ -15,6 +14,8 @@ import prompting
     
 app = Flask(__name__, static_folder="../dist")
 CORS(app)
+
+last_ready = False
 
 @dataclass
 class Data:
@@ -30,45 +31,56 @@ class Prompting(Thread):
     def __str__(self):
         return self.prompt
     
-    def __init__(self, prompt):
+    def __init__(self, prompt, make_last):
         super().__init__()
         self.prompt = prompt
+        self.make_last = make_last
 
     def run(self):
-        result = prompting.run_prompt(self.prompt)
-        print("Got:", result)
+        global last_ready
+        last_ready = False
+        result = prompting.run_prompt(self.prompt, self.make_last)
+        last_ready = True
         
 class Correcting(Thread):
     """ Class that wraps prompting module """
     def __str__(self):
         return "Corrections to " + self.path.split("Scenes/")[-1]
     
-    def __init__(self, path, errors):
+    def __init__(self, path, errors, make_last):
         super().__init__()
         self.errors = errors
         self.path = path
+        self.make_last = make_last
 
     def run(self):
-        result = prompting.run_correction(self.path, self.errors)
-        print("Got:", result)
+        global last_ready
+        last_ready = False
+        result = prompting.run_correction(self.path, self.errors, self.make_last)
+        last_ready = True
 
 
 
 @app.route("/wait")
 def wait():
-    if d:
-        return "last_ready"
+    global last_ready
+    if last_ready:
+        last_ready = False
+        return_ = "last_ready"
     else:
-        return "last_not_ready"    
-
-    return response
+        return_ = "last_not_ready" 
+    print(" --> processing...")
+    return return_   
     
 @app.route("/prompt", methods=['POST'])
 def prompt():
     prompt = request.form["prompt"]
-    print("Prompt received")
+    make_last = request.form["make_last"] == "True"
+    
+    print("Recieved:", request.form["make_last"], "of type", type(request.form["make_last"]))
+    print("Prompt received with make_last ==", make_last)
     # start prompting thread
-    new_thread = Prompting(prompt)
+    new_thread = Prompting(prompt, make_last)
     
     
     new_thread.start()
@@ -79,11 +91,10 @@ def prompt():
 @app.route("/errors", methods=['POST'])
 def take_errors():
     path = request.form["path"]
-    
     errors = request.form["errors"]
     print("Errors received")
     # start prompting thread
-    new_thread = Correcting(path, errors)
+    new_thread = Correcting(path, errors, make_last=True)
     
     
     new_thread.start()
@@ -122,7 +133,7 @@ try:
             if not thread.is_alive():
                 threads_to_rm.append(thread)
         for thread in threads_to_rm:
-            print(f"Prompt {str(thread)} complete.")
+            print(f"\nPrompt '{str(thread)}' complete.")
             active_prompting_threads.remove(thread)
         
         pass

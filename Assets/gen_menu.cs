@@ -8,6 +8,7 @@ using UnityEngine.Networking;
 using System.Collections;
 using System.Threading;
 using System.Reflection;
+using Unity.EditorCoroutines.Editor; // <--- make sure you have this
 
 using System;
 
@@ -16,7 +17,7 @@ public class MenuTest : EditorWindow
 
     static string prompt_buffer;
     
-    [MenuItem("Gen/Load...")]
+    [MenuItem("Gen/LoadAndCorrect")]
     static void LoadDialogue()
     {
         string path = EditorUtility.OpenFilePanel(
@@ -24,10 +25,23 @@ public class MenuTest : EditorWindow
             "Assets/Scenes",
             "unity");                    // extension filter (e.g. "txt", "png", "json"; empty = all files)
 
-        Load(path);
+        Debug.Log("Opening scene at path " + path);
+        Load(path, false, 0);
     }
     
-    static void Load(string path)
+    [MenuItem("Gen/LoadAndCycle")]
+    static void LoadDialogueAndCycle()
+    {
+        string path = EditorUtility.OpenFilePanel(
+            "Select a scene to load",   // window title
+            "Assets/Scenes",
+            "unity");                    // extension filter (e.g. "txt", "png", "json"; empty = all files)
+
+        Debug.Log("Opening scene at path " + path);
+        Load(path, true, 0);
+    }
+    
+    static void Load(string path, bool cycle, int i)
     {
         
         /* // Keep this if it works while the game is running
@@ -59,8 +73,11 @@ public class MenuTest : EditorWindow
                 // Log to Unity console
                 Debug.LogError(errorDetails);
             }
+            Debug.Log("Console cleared!");
             
             Debug.Log("Catching warnings...");
+            ConsoleUtils.ClearConsole();
+            
             EditorApplication.delayCall += () =>
             {
                 List<string> messages = GetEditorConsoleLogs();
@@ -72,6 +89,12 @@ public class MenuTest : EditorWindow
                     flask.SendErrorsToFlask(path, string.Join("\n\n", messages));
                     UnityEngine.Object.DestroyImmediate(flaskObj);
                     Debug.Log("Warnings sent.");
+                    if (cycle == true)
+                    {
+                        var flaskObjForLoadingErrors = new GameObject("FlaskInterface");
+                        var flaskWait = flaskObjForLoadingErrors.AddComponent<FlaskInterface>();
+                        EditorCoroutineUtility.StartCoroutineOwnerless(WaitAndLoad(flaskWait, true, i));
+                    }
                 }
                 else
                 {
@@ -122,23 +145,40 @@ public class MenuTest : EditorWindow
     [MenuItem("Gen/Prompt")]
     static void PromptDialogue()
     {
-        OpenPromptDialogue();
+        OpenPromptDialogue(false);
     }
     
-    [MenuItem("Gen/Prompt and Load %g")]
+    [MenuItem("Gen/PromptAndLoad")]
     static void PromptAndLoad()
     {
-        OpenPromptDialogue(); // Sets prompt_buffer
+        OpenPromptDialogue(true); // Sets prompt_buffer
         var flaskObj = new GameObject("FlaskInterface");
         var flask = flaskObj.AddComponent<FlaskInterface>();
-        flask.SendPromptToFlask(prompt_buffer);
-        Debug.Log("Prompt `" + prompt_buffer + "` sent.");
-        flask.StartWaitOnFlask(); //Default arg permitted in ToFlask?
-        UnityEngine.Object.DestroyImmediate(flask.gameObject);
-        Load("last.unity");
+        EditorCoroutineUtility.StartCoroutineOwnerless(WaitAndLoad(flask, false, 0));
     }
     
-    static void OpenPromptDialogue()
+    [MenuItem("Gen/PromptAndCycle %g")]
+    static void PromptAndCycle()
+    {
+        OpenPromptDialogue(true); // Sets prompt_buffer
+        var flaskObj = new GameObject("FlaskInterface");
+        var flask = flaskObj.AddComponent<FlaskInterface>();
+        EditorCoroutineUtility.StartCoroutineOwnerless(WaitAndLoad(flask, true, 0));
+    }
+    
+    static IEnumerator WaitAndLoad(FlaskInterface flask, bool cycle, int i)
+    {
+        Debug.Log("Waiting for iteration number " + i.ToString()); 
+        // Wait until Flask is done
+        yield return flask.WaitOnFlask();
+
+        // Now it’s safe to load
+        Debug.Log("Should load only if WaitOnFlask returns...");
+        Load("Assets/Scenes/last.unity", cycle, i + 1); // Yes, cycle
+        Debug.Log("Flask ready, file loaded.");
+    }
+    
+    static void OpenPromptDialogue(bool make_last)
     {
         TextInputDialog.Show("Enter text:", input =>
         {
@@ -146,11 +186,38 @@ public class MenuTest : EditorWindow
             prompt_buffer = input;
             var flaskObj = new GameObject("FlaskInterface");
             var flask = flaskObj.AddComponent<FlaskInterface>();
-            flask.SendPromptToFlask(prompt_buffer);
-            Debug.Log("Prompt `" + prompt_buffer + "` sent.");
+            flask.SendPromptToFlask(prompt_buffer, make_last);
+            Debug.Log("Prompt `" + prompt_buffer + "` sent with make_last = " + make_last.ToString());
             UnityEngine.Object.DestroyImmediate(flask.gameObject);
         });
         
+    }
+    
+    [MenuItem("Gen/Stop All Flask Interfaces")]
+    static void StopAllFlaskInterfaces()
+    {
+        // Find all FlaskInterface components in the scene or editor
+        FlaskInterface[] allFlasks = UnityEngine.Object.FindObjectsByType<FlaskInterface>(FindObjectsSortMode.None);
+
+        if (allFlasks.Length == 0)
+        {
+            Debug.Log("No FlaskInterface objects found.");
+            return;
+        }
+
+        foreach (var flask in allFlasks)
+        {
+            // Stop all coroutines on this FlaskInterface
+            flask.StopAllCoroutines();
+
+            // Optionally do any cleanup in FlaskInterface here
+            // flask.OnStop(); // if you have a custom method
+
+            // Delete the GameObject
+            UnityEngine.Object.DestroyImmediate(flask.gameObject);
+        }
+
+        Debug.Log($"Stopped and deleted {allFlasks.Length} FlaskInterface object(s).");
     }
     
     [MenuItem("Gen/Do Something")]
@@ -193,9 +260,9 @@ public class WarningCatcher : MonoBehaviour
 */
 public class FlaskInterface : MonoBehaviour
     {
-        public void SendPromptToFlask(string prompt)
+        public void SendPromptToFlask(string prompt, bool make_last)
         {
-            StartCoroutine(this.PromptToFlask(prompt));
+            StartCoroutine(this.PromptToFlask(prompt, make_last));
         }
         
         public void StartWaitOnFlask()
@@ -236,11 +303,12 @@ public class FlaskInterface : MonoBehaviour
             }
         }
         
-        IEnumerator PromptToFlask(string prompt)
+        IEnumerator PromptToFlask(string prompt, bool make_last)
         {
             WWWForm form = new WWWForm();
             form.AddField("prompt", prompt);
-
+            form.AddField("make_last", make_last.ToString());
+            Debug.Log("Sending " + make_last.ToString() + " to Flask");
             using UnityWebRequest www = UnityWebRequest.Post("http://localhost:5000/prompt", form);
             yield return www.SendWebRequest();
 
@@ -263,45 +331,35 @@ public class FlaskInterface : MonoBehaviour
             }
         }
         
-        IEnumerator WaitOnFlask()
+        public IEnumerator WaitOnFlask()
         {
-            using UnityWebRequest www = UnityWebRequest.Get("http://localhost:5000/wait");
-            yield return www.SendWebRequest();
+            Debug.Log("In WaitOnFlask");
 
-            if (www.result != UnityWebRequest.Result.Success)
+            string response = "";
+            do
             {
-                Debug.LogError(www.error);
-            }
-            else
-            {
-                string response = www.downloadHandler.text;
-
-                if (response == "last_ready") // The last prompted world (second kind of request)
+                using (UnityWebRequest www = UnityWebRequest.Get("http://localhost:5000/wait"))
                 {
-                    Debug.Log("File is immediately ready.");
-                }
-                else
-                    if (response == "last_not_ready")
-                    {
-                        // Call server until prompt is done
-                        do
-                        {
-                            Thread.Sleep(100);
-                            using UnityWebRequest wwwN = UnityWebRequest.Get("http://localhost:5000/wait");
-                            yield return wwwN.SendWebRequest();
+                    yield return www.SendWebRequest();
 
-                            if (wwwN.result != UnityWebRequest.Result.Success)
-                            {
-                                Debug.LogError(wwwN.error);
-                            }
-                            else {
-                                response = wwwN.downloadHandler.text;
-                            }
-                        } while (response == "last_not_ready");
-                        Debug.Log("File is finally ready.");
+                    if (www.result != UnityWebRequest.Result.Success)
+                    {
+                        Debug.LogError(www.error);
+                        yield break; // Stop if network error
                     }
-                        
-            }
+
+                    response = www.downloadHandler.text;
+                }
+
+                if (response == "last_not_ready")
+                {
+                    Debug.Log("Waiting for Flask...");
+                    yield return new EditorWaitForSeconds(3f); // safely wait 3 seconds in editor
+                }
+
+            } while (response == "last_not_ready");
+            // Otherwise, response is the number of correction iterations that have occured
+            Debug.Log("File is ready. Not 'last_not_ready':" + response);
         }
         
         
@@ -342,5 +400,19 @@ public class TextInputDialog : EditorWindow
             Close();
         }
         GUILayout.EndHorizontal();
+    }
+}
+
+public static class ConsoleUtils
+{
+    public static void ClearConsole()
+    {
+        // Get the internal Unity class
+        Assembly assembly = Assembly.GetAssembly(typeof(SceneView));
+        Type logEntries = assembly.GetType("UnityEditor.LogEntries");
+
+        // Call the Clear method
+        MethodInfo clearMethod = logEntries.GetMethod("Clear", BindingFlags.Static | BindingFlags.Public);
+        clearMethod.Invoke(null, null);
     }
 }

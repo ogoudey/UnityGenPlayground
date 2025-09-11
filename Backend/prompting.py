@@ -8,7 +8,7 @@ MODEL="o3-mini"
 
 from assets import resources as RESOURCES
 
-OFFLINE=True
+OFFLINE=False
 
 @dataclass
 class EnrichResponse():
@@ -25,6 +25,12 @@ class MakeResponse(BaseModel):
 @dataclass
 class CorrectMeResponse(BaseModel):
     new_unity_file: str
+    explanation: str
+    #next_agent: str
+    
+@dataclass
+class NameResponse(BaseModel):
+    name: str
     explanation: str
     #next_agent: str
 
@@ -108,7 +114,8 @@ repairman = Agent(
 scene_namer = Agent(
     name="Scenenamer",
     instructions="Simply come up with a name for this world. Prefer single-word names.",
-    model=MODEL
+    model=MODEL,
+    output_type=NameResponse,
 )   
 
 def save_unity_scene(yaml_string: str, path: str):
@@ -119,7 +126,7 @@ def save_unity_scene(yaml_string: str, path: str):
         raise ValueError("File path must end with .unity")
     with open(path, "w", encoding="utf-8") as f:
         f.write(yaml_string)
-    print(f"Scene written to: {path}")
+    print(f"\nScene written to: {path}")
 
 def recover_unity_scene(path: str) -> str:
     """
@@ -127,9 +134,12 @@ def recover_unity_scene(path: str) -> str:
     """
     if not path.endswith(".unity"):
         raise ValueError("File path must end with .unity")
+        
+    
+        
     with open(path, "r", encoding="utf-8") as f:
         unity_file = f.read()
-    print(f"Scene read from: {path}")
+    print(f"\nScene read from: {path}")
     return unity_file
 
 initial_file = """
@@ -137,7 +147,7 @@ initial_file = """
 %TAG !u! tag:unity3d.com,2011:
 """
 
-async def main(prompt="Make a blank scene with two opposing cameras."):
+async def main(prompt="Make a blank scene with two opposing cameras.", make_last=False):
     
     result = await Runner.run(client, str(EnrichPrompt(resources=[], prompt=prompt)))
     print(result.final_output) # Description
@@ -146,15 +156,19 @@ async def main(prompt="Make a blank scene with two opposing cameras."):
     print(result.final_output.unity_file)
     
     name_result = await Runner.run(scene_namer, prompt)
-    name = name_result.final_output
+    name = name_result.final_output.name
     
     import random
     world_name = prompt
     save_unity_scene(result.final_output.unity_file, "../Assets/Scenes/" + name + ".unity")
+    if make_last:
+        save_unity_scene(result.final_output.unity_file, "../Assets/Scenes/last.unity")
     return True
 
-async def correct(path, errors="Syntax error"):
-    print("Recovering scene for corrections")
+async def correct(path, errors="Syntax error", make_last=False):
+    print("Recovering scene at "+path+" for corrections")
+    if path.startswith("Assets"):
+        path = "../" + path # because the path is different relative to this file than the menu
     unity_file = recover_unity_scene(path)
     
     if OFFLINE:
@@ -167,17 +181,22 @@ async def correct(path, errors="Syntax error"):
     
     result = await Runner.run(repairman, str(CorrectMePrompt(unity_file=unity_file, errors=errors, resources=RESOURCES)))
     print(result.final_output.new_unity_file) # Description
-    import random
-    save_unity_scene(result.final_output.unity_file, path + "x")
+    
+    if make_last:
+        save_unity_scene(result.final_output.new_unity_file, "../Assets/Scenes/last.unity")
+        save_unity_scene(result.final_output.new_unity_file, path)
+    else:
+        import random
+        path = path.split(".unity")[0] + "x.unity"
+        
+        save_unity_scene(result.final_output.new_unity_file, path)
     return True
 
-def run_prompt(prompt):
-    asyncio.run(main(prompt))
+def run_prompt(prompt, make_last):
+    asyncio.run(main(prompt, make_last))
     return True
 
-def run_correction(path, errors):
-    asyncio.run(correct(path, errors))
+def run_correction(path, errors, make_last):
+    asyncio.run(correct(path, errors, make_last))
     return True
 
-if __name__ == "__main__":
-    asyncio.run(main())
