@@ -1,4 +1,4 @@
-Put in Unity project folder.
+Put contents of this repo in a Unity project folder.
 
 Then do
 ```
