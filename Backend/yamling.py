@@ -4,33 +4,64 @@ import random
 
 import re
 
-# Custom loader
-class UnityLoader(yaml.SafeLoader):
-    pass
-
-# Catch-all for any !u! tag
-def unity_tag_constructor(loader, tag_suffix, node):
-    # Convert the node to a Python dict
-    return loader.construct_mapping(node)
-
-# Register the catch-all constructor
-UnityLoader.add_multi_constructor("!UnityTag", unity_tag_constructor)
+from ruamel.yaml import YAML as ruamel_YAML
 
 
+from yaml.nodes import MappingNode, SequenceNode, ScalarNode
+
+class TaggedNode:
+    def __init__(self, tag, anchor, value):
+        print("New tagged node")
+        self.tag = tag        # e.g. "!u!104"
+        self.anchor = anchor  # e.g. "2"
+        self.value = value    # scalar, dict, or list
+
+    def __repr__(self):
+        return f"TaggedNode(tag={self.tag!r}, anchor={self.anchor!r}, value={self.value!r})"
+
+
+def node_to_python(node):
+
+
+    return wrapped
 
 class YAML:
     def __init__(self):
-        self.level0 = list(yaml.compose_all(re.sub(r"!u!(\d+)", r"!UnityTag\1", scene_init_text), Loader=UnityLoader))
-        #self.level0 = list(yaml.safe_compose_all(scene_init_text))
+        yaml = ruamel_YAML(typ='rt')
+
+        self.level0 = list(yaml.compose_all(preprocess_text(scene_init_text)))
+        # self.level0 is a list of MappingNodes
+        self.wrapped = [node_to_python(n) for n in self.level0]
+        """
+        MappingNode(
+            tag='!UnityTag196',
+            value=[
+                (
+                    ScalarNode(tag='tag:yaml.org,2002:str', value='NavMeshSettings'),
+                    MappingNode(tag='tag:yaml.org,2002:map', value=[
+                                                                (ScalarNode(tag='tag:yaml.org,2002:str', value='serializedVersion'), ScalarNode(tag='tag:yaml.org,2002:int', value='2')),
+                                                                (ScalarNode(tag='tag:yaml.org,2002:str', value='m_ObjectHideFlags'), ScalarNode(tag='tag:yaml.org,2002:int', value='0')),
+                                                                (ScalarNode(tag='tag:yaml.org,2002:str', value='m_BuildSettings'), MappingNode(tag='tag:yaml.org,2002:map', value=[
+                                                                                                                                                                            (ScalarNode(tag='tag:yaml.org,2002:str', value='serializedVersion'),ScalarNode(tag='tag:yaml.org,2002:int', value='3')),
+                                                                                                                                                                            (ScalarNode(tag='tag:yaml.org,2002:str', value='agentTypeID'), ScalarNode(tag='tag:yaml.org,2002:int', value='0')),
+                                                                                                                                                                            (ScalarNode(tag='tag:yaml.org,2002:str', value='agentRadius'), ScalarNode(tag='tag:yaml.org,2002:float', value='0.5')),
+                                                                                                                                                                            (ScalarNode(tag='tag:yaml.org,2002:str', value='agentHeight'), ScalarNode(tag='tag:yaml.org,2002:int', value='2')),
+                                                                                                                                                                            (ScalarNode(tag='tag:yaml.org,2002:str', value='agentSlope'), ScalarNode(tag='tag:yaml.org,2002:int', value='45')),
+                                                                                                                                                                            (ScalarNode(tag='tag:yaml.org,2002:str', value='agentClimb'), ScalarNode(tag='tag:yaml.org,2002:float', value='0.4')),
+                                                                                                                                                                            (ScalarNode(tag='tag:yaml.org,2002:str', value='ledgeDropHeight'), ScalarNode(tag='tag:yaml.org,2002:int', value='0')),
+                                                                                                                                                                            (ScalarNode(tag='tag:yaml.org,2002:str', value='maxJumpAcrossDistance'), ScalarNode(tag='tag:yaml.org,2002:int', value='0')),
+                                                                                                                                                                            (ScalarNode(tag='tag:yaml.org,2002:str', value='minRegionArea'), ScalarNode(tag='tag:yaml.org,2002:int', value='2')),
+                                                                                                                                                                            (ScalarNode(tag='tag:yaml.org,2002:str', value='manualCellSize'), ScalarNode(tag='tag:yaml.org,2002:int', value='0')), (ScalarNode(tag='tag:yaml.org,2002:str', value='cellSize'), ScalarNode(tag='tag:yaml.org,2002:float', value='0.16666667')), (ScalarNode(tag='tag:yaml.org,2002:str', value='manualTileSize'), ScalarNode(tag='tag:yaml.org,2002:int', value='0')), (ScalarNode(tag='tag:yaml.org,2002:str', value='tileSize'), ScalarNode(tag='tag:yaml.org,2002:int', value='256')), (ScalarNode(tag='tag:yaml.org,2002:str', value='buildHeightMesh'), ScalarNode(tag='tag:yaml.org,2002:int', value='0')), (ScalarNode(tag='tag:yaml.org,2002:str', value='maxJobWorkers'), ScalarNode(tag='tag:yaml.org,2002:int', value='0')), (ScalarNode(tag='tag:yaml.org,2002:str', value='preserveTilesOutsideBounds'), ScalarNode(tag='tag:yaml.org,2002:int', value='0')), (ScalarNode(tag='tag:yaml.org,2002:str', value='debug'), MappingNode(tag='tag:yaml.org,2002:map', value=[(ScalarNode(tag='tag:yaml.org,2002:str', value='m_Flags'), ScalarNode(tag='tag:yaml.org,2002:int', value='0'))]))])), (ScalarNode(tag='tag:yaml.org,2002:str', value='m_NavMeshData'), MappingNode(tag='tag:yaml.org,2002:map', value=[(ScalarNode(tag='tag:yaml.org,2002:str', value='fileID'), ScalarNode(tag='tag:yaml.org,2002:int', value='0'))]))]))])
+        """
+
+        
         
     def set_skybox(self, guid):
-        print(self.level0)
-        print("\n\n\n\n\n")
-        render_settings = self.get_doc_key("RenderSettings")
+        #self.level0[1].value[0][1].value[14]
         render_settings["m_SkyboxMaterial"]: {"fileID": "2100000", "guid": guid, "type": 2}
     
     def add_transform(self, guid: str, transform: dict):
-        default = list(yaml.compose_all(re.sub(r"!u!(\d+)", r"!UnityTag\1", scene_init_text), Loader=UnityLoader))
+        default = list(yaml.compose_all(preprocess_text(transform_init_text)))
         old_anchor = default[0]
         new_anchor, id_out = set_ID(old_anchor) # to random ID
         
@@ -44,7 +75,7 @@ class YAML:
         return id_out
     
     def add_game_object(self, guid, transform_id):
-        default = list(yaml.compose_all(re.sub(r"!u!(\d+)", r"!UnityTag\1", scene_init_text), Loader=UnityLoader))
+        default = list(yaml.compose_all(preprocess_text(game_object_init_text)))
         old_anchor = default[0]
         new_anchor, id_out = set_ID(old_anchor) # to random ID
         
@@ -61,7 +92,7 @@ class YAML:
                 
     
     def add_prefab_instance(self, guid, prefab_path, transform, transform_id=0):
-        default = list(yaml.compose_all(re.sub(r"!u!(\d+)", r"!UnityTag\1", prefab_init_text), Loader=UnityLoader))
+        default = list(yaml.compose_all(preprocess_text(prefab_init_text)))
         old_anchor = default[0]
         new_anchor, id_out = set_ID(old_anchor) # to random ID
         
@@ -96,9 +127,7 @@ class YAML:
         # Dump YAML content to a string first
         yaml_content = yaml.safe_dump_all(self.level0, sort_keys=False)
         yaml_content = yaml_content.replace("!UnityTag", "!u!")
-        # Prepend the Unity YAML header lines
-        header = "%YAML 1.1\n%TAG !u! tag:unity3d.com,2011:\n"
-        full_content = header + yaml_content
+
 
         with open(file_name, "w") as f:
             f.write(full_content)
@@ -146,7 +175,8 @@ def get_guid(meta_file: str) -> str:
     return data["guid"]
         
 scene_init_text = """
-
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
 --- !u!29 &1
 OcclusionCullingSettings:
   m_ObjectHideFlags: 0
@@ -369,3 +399,6 @@ Transform:
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 """
+
+def preprocess_text(text):
+    return re.sub(r"!u!(\d+)", r"!UnityTag\1", text)
