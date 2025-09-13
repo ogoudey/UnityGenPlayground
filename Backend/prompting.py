@@ -126,7 +126,7 @@ def save_unity_scene(yaml_string: str, path: str):
         raise ValueError("File path must end with .unity")
     with open(path, "w", encoding="utf-8") as f:
         f.write(yaml_string)
-    print(f"\nScene written to: {path}")
+    print(f"\nhScene written to: {path}")
 
 def recover_unity_scene(path: str) -> str:
     """
