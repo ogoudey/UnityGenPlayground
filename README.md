@@ -11,3 +11,9 @@ python3 Test.py
 
 Used assets:
 [Nature stuff](https://assetstore.unity.com/packages/3d/environments/unl-ultimate-nature-lite-176906)
+
+
+
+
+Note:
+Change Quality / Rendering / Rendering Pipeline Asset to None

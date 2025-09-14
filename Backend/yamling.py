@@ -1,18 +1,16 @@
-import yaml 
-from yaml import compose_all
+import yaml as pyyaml
+
 import random
 
 import re
 
 from ruamel.yaml import YAML as ruamel_YAML
-
-
-from yaml.nodes import MappingNode, SequenceNode, ScalarNode
+from ruamel.yaml.nodes import ScalarNode, MappingNode, SequenceNode
 
 class TaggedNode:
     def __init__(self, tag, anchor, value):
         print("New tagged node")
-        self.tag = tag        # e.g. "!u!104"
+        self.tag = tag
         self.anchor = anchor  # e.g. "2"
         self.value = value    # scalar, dict, or list
 
@@ -21,9 +19,27 @@ class TaggedNode:
 
 
 def node_to_python(node):
-
-
-    return wrapped
+    if isinstance(node, ScalarNode):
+        return node.value
+    if isinstance(node, SequenceNode):
+        values_to_objects = []
+        for value in node.value:
+            values_to_objects.append(node_to_python(value))
+        return values_to_objects
+    if isinstance(node, MappingNode):
+        
+            
+        map_dict = {}
+        if hasattr(node, "tag") and "!UnityTag" in node.tag:
+            map_dict["tag"] = node.tag.removeprefix("!UnityTag")    
+        if hasattr(node, "anchor") and node.anchor:
+            map_dict["anchor"] = node.anchor
+        for mapping_duple in node.value:
+            map_dict[node_to_python(mapping_duple[0])] = node_to_python(mapping_duple[1]) 
+        return map_dict
+    else:
+        print("Weird node detected:", type(node))
+        return None
 
 class YAML:
     def __init__(self):
@@ -51,30 +67,49 @@ class YAML:
                                                                                                                                                                             (ScalarNode(tag='tag:yaml.org,2002:str', value='ledgeDropHeight'), ScalarNode(tag='tag:yaml.org,2002:int', value='0')),
                                                                                                                                                                             (ScalarNode(tag='tag:yaml.org,2002:str', value='maxJumpAcrossDistance'), ScalarNode(tag='tag:yaml.org,2002:int', value='0')),
                                                                                                                                                                             (ScalarNode(tag='tag:yaml.org,2002:str', value='minRegionArea'), ScalarNode(tag='tag:yaml.org,2002:int', value='2')),
-                                                                                                                                                                            (ScalarNode(tag='tag:yaml.org,2002:str', value='manualCellSize'), ScalarNode(tag='tag:yaml.org,2002:int', value='0')), (ScalarNode(tag='tag:yaml.org,2002:str', value='cellSize'), ScalarNode(tag='tag:yaml.org,2002:float', value='0.16666667')), (ScalarNode(tag='tag:yaml.org,2002:str', value='manualTileSize'), ScalarNode(tag='tag:yaml.org,2002:int', value='0')), (ScalarNode(tag='tag:yaml.org,2002:str', value='tileSize'), ScalarNode(tag='tag:yaml.org,2002:int', value='256')), (ScalarNode(tag='tag:yaml.org,2002:str', value='buildHeightMesh'), ScalarNode(tag='tag:yaml.org,2002:int', value='0')), (ScalarNode(tag='tag:yaml.org,2002:str', value='maxJobWorkers'), ScalarNode(tag='tag:yaml.org,2002:int', value='0')), (ScalarNode(tag='tag:yaml.org,2002:str', value='preserveTilesOutsideBounds'), ScalarNode(tag='tag:yaml.org,2002:int', value='0')), (ScalarNode(tag='tag:yaml.org,2002:str', value='debug'), MappingNode(tag='tag:yaml.org,2002:map', value=[(ScalarNode(tag='tag:yaml.org,2002:str', value='m_Flags'), ScalarNode(tag='tag:yaml.org,2002:int', value='0'))]))])), (ScalarNode(tag='tag:yaml.org,2002:str', value='m_NavMeshData'), MappingNode(tag='tag:yaml.org,2002:map', value=[(ScalarNode(tag='tag:yaml.org,2002:str', value='fileID'), ScalarNode(tag='tag:yaml.org,2002:int', value='0'))]))]))])
+                                                                                                                                                                            (ScalarNode(tag='tag:yaml.org,2002:str', value='manualCellSize'), ScalarNode(tag='tag:yaml.org,2002:int', value='0')),
+                                                                                                                                                                            (ScalarNode(tag='tag:yaml.org,2002:str', value='cellSize'), ScalarNode(tag='tag:yaml.org,2002:float', value='0.16666667')),
+                                                                                                                                                                            (ScalarNode(tag='tag:yaml.org,2002:str', value='manualTileSize'), ScalarNode(tag='tag:yaml.org,2002:int', value='0')),
+                                                                                                                                                                            (ScalarNode(tag='tag:yaml.org,2002:str', value='tileSize'), ScalarNode(tag='tag:yaml.org,2002:int', value='256')),
+                                                                                                                                                                            (ScalarNode(tag='tag:yaml.org,2002:str', value='buildHeightMesh'), ScalarNode(tag='tag:yaml.org,2002:int', value='0')),
+                                                                                                                                                                            (ScalarNode(tag='tag:yaml.org,2002:str', value='maxJobWorkers'), ScalarNode(tag='tag:yaml.org,2002:int', value='0')),
+                                                                                                                                                                            (ScalarNode(tag='tag:yaml.org,2002:str', value='preserveTilesOutsideBounds'), ScalarNode(tag='tag:yaml.org,2002:int', value='0')),
+                                                                                                                                                                            (ScalarNode(tag='tag:yaml.org,2002:str', value='debug'), MappingNode(tag='tag:yaml.org,2002:map', value=[
+                                                                                                                                                                                                                                                            (ScalarNode(tag='tag:yaml.org,2002:str', value='m_Flags'), ScalarNode(tag='tag:yaml.org,2002:int', value='0'))
+                                                                                                                                                                                                                                                            ]))
+                                                                                                                                                                            ])),
+                                                              (ScalarNode(tag='tag:yaml.org,2002:str', value='m_NavMeshData'), MappingNode(tag='tag:yaml.org,2002:map', value=[
+                                                                                                                                                                            (ScalarNode(tag='tag:yaml.org,2002:str', value='fileID'), ScalarNode(tag='tag:yaml.org,2002:int', value='0'))
+                                                                                                                                                                            ]))
+                                                             ])
+                  )
+                  ])
         """
 
         
         
     def set_skybox(self, guid):
-        #self.level0[1].value[0][1].value[14]
-        render_settings["m_SkyboxMaterial"]: {"fileID": "2100000", "guid": guid, "type": 2}
+        render_settings = self.get_doc("RenderSettings")
+        render_settings["m_SkyboxMaterial"] = {"fileID": "2100000", "guid": guid, "type": 2}
     
     def add_transform(self, guid: str, transform: dict):
-        default = list(yaml.compose_all(preprocess_text(transform_init_text)))
-        old_anchor = default[0]
-        new_anchor, id_out = set_ID(old_anchor) # to random ID
+        yaml = ruamel_YAML(typ='rt')
+        default = list(yaml.compose_all(preprocess_text(transform_init_text)))[0]
+        wrapped = node_to_python(default)
         
-        body = default[1]
+        wrapped, id_out = set_ID(wrapped) # setID to random ID
         
-        body["m_LocalPosition"] = transform
-        self.level0.append([new_anchor, body])
+        main = wrapped["Transform"]
+        main["m_LocalPosition"] = transform
+        self.wrapped.append(wrapped)
         
-        sceneroots = self.get_doc_key("SceneRoots")
+        sceneroots = self.get_doc("SceneRoots")
         sceneroots["m_Roots"].append({"fileID": id_out})
         return id_out
     
     def add_game_object(self, guid, transform_id):
+        """ Broken """
+        yaml = ruamel_YAML(typ='rt')
         default = list(yaml.compose_all(preprocess_text(game_object_init_text)))
         old_anchor = default[0]
         new_anchor, id_out = set_ID(old_anchor) # to random ID
@@ -91,22 +126,28 @@ class YAML:
         return id_out      
                 
     
-    def add_prefab_instance(self, guid, prefab_path, transform, transform_id=0):
-        default = list(yaml.compose_all(preprocess_text(prefab_init_text)))
-        old_anchor = default[0]
-        new_anchor, id_out = set_ID(old_anchor) # to random ID
+    def add_prefab_instance(self, metaguid, prefab_path, transform, transform_id=0):
+        yaml = ruamel_YAML(typ='rt')
+        default = list(yaml.compose_all(preprocess_text(prefab_init_text)))[0]
+
+        wrapped = node_to_python(default)
+
+        wrapped, id_out = set_ID(wrapped) # to random ID
         
+        father_ID = self.get_father_id_of_root_transform_of_prefab(prefab_path)
         # find prefabs local filenames
         
         
-        body=default[1]
-        modifications = body["PrefabInstance"]["m_Modification"]["m_Modifications"]
+
+        modifications = wrapped["PrefabInstance"]["m_Modification"]["m_Modifications"]
         for mod in modifications:
             if "target" in mod and "guid" in mod["target"]:
                 if mod.get("propertyPath") == "m_Name":
-                    mod["target"]["guid"] = 0 # Anything?
+                    mod["target"]["guid"] = metaguid
+                    mod["target"]["value"] = "Name/file path leaf here" # Anything?
                 else:
-                    mod["target"]["guid"] = guid
+                    mod["target"]["fileID"] = father_ID
+                    mod["target"]["guid"] = metaguid
                     if mod.get("propertyPath") == "m_LocalPosition.x":
                         mod["value"] = transform["x"]
                     if mod.get("propertyPath") == "m_LocalPosition.y":
@@ -114,12 +155,39 @@ class YAML:
                     if mod.get("propertyPath") == "m_LocalPosition.z":
                         mod["value"] = transform["z"]
                     
-        body["PrefabInstance"]["m_Modification"]["m_TransformParent"] = transform_id
-        body["PrefabInstance"]["m_SourcePrefab"]["guid"] = guid
-        self.level0.append([new_anchor, body])
+        wrapped["PrefabInstance"]["m_SourcePrefab"]["guid"] = metaguid
+        sceneroots = self.get_doc("SceneRoots")
+        sceneroots["m_Roots"].append({"fileID": id_out})
+        self.wrapped.append(wrapped)
         
-        
-        
+    def get_father_id_of_root_transform_of_prefab(self, prefab_path):
+        with open(prefab_path, "r") as f:
+            prefab_file = f.read()
+        yaml = ruamel_YAML(typ='rt')
+        default = list(yaml.compose_all(preprocess_text(prefab_file)))
+        wrapped = [node_to_python(n) for n in default]
+        for doc in wrapped:
+            if "Transform" in doc.keys():
+                if doc["Transform"]["m_Father"]["fileID"] == "0":
+                    father_id = doc["anchor"]
+        if not father_id:
+            raise KeyError("The located prefab has no root transform")
+        return father_id
+    
+    def to_unity_yaml(self, file_name="minimal.unity"):
+        out = ["%YAML 1.1", "%TAG !u! tag:unity3d.com,2011:"]
+        for entry in self.wrapped:
+            tag = entry.pop("tag")
+            anchor = entry.pop("anchor")
+            # remaining single top-level key is the object name
+            [(objname, objdata)] = entry.items()
+            out.append(f"--- !u!{tag} &{anchor}")
+            out.append(f"{objname}:")
+            out.extend(dict_to_yaml(objdata, 2))
+        out = "\n".join(out) + "\n"
+        with open(file_name, "w") as f:
+            f.write(out)    
+
     def dump(self, file_name="minimal.unity"):
         if not file_name.endswith(".unity"):
             file_name += ".unity"
@@ -132,12 +200,12 @@ class YAML:
         with open(file_name, "w") as f:
             f.write(full_content)
 
-    def get_doc_key(self, top_key):
+    def get_doc(self, top_key):
         """
         Return the value of a top-level key in any YAML document.
         Returns None if not found.
         """
-        list_item = next((doc for doc in self.level0 if top_key in doc.value), None)
+        list_item = next((doc for doc in self.wrapped if top_key in doc.keys()), None)
         if list_item is None:
             return None
         return list_item[top_key]
@@ -151,29 +219,106 @@ class YAML:
 
 def set_ID(text: str, new_id: str=None) -> str:
     """ Changes the ID in the anchor line """
-    text.anchor = new_id
-    return new_id
-    
-    print(text)
-    non_id = text.split("&")[0]
     if not new_id:
-        new_id = str(random.int(1000000000, 9999999999))
-    non_id += "&" + new_id
-    return text.anchor, new_id
+        new_id = str(random.randint(1000000000, 9999999999))
+    if "anchor" in text.keys():
+        text["anchor"] = new_id
+    else:
+        raise ValueError("No anchor to be set!")
+    return text, new_id
 
 
         
 def get_guid(meta_file: str) -> str:
     """Returns the 'guid' property from a Unity .meta YAML file."""
     with open(meta_file, "r") as f:
-        data = yaml.safe_load(f)
+        data = pyyaml.safe_load(f)
     
     # Ensure 'guid' exists
     if "guid" not in data:
         raise KeyError(f"'guid' not found in {meta_file}")
     
     return data["guid"]
-        
+
+def try_number(val):
+    """Convert to int/float if it's a 'safe' number, else keep string."""
+    if isinstance(val, str):
+        # Don't convert if it has leading zeros (unless it's exactly "0")
+        if val.isdigit() and not (val.startswith("0") and val != "0"):
+            return int(val)
+        try:
+            # Convert floats, but not scientific/strange formats
+            if "." in val and not val.startswith("0"):
+                return float(val)
+        except ValueError:
+            return val
+        return val
+    return val
+
+def is_unity_inline_dict(d: dict) -> bool:
+    keys = set(d.keys())
+    # Object refs
+    if keys <= {"fileID", "guid", "type"}:
+        return True
+    # Vector3 / Quaternion style
+    if keys in ({"x", "y", "z"}, {"x", "y", "z", "w"}):
+        return True
+    if keys <= {"r", "g", "b", "a"}:
+        return True
+    
+    return False
+
+def dict_to_yaml(d, indent=0):
+    """Recursively turn dict into Unity-style YAML lines."""
+    lines = []
+    for k, v in d.items():
+        if isinstance(v, dict):
+            if is_unity_inline_dict(v):
+                inner = ", ".join(f"{ik}: {try_number(iv)}" for ik, iv in v.items())
+                lines.append(" " * indent + f"{k}: {{{inner}}}")
+            else:
+                lines.append(" " * indent + f"{k}:")
+                lines.extend(dict_to_yaml(v, indent + 2))
+        elif isinstance(v, list):
+            if not v:
+                lines.append(" " * indent + f"{k}: []")
+            else:
+                lines.append(" " * indent + f"{k}:")
+                for item in v:
+                    if isinstance(item, dict):
+                        if is_unity_inline_dict(item):
+                            inner = ", ".join(f"{ik}: {try_number(iv)}" for ik, iv in item.items())
+                            lines.append(" " * (indent + 2) + f"- {{{inner}}}")
+                        else:
+                            # Multi-key dict: dash + first key on same line
+                            first_key, first_val = next(iter(item.items()))
+                            if isinstance(first_val, dict) and is_unity_inline_dict(first_val):
+                                inner = ", ".join(f"{ik2}: {try_number(iv2)}" for ik2, iv2 in first_val.items())
+                                lines.append(" " * (indent + 2) + f"- {first_key}: {{{inner}}}")
+                            elif isinstance(first_val, dict):
+                                lines.append(" " * (indent + 2) + f"- {first_key}:")
+                                lines.extend(dict_to_yaml(first_val, indent + 4))
+                            else:
+                                lines.append(" " * (indent + 2) + f"- {first_key}: {try_number(first_val)}")
+
+                            # Remaining keys indented 2 spaces relative to dash
+                            for ik, iv in list(item.items())[1:]:
+                                if isinstance(iv, dict) and is_unity_inline_dict(iv):
+                                    inner = ", ".join(f"{ik2}: {try_number(iv2)}" for ik2, iv2 in iv.items())
+                                    lines.append(" " * (indent + 4) + f"{ik}: {{{inner}}}")
+                                elif isinstance(iv, dict):
+                                    lines.append(" " * (indent + 4) + f"{ik}:")
+                                    lines.extend(dict_to_yaml(iv, indent + 6))
+                                else:
+                                    lines.append(" " * (indent + 4) + f"{ik}: {try_number(iv)}")
+                    else:
+                        lines.append(" " * (indent + 2) + f"- {try_number(item)}")
+        else:
+            lines.append(" " * indent + f"{k}: {try_number(v)}")
+    return lines
+
+
+       
 scene_init_text = """
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
@@ -319,39 +464,39 @@ PrefabInstance:
       propertyPath: m_LocalPosition.x
       value: -1045.3981
       objectReference: {fileID: 0}
-    - target: {fileID: 7746927824541037661, guid: 1f9036ec905b920479091aca9ba81305, type: 3}
+    - target: {fileID: 6, guid: 1f9036ec905b920479091aca9ba81305, type: 3}
       propertyPath: m_LocalPosition.y
       value: 2190.1765
       objectReference: {fileID: 0}
-    - target: {fileID: 7746927824541037661, guid: 1f9036ec905b920479091aca9ba81305, type: 3}
+    - target: {fileID: 6, guid: 1f9036ec905b920479091aca9ba81305, type: 3}
       propertyPath: m_LocalPosition.z
       value: 3885.3948
       objectReference: {fileID: 0}
-    - target: {fileID: 7746927824541037661, guid: 1f9036ec905b920479091aca9ba81305, type: 3}
+    - target: {fileID: 6, guid: 1f9036ec905b920479091aca9ba81305, type: 3}
       propertyPath: m_LocalRotation.w
       value: 1
       objectReference: {fileID: 0}
-    - target: {fileID: 7746927824541037661, guid: 1f9036ec905b920479091aca9ba81305, type: 3}
+    - target: {fileID: 6, guid: 1f9036ec905b920479091aca9ba81305, type: 3}
       propertyPath: m_LocalRotation.x
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 7746927824541037661, guid: 1f9036ec905b920479091aca9ba81305, type: 3}
+    - target: {fileID: 6, guid: 1f9036ec905b920479091aca9ba81305, type: 3}
       propertyPath: m_LocalRotation.y
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 7746927824541037661, guid: 1f9036ec905b920479091aca9ba81305, type: 3}
+    - target: {fileID: 6, guid: 1f9036ec905b920479091aca9ba81305, type: 3}
       propertyPath: m_LocalRotation.z
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 7746927824541037661, guid: 1f9036ec905b920479091aca9ba81305, type: 3}
+    - target: {fileID: 6, guid: 1f9036ec905b920479091aca9ba81305, type: 3}
       propertyPath: m_LocalEulerAnglesHint.x
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 7746927824541037661, guid: 1f9036ec905b920479091aca9ba81305, type: 3}
+    - target: {fileID: 6, guid: 1f9036ec905b920479091aca9ba81305, type: 3}
       propertyPath: m_LocalEulerAnglesHint.y
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 7746927824541037661, guid: 1f9036ec905b920479091aca9ba81305, type: 3}
+    - target: {fileID: 6, guid: 1f9036ec905b920479091aca9ba81305, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}

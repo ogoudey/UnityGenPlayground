@@ -30,25 +30,12 @@ class UnityFile:
         guid = yamling.get_guid(meta_file)
         self.yaml.set_skybox(guid)
     
-    def add_prefab(self, name, meta_file, transform):
+    def add_prefab(self, meta_file, transform):
         guid = yamling.get_guid(meta_file)
         prefab_path = meta_file.removesuffix(".meta")
         self.yaml.add_prefab_instance(guid, prefab_path, transform)
-        # fill out prefab based on guid, then add to self.file
-        pass
+        print(self.yaml.wrapped)
         
-    """
-    def add_game_object(self, name, meta_file)
-        # Only takes prefabs for now #
-        guid = self.yaml.get_guid(meta_file)
-        transform_ID = self.yaml.add_transform(guid)
-        
-        game_object_ID = self.yaml.add_game_object(guid, transform_ID)
-        
-        prefab_path = meta_file.removesuffix(".meta")
-        self.yaml.add_prefab_instance(guid, prefab_path)
-        return name
-    """
     def done(self, file_name=None):
         if not file_name:
             file_name = self.name
