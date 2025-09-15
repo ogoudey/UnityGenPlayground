@@ -1,25 +1,36 @@
-"""import subprocess
+import subprocess
+import os
+import re
+import pathlib
+from collections import defaultdict
 
-def parse_resources():
-
-    folder = "../Assets/Proxy Games"
+def get_tree(file_type=".prefab", folder="../Assets"):
+    folder = "../Assets"
 
     result = subprocess.run(
-        ["tree", folder],
+        ["tree", "-P", "*" + file_type, folder],
         capture_output=True,
         text=True
     )
 
-    resources = result.stdout
-    return resources
+    assets = result.stdout
+    return assets
 
-resources = parse_resources()
-"""
+def get_found(file_type=".prefab", folder="../Assets"):
+    result = subprocess.run(
+        ["find", folder, "-type", "f", "-name", f"*{file_type}"],
+        capture_output=True,
+        text=True
+    )
 
-import os
-import re
+    # Split into list of file paths, strip whitespace
+    files = [line.strip() for line in result.stdout.splitlines() if line.strip()]
 
-from collections import defaultdict
+    # Normalize paths (optional, makes everything consistent)
+    files = [str(pathlib.Path(f).as_posix()) for f in files]
+
+    return files
+
 
 # List of metadata fields to extract
 important_data = ["GUID", "fileID"]
@@ -73,9 +84,7 @@ def parse_assets(folder="../Assets/Proxy Games"):
     return final_metadata
 
 list_of_important_metadata_dicts = parse_assets()
-print(f"Found {len(list_of_important_metadata_dicts)} entries:")
-for entry in list_of_important_metadata_dicts:
-    print(entry)
+
 
 resources = str(list_of_important_metadata_dicts)
 

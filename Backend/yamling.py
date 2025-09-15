@@ -7,17 +7,6 @@ import re
 from ruamel.yaml import YAML as ruamel_YAML
 from ruamel.yaml.nodes import ScalarNode, MappingNode, SequenceNode
 
-class TaggedNode:
-    def __init__(self, tag, anchor, value):
-        print("New tagged node")
-        self.tag = tag
-        self.anchor = anchor  # e.g. "2"
-        self.value = value    # scalar, dict, or list
-
-    def __repr__(self):
-        return f"TaggedNode(tag={self.tag!r}, anchor={self.anchor!r}, value={self.value!r})"
-
-
 def node_to_python(node):
     if isinstance(node, ScalarNode):
         return node.value
@@ -26,9 +15,7 @@ def node_to_python(node):
         for value in node.value:
             values_to_objects.append(node_to_python(value))
         return values_to_objects
-    if isinstance(node, MappingNode):
-        
-            
+    if isinstance(node, MappingNode):  
         map_dict = {}
         if hasattr(node, "tag") and "!UnityTag" in node.tag:
             map_dict["tag"] = node.tag.removeprefix("!UnityTag")    
@@ -48,50 +35,16 @@ class YAML:
         self.level0 = list(yaml.compose_all(preprocess_text(scene_init_text)))
         # self.level0 is a list of MappingNodes
         self.wrapped = [node_to_python(n) for n in self.level0]
-        """
-        MappingNode(
-            tag='!UnityTag196',
-            value=[
-                (
-                    ScalarNode(tag='tag:yaml.org,2002:str', value='NavMeshSettings'),
-                    MappingNode(tag='tag:yaml.org,2002:map', value=[
-                                                                (ScalarNode(tag='tag:yaml.org,2002:str', value='serializedVersion'), ScalarNode(tag='tag:yaml.org,2002:int', value='2')),
-                                                                (ScalarNode(tag='tag:yaml.org,2002:str', value='m_ObjectHideFlags'), ScalarNode(tag='tag:yaml.org,2002:int', value='0')),
-                                                                (ScalarNode(tag='tag:yaml.org,2002:str', value='m_BuildSettings'), MappingNode(tag='tag:yaml.org,2002:map', value=[
-                                                                                                                                                                            (ScalarNode(tag='tag:yaml.org,2002:str', value='serializedVersion'),ScalarNode(tag='tag:yaml.org,2002:int', value='3')),
-                                                                                                                                                                            (ScalarNode(tag='tag:yaml.org,2002:str', value='agentTypeID'), ScalarNode(tag='tag:yaml.org,2002:int', value='0')),
-                                                                                                                                                                            (ScalarNode(tag='tag:yaml.org,2002:str', value='agentRadius'), ScalarNode(tag='tag:yaml.org,2002:float', value='0.5')),
-                                                                                                                                                                            (ScalarNode(tag='tag:yaml.org,2002:str', value='agentHeight'), ScalarNode(tag='tag:yaml.org,2002:int', value='2')),
-                                                                                                                                                                            (ScalarNode(tag='tag:yaml.org,2002:str', value='agentSlope'), ScalarNode(tag='tag:yaml.org,2002:int', value='45')),
-                                                                                                                                                                            (ScalarNode(tag='tag:yaml.org,2002:str', value='agentClimb'), ScalarNode(tag='tag:yaml.org,2002:float', value='0.4')),
-                                                                                                                                                                            (ScalarNode(tag='tag:yaml.org,2002:str', value='ledgeDropHeight'), ScalarNode(tag='tag:yaml.org,2002:int', value='0')),
-                                                                                                                                                                            (ScalarNode(tag='tag:yaml.org,2002:str', value='maxJumpAcrossDistance'), ScalarNode(tag='tag:yaml.org,2002:int', value='0')),
-                                                                                                                                                                            (ScalarNode(tag='tag:yaml.org,2002:str', value='minRegionArea'), ScalarNode(tag='tag:yaml.org,2002:int', value='2')),
-                                                                                                                                                                            (ScalarNode(tag='tag:yaml.org,2002:str', value='manualCellSize'), ScalarNode(tag='tag:yaml.org,2002:int', value='0')),
-                                                                                                                                                                            (ScalarNode(tag='tag:yaml.org,2002:str', value='cellSize'), ScalarNode(tag='tag:yaml.org,2002:float', value='0.16666667')),
-                                                                                                                                                                            (ScalarNode(tag='tag:yaml.org,2002:str', value='manualTileSize'), ScalarNode(tag='tag:yaml.org,2002:int', value='0')),
-                                                                                                                                                                            (ScalarNode(tag='tag:yaml.org,2002:str', value='tileSize'), ScalarNode(tag='tag:yaml.org,2002:int', value='256')),
-                                                                                                                                                                            (ScalarNode(tag='tag:yaml.org,2002:str', value='buildHeightMesh'), ScalarNode(tag='tag:yaml.org,2002:int', value='0')),
-                                                                                                                                                                            (ScalarNode(tag='tag:yaml.org,2002:str', value='maxJobWorkers'), ScalarNode(tag='tag:yaml.org,2002:int', value='0')),
-                                                                                                                                                                            (ScalarNode(tag='tag:yaml.org,2002:str', value='preserveTilesOutsideBounds'), ScalarNode(tag='tag:yaml.org,2002:int', value='0')),
-                                                                                                                                                                            (ScalarNode(tag='tag:yaml.org,2002:str', value='debug'), MappingNode(tag='tag:yaml.org,2002:map', value=[
-                                                                                                                                                                                                                                                            (ScalarNode(tag='tag:yaml.org,2002:str', value='m_Flags'), ScalarNode(tag='tag:yaml.org,2002:int', value='0'))
-                                                                                                                                                                                                                                                            ]))
-                                                                                                                                                                            ])),
-                                                              (ScalarNode(tag='tag:yaml.org,2002:str', value='m_NavMeshData'), MappingNode(tag='tag:yaml.org,2002:map', value=[
-                                                                                                                                                                            (ScalarNode(tag='tag:yaml.org,2002:str', value='fileID'), ScalarNode(tag='tag:yaml.org,2002:int', value='0'))
-                                                                                                                                                                            ]))
-                                                             ])
-                  )
-                  ])
-        """
-
-        
         
     def set_skybox(self, guid):
-        render_settings = self.get_doc("RenderSettings")
-        render_settings["m_SkyboxMaterial"] = {"fileID": "2100000", "guid": guid, "type": 2}
-    
+        print("Setting skybox...")
+        try:
+            render_settings = self.get_doc("RenderSettings")
+            render_settings["m_SkyboxMaterial"] = {"fileID": "2100000", "guid": guid, "type": 2}
+            print("Skybox set in YAML.")
+        except Exception:
+            print("Failed to set skybox.")
+            
     def add_transform(self, guid: str, transform: dict):
         yaml = ruamel_YAML(typ='rt')
         default = list(yaml.compose_all(preprocess_text(transform_init_text)))[0]
@@ -137,17 +90,20 @@ class YAML:
         father_ID = self.get_father_id_of_root_transform_of_prefab(prefab_path)
         # find prefabs local filenames
         
-        
-
+        try:
+            print(f"Placing object at {transform}") # MAkes sure dict is well-formed
+        except:
+            print("Failed on:", transform)
+            raise KeyError("Trying to add get x value of location dict. Failed!")
+            
         modifications = wrapped["PrefabInstance"]["m_Modification"]["m_Modifications"]
         for mod in modifications:
             if "target" in mod and "guid" in mod["target"]:
+                mod["target"]["fileID"] = father_ID
+                mod["target"]["guid"] = metaguid
                 if mod.get("propertyPath") == "m_Name":
-                    mod["target"]["guid"] = metaguid
-                    mod["target"]["value"] = "Name/file path leaf here" # Anything?
+                    mod["target"]["value"] = "Name of object here" # Anything?
                 else:
-                    mod["target"]["fileID"] = father_ID
-                    mod["target"]["guid"] = metaguid
                     if mod.get("propertyPath") == "m_LocalPosition.x":
                         mod["value"] = transform["x"]
                     if mod.get("propertyPath") == "m_LocalPosition.y":
@@ -159,6 +115,7 @@ class YAML:
         sceneroots = self.get_doc("SceneRoots")
         sceneroots["m_Roots"].append({"fileID": id_out})
         self.wrapped.append(wrapped)
+        print("Asset added to YAML.")
         
     def get_father_id_of_root_transform_of_prefab(self, prefab_path):
         with open(prefab_path, "r") as f:
@@ -175,6 +132,10 @@ class YAML:
         return father_id
     
     def to_unity_yaml(self, file_name="minimal.unity"):
+        if not file_name.endswith(".unity"):
+            file_name += ".unity"
+        file_name = "../Assets/Scenes/" + file_name
+        print("Attempting to write to", file_name)
         out = ["%YAML 1.1", "%TAG !u! tag:unity3d.com,2011:"]
         for entry in self.wrapped:
             tag = entry.pop("tag")
@@ -186,15 +147,17 @@ class YAML:
             out.extend(dict_to_yaml(objdata, 2))
         out = "\n".join(out) + "\n"
         with open(file_name, "w") as f:
-            f.write(out)    
+            f.write(out)   
+        print("YAML written to", file_name) 
 
     def dump(self, file_name="minimal.unity"):
+        
         if not file_name.endswith(".unity"):
             file_name += ".unity"
             
         # Dump YAML content to a string first
-        yaml_content = yaml.safe_dump_all(self.level0, sort_keys=False)
-        yaml_content = yaml_content.replace("!UnityTag", "!u!")
+        yaml_content = pyyaml.safe_dump_all(self.level0, sort_keys=False)
+        yaml_content = pyyaml_content.replace("!UnityTag", "!u!")
 
 
         with open(file_name, "w") as f:
@@ -460,7 +423,7 @@ PrefabInstance:
       propertyPath: m_Name
       value: Spruce 1
       objectReference: {fileID: 0}
-    - target: {fileID: 0}
+    - target: {fileID: 6, guid: 1f9036ec905b920479091aca9ba81305, type: 3}
       propertyPath: m_LocalPosition.x
       value: -1045.3981
       objectReference: {fileID: 0}

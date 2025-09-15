@@ -25,6 +25,8 @@ material_tree = assets.get_found(".mat")
 
 MODEL="o3-mini"
 
+RESTRICTIONS="""In fact, only describe objects that are commonly found in scenes built in the game engine Unity. IN FACT, ONLY USE THESE ASSETS:\n"../Assets/Proxy Games/Stylized Nature Kit Lite/Prefabs/Foliage/Mushroom/Mushrooms Patch.prefab", "../Assets/Proxy Games/Stylized Nature Kit Lite/Prefabs/Foliage/Branch/Branch.prefab", "../Assets/Proxy Games/Stylized Nature Kit Lite/Prefabs/Foliage/Trees/Spruce 1.prefab", "../Assets/Proxy Games/Stylized Nature Kit Lite/Prefabs/Foliage/Trees/Spruce 2.prefab", "../Assets/Proxy Games/Stylized Nature Kit Lite/Prefabs/Foliage/Stump/Stump.prefab", "../Assets/Proxy Games/Stylized Nature Kit Lite/Prefabs/Foliage/Flower/Flower.prefab", "../Assets/Proxy Games/Stylized Nature Kit Lite/Prefabs/Foliage/Log/Log.prefab", "../Assets/Proxy Games/Stylized Nature Kit Lite/Prefabs/Foliage/Grass/Grass.prefab", "../Assets/Proxy Games/Stylized Nature Kit Lite/Prefabs/Foliage/Bush/Bush.prefab", "../Assets/Proxy Games/Stylized Nature Kit Lite/Prefabs/Water/Flat Water.prefab", "../Assets/Proxy Games/Stylized Nature Kit Lite/Prefabs/Water/Detailed Water.prefab", "../Assets/Proxy Games/Stylized Nature Kit Lite/Prefabs/Rocks/Standard Rocks/Standard Rock 3.prefab", "../Assets/Proxy Games/Stylized Nature Kit Lite/Prefabs/Rocks/Standard Rocks/Standard Rock 1.prefab", "../Assets/Proxy Games/Stylized Nature Kit Lite/Prefabs/Rocks/Standard Rocks/Standard Rock 2.prefab", "../Assets/Proxy Games/Stylized Nature Kit Lite/Prefabs/Rocks/Standard Rocks/Standard Rock 5.prefab", "../Assets/Proxy Games/Stylized Nature Kit Lite/Prefabs/Rocks/Standard Rocks/Standard Rock 4.prefab", "../Assets/Proxy Games/Stylized Nature Kit Lite/Prefabs/Rocks/Rock Cliffs/Rock Cliff 5.prefab", "../Assets/Proxy Games/Stylized Nature Kit Lite/Prefabs/Rocks/Rock Cliffs/Rock Cliff 4.prefab", "../Assets/Proxy Games/Stylized Nature Kit Lite/Prefabs/Rocks/Rock Cliffs/Rock Cliff 3.prefab", "../Assets/Proxy Games/Stylized Nature Kit Lite/Prefabs/Rocks/Rock Cliffs/Rock Cliff 1.prefab", "../Assets/Proxy Games/Stylized Nature Kit Lite/Prefabs/Rocks/Rock Cliffs/Rock Cliff 2.prefab", "../Assets/Proxy Games/Stylized Nature Kit Lite/Prefabs/Rocks/Mountain/Mountain.prefab", "../Assets/Proxy Games/Stylized Nature Kit Lite/Prefabs/Rocks/Tiny Rocks/Tiny Rock 3.prefab", "../Assets/Proxy Games/Stylized Nature Kit Lite/Prefabs/Rocks/Tiny Rocks/Tiny Rock 2.prefab", "../Assets/Proxy Games/Stylized Nature Kit Lite/Prefabs/Rocks/Tiny Rocks/Tiny Rock 4.prefab", "../Assets/Proxy Games/Stylized Nature Kit Lite/Prefabs/Rocks/Tiny Rocks/Tiny Rock 5.prefab", "../Assets/Proxy Games/Stylized Nature Kit Lite/Prefabs/Rocks/Tiny Rocks/Tiny Rock 1.prefab"""
+
 class UnityFile:
     def __init__(self, name="testingtesting123"):
         self.name = name
@@ -51,31 +53,6 @@ global unity
 class Designation(BaseModel):
     asset_path: str
     #next_agent: str
- 
-
-class DesignedObject(BaseModel):
-    game_object_name: str
-    asset_path: str
-
-@function_tool
-async def skyboxConsult(skybox_description: str, important_info: str="skybox1 has blue sky, skybox2 has cloudy sky") -> Designation:
-    agent = Agent(
-        name="SkyboxConsultant" + str(random.randint(100, 999)),
-        output_type = Designation,
-        instructions="Given the directory structure (asset tree), return the path to the metafile of the desired asset.",
-        model=MODEL
-        
-    )
-    prompt = {"Object description": skybox_description,
-                "Asset tree": material_tree}
-
-    result = await Runner.run(agent, json.dumps(prompt))
-    asset_path = result.final_output.asset_path
-    
-    global unity
-    unity.add_skybox(asset_path + ".meta")
-    
-    return f"Successfully added skybox with description {skybox_description} to the scene."
 
 @function_tool
 async def objectConsult(object_description: str, location: str, important_info: str) -> str:
@@ -83,9 +60,8 @@ async def objectConsult(object_description: str, location: str, important_info: 
     agent = Agent(
         name="ObjectConsultant" + str(random.randint(100, 999)),
         output_type = Designation,
-        instructions="Given the directory structure (asset tree), return the path to file of the desired asset.",
-        model=MODEL
-        
+        instructions="Given the directory structure (asset tree), return the path to the file of the desired asset. If, for some reason, you cannot retrieve the asset, return some reason (e.g. this library seems to cover X instead).",
+        model=MODEL  
     )
     
     prompt = {"Object description": object_description,
@@ -96,27 +72,152 @@ async def objectConsult(object_description: str, location: str, important_info: 
     
     asset_path = result.final_output.asset_path + ".meta"
     
-    global unity
-    print("A location where we add asset:", location)
+    
     try:
         json_location = json.loads(location)
-        unity.add_prefab(asset_path, json_location)
-        return f"Successfully added object with description '{object_description}' to {location} in the scene."
     except Exception as e:
         print(e)
         print("Could not JSONify")
         return f"Failed to add object with description '{object_description}' to {location} in the scene. Make sure to pass a correct something that can be loaded with json.loads() into JSON."
-    #print(return_)
-    #print(type(return_))
+    try:
+        global unity
+        print("An object with description '{object_description}' is going to be added to: {location}")
+        unity.add_prefab(asset_path, json_location)
+        return f"Successfully added object with description '{object_description}' to {location} in the scene."
+    except Exception as e:
+        return f"Could not add asset, likely because nothing an object with a description '{description}' is available in the library of assets. {asset_path}"
+
+@function_tool
+async def createObject(description: str, location: str, other_important_info: str) -> str:
+    """ 
+        Location is a str: \"\"\"{"x": float, "y": float, "z": float}", for example, "{"x": -1045.6066, "y": 2196.2122, "z": 3885.3037}\"\"\"
+    """
+    agent = Agent(
+        name="ObjectCreator" + str(random.randint(100, 999)),
+        tools=[objectConsult],
+        #instructions="It is your job to prompt an asset-retriever to get the object you are assigned to place. For example, given that you are supposed to put a rock at [1.2, 2.8, -1.5] and this location is 1m high, the object must be extend at least 1m below its center point, otherwise it is floating mid-air."
+        instructions= "Name the object and use the objectConsult tool to retrieve the asset path.",
+        model=MODEL
+    )
+    
+    prompt = {"Description of object": description,
+                "Intended location of object": location,
+                "Other important info": other_important_info}
+    
+    await Runner.run(agent, json.dumps(prompt))
+    
+    return f"Successfully called objectConsult."
+
+@function_tool
+async def createSectionL0(description: str, region: str):
+    """ Handle coming soon... """
+
+    """ This function is currently equipped with RESTRICTIONS """
     
 
+
+    agent = Agent(
+        name="SectionLeader" + str(random.randint(100, 999)),
+        tools=[createObject],
+        instructions="You are an architect of a scene. According to the prompt, you design a (section of a) scene by creating objects. Reference one object per call to createObject, since some downstream agent needs to take your description and find the right asset." + RESTRICTIONS,
+        model=MODEL
+    )
     
+    prompt = {"Description of your section": description, "Region to work in": region}
     
-  
+    await Runner.run(agent, json.dumps(prompt))
+    return f"Successfully allocated generation of this section which has description '{description}'."
+
+@function_tool
+async def createSectionL1(description: str, region: str):
+    agent = Agent(
+        name="SectionLeader" + str(random.randint(100, 999)),
+        tools=[createSectionL0, createObject],
+        instructions="You are an architect of a scene. According to the prompt, you design a (section of a) scene by either creating objects or by (recursively) assigning a 'section leader' (like yourself) to a sub-section of the scene which is restricted to a region.",
+        model=MODEL
+    )
+    
+    prompt = {"Description of your section": description, "Region to work in": region}
+    
+    await Runner.run(agent, json.dumps(prompt))
+    return f"Successfully allocated generation of this section which has description '{description}'."
+ 
+@function_tool
+async def createSectionL2(description: str, region: str):
+    agent = Agent(
+        name="SectionLeader" + str(random.randint(100, 999)),
+        tools=[createSectionL1, createObject],
+        instructions="You are an architect of a scene. According to the prompt, you design a (section of a) scene by either creating objects or by (recursively) assigning a 'section leader' (like yourself) to a sub-section of the scene which is restricted to a region.",
+        model=MODEL
+    )
+    
+    prompt = {"Description of your section": description, "Region to work in": region}
+    
+    await Runner.run(agent, json.dumps(prompt))
+    return f"Successfully allocated generation of this section which has description '{description}'."
+
+
+@function_tool
+async def skyboxConsult(skybox_description: str, important_info: str="skybox1 has blue sky, skybox2 has cloudy sky") -> Designation:
+    agent = Agent(
+        name="SkyboxConsultant" + str(random.randint(100, 999)),
+        output_type = Designation,
+        instructions="Given the directory structure (asset tree), return the path to the file of the desired asset.",
+        model=MODEL
+        
+    )
+    prompt = {"Object description": skybox_description,
+                "Available assets": material_tree}
+
+    result = await Runner.run(agent, json.dumps(prompt))
+    asset_path = result.final_output.asset_path
+    
+    global unity
+    unity.add_skybox(asset_path + ".meta")
+    
+    return f"Successfully added skybox with description '{skybox_description}' to the scene."
+
+async def createSkyboxLeader(description: str="Plain blue sky"):
+    
+    agent = Agent(
+        name="SkyboxLeader",
+        tools=[skyboxConsult],
+        instructions="You will be given a description of an intended Unity scene and you are to prompt an agent (through the skyboxConsult tool) to select the right asset. Name the object and use the objectConsult tool to retrieve the asset path. The agent you prompt will be looking for a skybox that corresponds to your prompt."
+    )
+    
+    prompt = {"Description of scene": description}
+    result = await Runner.run(agent, json.dumps(prompt))
+    
+    return f"Successfully added skybox given description '{description}'"
+   
+   
+async def main(prompt):
+    global unity
+    unity = UnityFile("test0")
+    
+    await createSkyboxLeader(prompt)
+
+
+    
+    agent = Agent(
+        name="SectionLeader0",
+        tools=[createSectionL2, createObject],
+        instructions="You are an architect of a scene, you design a (section of a) scene by either creating objects, or by (recursively) assigning a 'section leader' (like yourself) to a sub-section of the scene which is restricted to a region.",
+        model=MODEL
+    )
+    
+    prompt = {"Description of your section": prompt, "Region to work in": "completely open - scene origin is at (0,0,0)"}
+    
+    await Runner.run(agent, json.dumps(prompt))
+    
+    unity.done_and_write() # writes
+
+
+""" Tests """
 
 async def createObjectNotAsTool(description: str, location: str, other_important_info: str) -> str:
     """ 
-        Location is a str: {"x": float, "y": float, "z": float}, for example, {"x": -1045.6066, "y": 2196.2122, "z": 3885.3037}
+        Helper
     """
     agent = Agent(
         name="ObjectCreator" + str(random.randint(100, 999)),
@@ -140,80 +241,14 @@ async def createObjectNotAsTool(description: str, location: str, other_important
     await Runner.run(agent, json.dumps(prompt))
     return f"Successfully called objectConsult."
 
-@function_tool
-async def createObject(description: str, location: str, other_important_info: str) -> str:
-    """ 
-        Location is a str: """{"x": float, "y": float, "z": float}", for example, "{"x": -1045.6066, "y": 2196.2122, "z": 3885.3037}"""
-    """
-    agent = Agent(
-        name="ObjectCreator" + str(random.randint(100, 999)),
-        tools=[objectConsult],
-        #instructions="It is your job to prompt an asset-retriever to get the object you are assigned to place. For example, given that you are supposed to put a rock at [1.2, 2.8, -1.5] and this location is 1m high, the object must be extend at least 1m below its center point, otherwise it is floating mid-air."
-        instructions= "Name the object and use the objectConsult tool to retrieve the asset path.",
-        model=MODEL
-    )
+async def test_skybox(prompt="A forest with the sun out"):
     
-    prompt = {"Description of object": description,
-                "Intended location of object": location,
-                "Other important info": other_important_info}
-    
-    await Runner.run(agent, json.dumps(prompt))
-    
-    return f"Successfully called objectConsult."
-    
-@function_tool
-async def createSectionLeader(description: str, region: str):
-    
-    agent = Agent(
-        name="SectionLeader" + str(random.randint(100, 999)),
-        tools=[createSectionLeader, createObject],
-        instructions="You are an architect of a scene, you design a (section of a) scene by either creating objects, or by (recursively) assigning a 'section leader' (like yourself) to a sub-section of the scene restricted to a region, given the description of your section.",
-        model=MODEL
-    )
-    
-    prompt = {"Description of your section": decription, "Region to work in": region}
-    
-    await Runner.run(agent, json.dumps(prompt))
-    return f"Successfully allocated generation of this section which has description '{description}'."
 
-async def createSkyboxLeader(description: str="Plain blue sky"):
-    
-    agent = Agent(
-        name="SkyboxLeader",
-        tools=[skyboxConsult],
-        instructions="You will be given a description of an intended Unity scene and you are to prompt an agent (through the skyboxConsult tool) to select the right asset. Name the object and use the objectConsult tool to retrieve the asset path."
-    )
-    
-    prompt = {"Description of scene": description}
-    result = await Runner.run(agent, json.dumps(prompt))
-    
-    return f"Successfully added skybox given description '{description}'"
-   
-   
-async def main(prompt):
     global unity
-    unity = UnityFile("test0")
+    unity = UnityFile("test_skybox" + str(random.randint(100, 999)))
+    await createSkyboxLeader(prompt) # success/fail
     
-    await createSkyboxLeader(prompt)
-
-
-    
-    agent = Agent(
-        name="SectionLeader0",
-        tools=[createSectionLeader, createObject],
-        instructions="You are an architect of a scene, you design a (section of a) scene by either creating objects, or by (recursively) assigning a 'section leader' (like yourself) to a sub-section of the scene restricted to a region.",
-        model=MODEL
-    )
-    
-    prompt = {"Description of your section": prompt, "Region to work in": "completely open - scene origin is at (0,0,0)"}
-    
-    await Runner.run(agent, json.dumps(prompt))
-    
-    unity.done_and_write() # writes
-
-
-""" Tests """
-
+    unity.done_and_write()
 
 async def test_leaves(prompt="A forest"):
     
@@ -227,26 +262,20 @@ async def test_leaves(prompt="A forest"):
     
     unity.done_and_write()
     
-async def test_skybox(prompt="A forest with the sun out"):
+
+
+async def test_stem(prompt="Two trees"):
     
 
     global unity
-    unity = UnityFile("test_skybox" + str(random.randint(100, 999)))
-    await createSkyboxLeader(prompt) # success/fail
+    unity = UnityFile("test_stem" + str(random.randint(100, 999)))
     
-    unity.done_and_write()
-    
-async def test_cumulative(prompt="A forest with the sun out."):
-    
-
-    global unity
-    unity = UnityFile("test_cumulative" + str(random.randint(100, 999)))
-    await createSkyboxLeader(prompt) # success/fail
+    #await createSkyboxLeader(prompt) # success/fail
     
     section_leader0 = Agent(
-        name="SectionLeader0",
-        tools=[createSectionLeader, createObject],
-        instructions="You are an architect of a scene, you design a (section of a) scene by either creating objects, or by (recursively) assigning a 'section leader' (like yourself) to a sub-section of the scene restricted to a region.",
+        name="SectionLeaderL0",
+        tools=[createObject],
+        instructions="""You are an architect of a scene. According to the prompt, you design a (section of a) scene by creating objects. Reference one object per call to createObject, since some downstream agent needs to take your description and find the right asset.""" + RESTRICTIONS,
         model=MODEL
     )
     
@@ -256,8 +285,49 @@ async def test_cumulative(prompt="A forest with the sun out."):
     
     unity.done_and_write()
     
+async def test_stem_and_sky(prompt="A forest"):
+    
 
-test_dispatcher = {"test_leaves": test_leaves, "test_skybox": test_skybox, "test_cumulative": test_cumulative}
+    global unity
+    unity = UnityFile("test_stem_and_sky" + str(random.randint(100, 999)))
+    
+    await createSkyboxLeader(prompt) # success/fail
+    
+    section_leader0 = Agent(
+        name="SectionLeaderL0",
+        tools=[createObject],
+        instructions="""You are an architect of a scene. According to the prompt, you design a (section of a) scene by either creating objects or by (recursively) assigning a 'section leader' (like yourself) to a sub-section of the scene which is restricted to a region. Reference one object per call to createObject, since some downstream agent needs to take your description and find the right asset.""" + RESTRICTIONS,
+        model=MODEL
+    )
+    
+    prompt = {"Description of your section": prompt, "Region to work in": "completely open - scene origin is at (0,0,0)"}
+    
+    await Runner.run(section_leader0, json.dumps(prompt))
+    
+    unity.done_and_write()
+    
+async def test_L1(prompt="A forest"):
+    
+
+    global unity
+    unity = UnityFile("test_L1" + str(random.randint(100, 999)))
+    await createSkyboxLeader(prompt) # success/fail
+    
+    section_leaderL1 = Agent(
+        name="SectionLeaderL1",
+        tools=[createSectionL0, createObject],
+        instructions="""You are an architect of a scene, you design a (section of a) scene by either creating objects, or by (recursively) assigning a 'section leader' (like yourself) to a sub-section of the scene which is restricted to a region. If you do use createObject, reference only one object per call, since some downstream agent needs to take your description and find the right asset.""" + RESTRICTIONS,
+        model=MODEL
+    )
+    
+    prompt = {"Description of your section": prompt, "Region to work in": "completely open - scene origin is at (0,0,0)"}
+    
+    await Runner.run(section_leaderL1, json.dumps(prompt))
+    
+    unity.done_and_write()
+    
+
+test_dispatcher = {"test_leaves": test_leaves, "test_stem": test_stem, "test_skybox": test_skybox, "test_stem_and_sky": test_stem_and_sky, "test_L1": test_L1}
 
 import sys
 if __name__ == "__main__":
