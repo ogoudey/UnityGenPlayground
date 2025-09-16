@@ -25,7 +25,7 @@ material_tree = assets.get_found(".mat")
 
 MODEL="o3-mini"
 
-RESTRICTIONS="""In fact, only describe objects that are commonly found in scenes built in the game engine Unity. IN FACT, ONLY USE THESE ASSETS:\n"../Assets/Proxy Games/Stylized Nature Kit Lite/Prefabs/Foliage/Mushroom/Mushrooms Patch.prefab", "../Assets/Proxy Games/Stylized Nature Kit Lite/Prefabs/Foliage/Branch/Branch.prefab", "../Assets/Proxy Games/Stylized Nature Kit Lite/Prefabs/Foliage/Trees/Spruce 1.prefab", "../Assets/Proxy Games/Stylized Nature Kit Lite/Prefabs/Foliage/Trees/Spruce 2.prefab", "../Assets/Proxy Games/Stylized Nature Kit Lite/Prefabs/Foliage/Stump/Stump.prefab", "../Assets/Proxy Games/Stylized Nature Kit Lite/Prefabs/Foliage/Flower/Flower.prefab", "../Assets/Proxy Games/Stylized Nature Kit Lite/Prefabs/Foliage/Log/Log.prefab", "../Assets/Proxy Games/Stylized Nature Kit Lite/Prefabs/Foliage/Grass/Grass.prefab", "../Assets/Proxy Games/Stylized Nature Kit Lite/Prefabs/Foliage/Bush/Bush.prefab", "../Assets/Proxy Games/Stylized Nature Kit Lite/Prefabs/Water/Flat Water.prefab", "../Assets/Proxy Games/Stylized Nature Kit Lite/Prefabs/Water/Detailed Water.prefab", "../Assets/Proxy Games/Stylized Nature Kit Lite/Prefabs/Rocks/Standard Rocks/Standard Rock 3.prefab", "../Assets/Proxy Games/Stylized Nature Kit Lite/Prefabs/Rocks/Standard Rocks/Standard Rock 1.prefab", "../Assets/Proxy Games/Stylized Nature Kit Lite/Prefabs/Rocks/Standard Rocks/Standard Rock 2.prefab", "../Assets/Proxy Games/Stylized Nature Kit Lite/Prefabs/Rocks/Standard Rocks/Standard Rock 5.prefab", "../Assets/Proxy Games/Stylized Nature Kit Lite/Prefabs/Rocks/Standard Rocks/Standard Rock 4.prefab", "../Assets/Proxy Games/Stylized Nature Kit Lite/Prefabs/Rocks/Rock Cliffs/Rock Cliff 5.prefab", "../Assets/Proxy Games/Stylized Nature Kit Lite/Prefabs/Rocks/Rock Cliffs/Rock Cliff 4.prefab", "../Assets/Proxy Games/Stylized Nature Kit Lite/Prefabs/Rocks/Rock Cliffs/Rock Cliff 3.prefab", "../Assets/Proxy Games/Stylized Nature Kit Lite/Prefabs/Rocks/Rock Cliffs/Rock Cliff 1.prefab", "../Assets/Proxy Games/Stylized Nature Kit Lite/Prefabs/Rocks/Rock Cliffs/Rock Cliff 2.prefab", "../Assets/Proxy Games/Stylized Nature Kit Lite/Prefabs/Rocks/Mountain/Mountain.prefab", "../Assets/Proxy Games/Stylized Nature Kit Lite/Prefabs/Rocks/Tiny Rocks/Tiny Rock 3.prefab", "../Assets/Proxy Games/Stylized Nature Kit Lite/Prefabs/Rocks/Tiny Rocks/Tiny Rock 2.prefab", "../Assets/Proxy Games/Stylized Nature Kit Lite/Prefabs/Rocks/Tiny Rocks/Tiny Rock 4.prefab", "../Assets/Proxy Games/Stylized Nature Kit Lite/Prefabs/Rocks/Tiny Rocks/Tiny Rock 5.prefab", "../Assets/Proxy Games/Stylized Nature Kit Lite/Prefabs/Rocks/Tiny Rocks/Tiny Rock 1.prefab"""
+RESTRICTIONS="""In fact, only describe objects that are commonly found in scenes built in the game engine Unity. IN FACT, ONLY USE THESE ASSETS:\n"""+str(prefab_tree)+"""."""
 
 class UnityFile:
     def __init__(self, name="testingtesting123"):
@@ -81,11 +81,11 @@ async def objectConsult(object_description: str, location: str, important_info: 
         return f"Failed to add object with description '{object_description}' to {location} in the scene. Make sure to pass a correct something that can be loaded with json.loads() into JSON."
     try:
         global unity
-        print("An object with description '{object_description}' is going to be added to: {location}")
+        print(f"An object with description '{object_description}' is going to be added to: {location}")
         unity.add_prefab(asset_path, json_location)
         return f"Successfully added object with description '{object_description}' to {location} in the scene."
     except Exception as e:
-        return f"Could not add asset, likely because nothing an object with a description '{description}' is available in the library of assets. {asset_path}"
+        return f"Could not add asset, likely because nothing an object with a description '{object_description}' is available in the library of assets. {asset_path}"
 
 @function_tool
 async def createObject(description: str, location: str, other_important_info: str) -> str:
@@ -326,8 +326,44 @@ async def test_L1(prompt="A forest"):
     
     unity.done_and_write()
     
+async def test_bridge_L1(prompt="A bridge in a forest"):
+    global unity
+    unity = UnityFile("test_bridge_L1" + str(random.randint(100, 999)))
+    await createSkyboxLeader(prompt) # success/fail
+    
+    section_leaderL1 = Agent(
+        name="SectionLeaderL1",
+        tools=[createSectionL0, createObject],
+        instructions="""You are an architect of a scene, you design a (section of a) scene by either creating objects, or by (recursively) assigning a 'section leader' (like yourself) to a sub-section of the scene which is restricted to a region. If you do use createObject, reference only one object per call, since some downstream agent needs to take your description and find the right asset.""" + RESTRICTIONS,
+        model=MODEL
+    )
+    
+    prompt = {"Description of your section": prompt, "Region to work in": "completely open - scene origin is at (0,0,0)"}
+    
+    await Runner.run(section_leaderL1, json.dumps(prompt))
+    
+    unity.done_and_write()
+    
+async def test_lab(prompt="A laboratory"):
+    global unity
+    unity = UnityFile("test_laboratory" + str(random.randint(100, 999)))
+    await createSkyboxLeader(prompt) # success/fail
+    
+    section_leaderL1 = Agent(
+        name="SectionLeaderL1",
+        tools=[createSectionL0, createObject],
+        instructions="""You are an architect of a scene, you design a (section of a) scene by either creating objects, or by (recursively) assigning a 'section leader' (like yourself) to a sub-section of the scene which is restricted to a region. If you do use createObject, reference only one object per call, since some downstream agent needs to take your description and find the right asset.""" + RESTRICTIONS,
+        model=MODEL
+    )
+    
+    prompt = {"Description of your section": prompt, "Region to work in": "completely open - scene origin is at (0,0,0)"}
+    
+    await Runner.run(section_leaderL1, json.dumps(prompt))
+    
+    unity.done_and_write()
+    
 
-test_dispatcher = {"test_leaves": test_leaves, "test_stem": test_stem, "test_skybox": test_skybox, "test_stem_and_sky": test_stem_and_sky, "test_L1": test_L1}
+test_dispatcher = {"test_leaves": test_leaves, "test_stem": test_stem, "test_skybox": test_skybox, "test_stem_and_sky": test_stem_and_sky, "test_L1": test_L1, "test_bridge_L1": test_bridge_L1, "test_lab": test_lab}
 
 import sys
 if __name__ == "__main__":
