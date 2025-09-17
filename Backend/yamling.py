@@ -77,7 +77,39 @@ class YAML:
         transform_body = self.get_element_by_id(transform_id)
         transform_body["Transform"]["m_GameObject"]["fileID"] = id_out
         return id_out      
-                
+    
+    def add_ground_prefab_instance(self, metaguid, transform):
+        yaml = ruamel_YAML(typ='rt')
+        default = list(yaml.compose_all(preprocess_text(prefab_init_text)))[0]
+        
+        wrapped = node_to_python(default)
+        
+        wrapped, id_out = set_ID(wrapped) # to random ID
+        
+            
+        modifications = wrapped["PrefabInstance"]["m_Modification"]["m_Modifications"]
+        for mod in modifications:
+            if "target" in mod and "guid" in mod["target"]:
+                mod["target"]["fileID"] = "-8679921383154817045"
+                mod["target"]["guid"] = metaguid
+                if mod.get("propertyPath") == "m_Name":
+                    mod["target"]["value"] = "Name of object here" # Anything?
+                else:
+                    if mod.get("propertyPath") == "m_LocalPosition.x":
+                        mod["value"] = transform["x"]
+                    if mod.get("propertyPath") == "m_LocalPosition.y":
+                        mod["value"] = transform["y"]
+                    if mod.get("propertyPath") == "m_LocalPosition.z":
+                        mod["value"] = transform["z"]
+        """
+        If you set the fileID to -8679921383154817045 you can change the transform.
+        """
+                    
+        wrapped["PrefabInstance"]["m_SourcePrefab"]["guid"] = metaguid
+        sceneroots = self.get_doc("SceneRoots")
+        sceneroots["m_Roots"].append({"fileID": id_out})
+        self.wrapped.append(wrapped)
+        print("Asset added to YAML.")            
     
     def add_prefab_instance(self, metaguid, prefab_path, transform, transform_id=0):
         yaml = ruamel_YAML(typ='rt')
@@ -280,8 +312,159 @@ def dict_to_yaml(d, indent=0):
             lines.append(" " * indent + f"{k}: {try_number(v)}")
     return lines
 
+def convert_numbers(obj):
+    if isinstance(obj, dict):
+        return {k: convert_numbers(v) for k, v in obj.items()}
+    elif isinstance(obj, list):
+        return [convert_numbers(v) for v in obj]
+    elif isinstance(obj, str):
+        try:
+            if '.' in obj:
+                return float(obj)
+            else:
+                return int(obj)
+        except ValueError:
+            return obj  # keep string if not a number
+    else:
+        return obj
 
-       
+def write_obj_meta(obj_path, guid):
+    yaml = ruamel_YAML(typ='rt')
+    default = list(yaml.compose_all(obj_meta_init_text))[0]
+
+    wrapped = node_to_python(default)
+    wrapped["guid"] = guid
+
+    
+
+    reformatted = convert_numbers(wrapped)
+    
+    yaml_str = pyyaml.dump(
+        reformatted, 
+        default_flow_style=False, 
+        sort_keys=False
+    )
+    
+    with open(obj_path + ".meta", "w") as f:
+        f.write(yaml_str)
+        
+    
+
+    print("Meta file with updated GUID written")
+
+obj_meta_init_text = """
+fileFormatVersion: 2
+guid: d52b4c2576141d6e284af00db4ba39ac
+ModelImporter:
+  serializedVersion: 24200
+  internalIDToNameTable: []
+  externalObjects: {}
+  materials:
+    materialImportMode: 2
+    materialName: 0
+    materialSearch: 1
+    materialLocation: 1
+  animations:
+    legacyGenerateAnimations: 4
+    bakeSimulation: 0
+    resampleCurves: 1
+    optimizeGameObjects: 0
+    removeConstantScaleCurves: 0
+    motionNodeName: 
+    animationImportErrors: 
+    animationImportWarnings: 
+    animationRetargetingWarnings: 
+    animationDoRetargetingWarnings: 0
+    importAnimatedCustomProperties: 0
+    importConstraints: 0
+    animationCompression: 1
+    animationRotationError: 0.5
+    animationPositionError: 0.5
+    animationScaleError: 0.5
+    animationWrapMode: 0
+    extraExposedTransformPaths: []
+    extraUserProperties: []
+    clipAnimations: []
+    isReadable: 0
+  meshes:
+    lODScreenPercentages: []
+    globalScale: 1
+    meshCompression: 0
+    addColliders: 0
+    useSRGBMaterialColor: 1
+    sortHierarchyByName: 1
+    importPhysicalCameras: 1
+    importVisibility: 1
+    importBlendShapes: 1
+    importCameras: 1
+    importLights: 1
+    nodeNameCollisionStrategy: 1
+    fileIdsGeneration: 2
+    swapUVChannels: 0
+    generateSecondaryUV: 0
+    useFileUnits: 1
+    keepQuads: 0
+    weldVertices: 1
+    bakeAxisConversion: 0
+    preserveHierarchy: 0
+    skinWeightsMode: 0
+    maxBonesPerVertex: 4
+    minBoneWeight: 0.001
+    optimizeBones: 1
+    generateMeshLods: 0
+    meshLodGenerationFlags: 0
+    maximumMeshLod: -1
+    meshOptimizationFlags: -1
+    indexFormat: 0
+    secondaryUVAngleDistortion: 8
+    secondaryUVAreaDistortion: 15.000001
+    secondaryUVHardAngle: 88
+    secondaryUVMarginMethod: 1
+    secondaryUVMinLightmapResolution: 40
+    secondaryUVMinObjectScale: 1
+    secondaryUVPackMargin: 4
+    useFileScale: 1
+    strictVertexDataChecks: 0
+  tangentSpace:
+    normalSmoothAngle: 60
+    normalImportMode: 0
+    tangentImportMode: 3
+    normalCalculationMode: 4
+    legacyComputeAllNormalsFromSmoothingGroupsWhenMeshHasBlendShapes: 0
+    blendShapeNormalImportMode: 1
+    normalSmoothingSource: 0
+  referencedClips: []
+  importAnimation: 1
+  humanDescription:
+    serializedVersion: 3
+    human: []
+    skeleton: []
+    armTwist: 0.5
+    foreArmTwist: 0.5
+    upperLegTwist: 0.5
+    legTwist: 0.5
+    armStretch: 0.05
+    legStretch: 0.05
+    feetSpacing: 0
+    globalScale: 1
+    rootMotionBoneName: 
+    hasTranslationDoF: 0
+    hasExtraRoot: 0
+    skeletonHasParents: 1
+  lastHumanDescriptionAvatarSource: {instanceID: 0}
+  autoGenerateAvatarMappingIfUnspecified: 1
+  animationType: 2
+  humanoidOversampling: 1
+  avatarSetup: 0
+  addHumanoidExtraRootOnlyWhenUsingAvatar: 1
+  importBlendShapeDeformPercent: 1
+  remapMaterialsIfMaterialImportModeIsNone: 0
+  additionalBone: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+"""
+ 
 scene_init_text = """
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:

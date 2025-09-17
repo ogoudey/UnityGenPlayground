@@ -4,7 +4,7 @@ import time # sub for actual prompting
 
 from flask import Flask, send_from_directory, jsonify, request
 from flask_cors import CORS
-
+import uuid
 
 from dataclasses import dataclass, asdict
 import json
@@ -18,6 +18,8 @@ from pydantic import BaseModel
 import asyncio
 
 from dataclasses import dataclass, asdict
+
+from obj_building import obj_from_grid
 
 import assets
 prefab_tree = assets.get_found(".prefab")
@@ -33,14 +35,24 @@ class UnityFile:
         self.yaml = yamling.YAML()
 
     def add_skybox(self, meta_file):
+        print("+ Skybox")
         guid = yamling.get_guid(meta_file)
         self.yaml.set_skybox(guid)
-    
+        print("---------------------------------")
+            
     def add_prefab(self, meta_file, transform):
+        print("+ Prefab")
         guid = yamling.get_guid(meta_file)
         prefab_path = meta_file.removesuffix(".meta")
         self.yaml.add_prefab_instance(guid, prefab_path, transform)
-        #print(self.yaml.wrapped)
+        print("---------------------------------")  
+              
+    def add_ground(self, obj_path, transform):
+        print("+ Ground")
+        guid = uuid.uuid4().hex
+        yamling.write_obj_meta(obj_path, guid)
+        self.yaml.add_ground_prefab_instance(guid, transform)
+        print("---------------------------------")
         
     def done_and_write(self, file_name=None):
         if not file_name:
@@ -52,7 +64,9 @@ global unity
 
 class Designation(BaseModel):
     asset_path: str
-    #next_agent: str
+
+class GroundData(BaseModel):
+    grid: str
 
 @function_tool
 async def objectConsult(object_description: str, location: str, important_info: str) -> str:
@@ -189,7 +203,51 @@ async def createSkyboxLeader(description: str="Plain blue sky"):
     result = await Runner.run(agent, json.dumps(prompt))
     
     return f"Successfully added skybox given description '{description}'"
-   
+
+@function_tool
+async def createGround(ground_description: str, location: str, scale:float):
+    """ 
+        Location is a str: \"\"\"{"x": float, "y": float, "z": float}", for example, "{"x": -1045.6066, "y": 2196.2122, "z": 3885.3037}\"\"\"
+    """
+    agent = Agent(
+        name="GroundCreator",
+        instructions="Give me a grid of floats, written out directly as rows of numbers, no code, that represents the heightmap of the ground described by the prompt.",
+        output_type=GroundData
+    )
+    prompt = {"Description of the ground": ground_description}
+    
+    result = await Runner.run(agent, json.dumps(prompt))
+    
+    try:
+        json_location = json.loads(location)
+    except Exception as e:
+        print(e)
+        print("Could not JSONify")
+        return f"Failed to add ground (described by '{ground_description}') to {location} in the scene. Make sure to pass a correct string that can be loaded with json.loads() into JSON."
+        
+    asset_path, grid_region = obj_from_grid(result.final_output.grid, json_location, scale) # writes obj
+    print("Asset written")
+    
+    global unity    
+    
+    
+    unity.add_ground(asset_path, json_location)
+    
+    return f"ground created of grid\n{result.final_output.grid}\nThis grid spans {grid_region}."
+
+@function_tool
+async def createGroundLeader(description: str="A mountain"):
+    
+    agent = Agent(
+        name="GroundLeader",
+        tools=[createGround],
+        instructions="You will be given a description of an intended Unity scene and you are to prompt an agent (through the groundConsult tool) to generate a heightmap. You're going to "
+    )
+    
+    prompt = {"Description of scene": description}
+    result = await Runner.run(agent, json.dumps(prompt))
+    
+    return f"Successfully added skybox given description '{description}'" 
    
 async def main(prompt):
     global unity
@@ -214,6 +272,36 @@ async def main(prompt):
 
 
 """ Tests """
+
+async def createGroundNotAsTool(ground_description: str, location: str):
+    """ 
+        Helper
+    """
+    agent = Agent(
+        name="GroundCreator",
+        instructions="Give me a grid of floats, written out directly as rows of numbers, no code, that represents the heightmap of the ground described by the prompt.",
+        output_type=GroundData
+    )
+    prompt = {"Description of the ground": ground_description}
+    
+    result = await Runner.run(agent, json.dumps(prompt))
+    
+    try:
+        json_location = json.loads(location)
+    except Exception as e:
+        print(e)
+        print("Could not JSONify")
+        return f"Failed to add ground (described by '{ground_description}') to {location} in the scene. Make sure to pass a correct string that can be loaded with json.loads() into JSON."
+        
+    asset_path, grid_region = obj_from_grid(result.final_output.grid, json_location, scale) # writes obj
+    print("Asset written")
+    
+    global unity    
+    
+    
+    unity.add_ground(asset_path, json_location)
+    
+    return f"ground created of grid\n{result.final_output.grid}\nThis grid spans {grid_region}."
 
 async def createObjectNotAsTool(description: str, location: str, other_important_info: str) -> str:
     """ 
@@ -246,7 +334,18 @@ async def test_skybox(prompt="A forest with the sun out"):
 
     global unity
     unity = UnityFile("test_skybox" + str(random.randint(100, 999)))
+    
     await createSkyboxLeader(prompt) # success/fail
+    
+    unity.done_and_write()
+    
+async def test_ground(prompt="A mountain"):
+    
+
+    global unity
+    unity = UnityFile("test_ground" + str(random.randint(100, 999)))
+    
+    #await createGroundLeader(prompt) # commented because it needs a NotAsTool implementation
     
     unity.done_and_write()
 
@@ -284,7 +383,19 @@ async def test_stem(prompt="Two trees"):
     await Runner.run(section_leader0, json.dumps(prompt))
     
     unity.done_and_write()
+
+async def test_create_ground(prompt={
+  "ground_description": "A heightmap designed for a river with two opposing banks. The landscape features a central river valley with a smooth water channel, flanked by elevated, gently sloping banks.",
+  "location": "{\"x\":0, \"y\":0, \"z\":0}"
+}):
+    global unity
+    unity = UnityFile("test_create_ground" + str(random.randint(100, 999)))
     
+    await createGroundNotAsTool(prompt["ground_description"], prompt["location"])
+    
+    unity.done_and_write()
+    
+  
 async def test_stem_and_sky(prompt="A forest"):
     
 
@@ -326,24 +437,6 @@ async def test_L1(prompt="A forest"):
     
     unity.done_and_write()
     
-async def test_bridge_L1(prompt="A bridge in a forest"):
-    global unity
-    unity = UnityFile("test_bridge_L1" + str(random.randint(100, 999)))
-    await createSkyboxLeader(prompt) # success/fail
-    
-    section_leaderL1 = Agent(
-        name="SectionLeaderL1",
-        tools=[createSectionL0, createObject],
-        instructions="""You are an architect of a scene, you design a (section of a) scene by either creating objects, or by (recursively) assigning a 'section leader' (like yourself) to a sub-section of the scene which is restricted to a region. If you do use createObject, reference only one object per call, since some downstream agent needs to take your description and find the right asset.""" + RESTRICTIONS,
-        model=MODEL
-    )
-    
-    prompt = {"Description of your section": prompt, "Region to work in": "completely open - scene origin is at (0,0,0)"}
-    
-    await Runner.run(section_leaderL1, json.dumps(prompt))
-    
-    unity.done_and_write()
-    
 async def test_lab(prompt="A laboratory"):
     global unity
     unity = UnityFile("test_laboratory" + str(random.randint(100, 999)))
@@ -361,9 +454,42 @@ async def test_lab(prompt="A laboratory"):
     await Runner.run(section_leaderL1, json.dumps(prompt))
     
     unity.done_and_write()
-    
+ 
+async def test_river(prompt="A river with two opposing banks"):
+    global unity
+    unity = UnityFile("test_river" + str(random.randint(100, 999)))
+    await createSkyboxLeader(prompt) # success/fail
 
-test_dispatcher = {"test_leaves": test_leaves, "test_stem": test_stem, "test_skybox": test_skybox, "test_stem_and_sky": test_stem_and_sky, "test_L1": test_L1, "test_bridge_L1": test_bridge_L1, "test_lab": test_lab}
+    
+    section_leader0_w_groundleader = Agent(
+        name="SectionLeaderL0wGroundLeader",
+        tools=[createObject, createGround],
+        instructions="""You are an architect of a scene. According to the prompt, you design a (section of a) scene by creating objects. Reference one object per call to createObject, since some downstream agent needs to take your description and find the right asset. You should create the ground before any objects are created, so that you can properly arrange objects in the scene. To create the ground, you prompt an agent to generate a heightmap that fits the scene.""" + RESTRICTIONS,
+        model=MODEL
+    )
+    
+    prompt = {"Description of the scene": prompt}
+    
+    await Runner.run(section_leader0_w_groundleader, json.dumps(prompt))
+    
+    
+    
+    unity.done_and_write()
+   
+
+test_dispatcher = {
+    # = deprecated test
+    "test_leaves": test_leaves,
+    "test_stem": test_stem,
+    "test_skybox": test_skybox,
+    "test_stem_and_sky": test_stem_and_sky,
+    "test_L1": test_L1,
+    #"test_bridge_L1": test_bridge_L1,
+    "test_lab": test_lab,
+    "test_ground": test_ground,
+    "test_river": test_river,
+    "test_create_ground": test_create_ground,
+}
 
 import sys
 if __name__ == "__main__":
