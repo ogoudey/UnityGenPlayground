@@ -111,7 +111,7 @@ class YAML:
         self.wrapped.append(wrapped)
         print("Asset added to YAML.")            
     
-    def add_prefab_instance(self, metaguid, prefab_path, transform, transform_id=0):
+    def add_prefab_instance(self, metaguid, prefab_path, transform, scale, transform_id=0):
         yaml = ruamel_YAML(typ='rt')
         default = list(yaml.compose_all(preprocess_text(prefab_init_text)))[0]
 
@@ -138,6 +138,15 @@ class YAML:
                 else:
                     if mod.get("propertyPath") == "m_LocalPosition.x":
                         mod["value"] = transform["x"]
+                    if mod.get("propertyPath") == "m_LocalPosition.y":
+                        mod["value"] = transform["y"]
+                    if mod.get("propertyPath") == "m_LocalPosition.z":
+                        mod["value"] = transform["z"]
+                    if not scale == 1.0:
+                        if mod.get("propertyPath") == "m_LocalScale.x":
+                            mod["value"] = scale
+                        if mod.get("propertyPath") == "m_LocalScale.z":
+                            mod["value"] = scale
                     if mod.get("propertyPath") == "m_LocalPosition.y":
                         mod["value"] = transform["y"]
                     if mod.get("propertyPath") == "m_LocalPosition.z":
@@ -602,6 +611,14 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 4454668921102459321, guid: cdafd6d66f108e740a95731699638c87, type: 3}
+      propertyPath: m_LocalScale.x
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 4454668921102459321, guid: cdafd6d66f108e740a95731699638c87, type: 3}
+      propertyPath: m_LocalScale.z
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 0, guid: 1f9036ec905b920479091aca9ba81305, type: 3}
       propertyPath: m_Name
       value: Spruce 1

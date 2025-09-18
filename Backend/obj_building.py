@@ -37,8 +37,8 @@ def facify(matrix):
     lines = ""
     visited = []
     x_per_row = len(matrix)
-    for x in range(0, len(matrix) - 1):
-        for y in range(0, len(matrix[x]) - 1):    
+    for x in range(0, len(matrix)):
+        for y in range(0, len(matrix[x])):    
                 if not (x, y) in visited:
                     visited.append((x, y))
                     lines += f"f {y*x_per_row + x + 1} {(y+1)*x_per_row + x + 1} {(y+1)*x_per_row + x + 2} {y*x_per_row + x + 2}\n"
@@ -55,8 +55,10 @@ def obj_from_grid(grid: str = default_grid, location = {"x": 0.0, "y": 0.0, "z":
         for x in range(0, len(line)):
 
             matrix[y].append(float(line[x]))
-
-            obj_str += f"v {float(x)*scale} {float(line[x])*scale} {float(y)*scale}\n"
+            try:
+                obj_str += f"v {float(x)*scale} {float(line[x])} {float(y)*scale}\n"
+            except Exception:
+                print(line[x], "is an arifact of the grid. Ignoring...")
     
     
     
@@ -89,10 +91,10 @@ def obj_from_grid(grid: str = default_grid, location = {"x": 0.0, "y": 0.0, "z":
     print("Ground obj written to", out_path)
     
     """
-    grid_region = [location["x"] + len(lines), location["z"] + len(line)]
+    grid_region = [location["x"], location["y"], location["x"] + len(lines)*scale, location["z"] + len(line)*scale]
     
     
-    return out_path, grid_region
+    return out_path, grid_region, matrix
     # Generate faces
             
     

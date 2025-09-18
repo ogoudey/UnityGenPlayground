@@ -38,21 +38,21 @@ class UnityFile:
         print("+ Skybox")
         guid = yamling.get_guid(meta_file)
         self.yaml.set_skybox(guid)
-        print("---------------------------------")
+        
             
-    def add_prefab(self, meta_file, transform):
+    def add_prefab(self, meta_file, transform, scale):
         print("+ Prefab")
         guid = yamling.get_guid(meta_file)
         prefab_path = meta_file.removesuffix(".meta")
-        self.yaml.add_prefab_instance(guid, prefab_path, transform)
-        print("---------------------------------")  
+        self.yaml.add_prefab_instance(guid, prefab_path, transform, scale)
+         
               
     def add_ground(self, obj_path, transform):
         print("+ Ground")
         guid = uuid.uuid4().hex
         yamling.write_obj_meta(obj_path, guid)
         self.yaml.add_ground_prefab_instance(guid, transform)
-        print("---------------------------------")
+        
         
     def done_and_write(self, file_name=None):
         if not file_name:
@@ -64,28 +64,37 @@ global unity
 
 class Designation(BaseModel):
     asset_path: str
+    scale: float
+    explanation: str
+    
 
 class GroundData(BaseModel):
     grid: str
 
 @function_tool
-async def objectConsult(object_description: str, location: str, important_info: str) -> str:
-    """ I get the object, I find the asset """
+async def objectConsult(object_description: str, location: str, intended_size: str="") -> str:
+    """ 
+        Args:
+            object_description: Some text that the describes the object and provides enough information to specifically retrieve the asset from a library/folder of assets.
+            location: \"\"\"{"x": float, "y": float, "z": float}" - e.g. "{"x": 75, "y": 10, "z": 70}\"\"\". Remember - Y is up and these units are in base units - meters.
+            intended_size: A desired dimension for the object. MUST BE SQUARE. This dimension will help downstream agents scale generic assets like water (in which case make sure to include an intended size. The default takes size as is (pass "default").
+    """
     agent = Agent(
         name="ObjectConsultant" + str(random.randint(100, 999)),
         output_type = Designation,
-        instructions="Given the directory structure (asset tree), return the path to the file of the desired asset. If, for some reason, you cannot retrieve the asset, return some reason (e.g. this library seems to cover X instead).",
+        instructions="Retrieve the asset from the list of available assets that best matches the intended description. Then, decide whether to scale it to match the intended size for the object. In many cases, the intended size can be ignored. But the intended size is useful, say, when you need to know how much to scale up a water asset. Leave the scale at 1 for most objecst.",
         model=MODEL  
     )
     
     prompt = {"Object description": object_description,
-                "Relevant information": important_info,
-                "Asset tree": prefab_tree}
-    
+                "Intended size": intended_size,
+                "Available assets": prefab_tree}
+    t = time.time()
     result = await Runner.run(agent, json.dumps(prompt))
-    
+    print(agent.name + ":", time.time() - t, "seconds.")
     asset_path = result.final_output.asset_path + ".meta"
-    
+    scale = result.final_output.scale
+    print("Explanation for", str(scale) + ":", result.final_output.explanation)
     
     try:
         json_location = json.loads(location)
@@ -96,16 +105,22 @@ async def objectConsult(object_description: str, location: str, important_info: 
     try:
         global unity
         print(f"An object with description '{object_description}' is going to be added to: {location}")
-        unity.add_prefab(asset_path, json_location)
-        return f"Successfully added object with description '{object_description}' to {location} in the scene."
+        unity.add_prefab(asset_path, json_location, scale)
+        return f"Successfully added object with description '{object_description}' to {location} in the scene, using the asset {result.final_output.asset_path}."
     except Exception as e:
         return f"Could not add asset, likely because nothing an object with a description '{object_description}' is available in the library of assets. {asset_path}"
 
 @function_tool
-async def createObject(description: str, location: str, other_important_info: str) -> str:
+async def createObject(description: str, location: str, intended_size: str="default", explanation: str="") -> str:
     """ 
-        Location is a str: \"\"\"{"x": float, "y": float, "z": float}", for example, "{"x": -1045.6066, "y": 2196.2122, "z": 3885.3037}\"\"\"
+        Args:
+            description: Some text describing that the object should be like, refering to a singular object that's likely to be selected from a common asset library.
+            location: \"\"\"{"x": float, "y": float, "z": float}" - e.g. "{"x": 75, "y": 10, "z": 70}\"\"\". Remember - Y is up and these units are in base units - meters.
+            intended_size: A desired dimension for the object. MUST BE SQUARE. This dimension will help downstream agents scale generic assets like water.
+            explanation: Your reasoning for the above args you've settled on, with particular emphasis on correct positioning of the object.
     """
+    print("Explanation:", explanation)
+    
     agent = Agent(
         name="ObjectCreator" + str(random.randint(100, 999)),
         tools=[objectConsult],
@@ -114,12 +129,15 @@ async def createObject(description: str, location: str, other_important_info: st
         model=MODEL
     )
     
+    
+    
     prompt = {"Description of object": description,
                 "Intended location of object": location,
-                "Other important info": other_important_info}
-    
+                "Intended size": intended_size}
+    t = time.time()
     await Runner.run(agent, json.dumps(prompt))
-    
+    print(agent.name + ":", time.time() - t, "seconds.")
+    print("--------------object creation done-------------------")
     return f"Successfully called objectConsult."
 
 @function_tool
@@ -128,8 +146,6 @@ async def createSectionL0(description: str, region: str):
 
     """ This function is currently equipped with RESTRICTIONS """
     
-
-
     agent = Agent(
         name="SectionLeader" + str(random.randint(100, 999)),
         tools=[createObject],
@@ -188,7 +204,7 @@ async def skyboxConsult(skybox_description: str, important_info: str="skybox1 ha
     
     global unity
     unity.add_skybox(asset_path + ".meta")
-    
+    print("--------------skybox creation done-------------------") 
     return f"Successfully added skybox with description '{skybox_description}' to the scene."
 
 async def createSkyboxLeader(description: str="Plain blue sky"):
@@ -196,44 +212,54 @@ async def createSkyboxLeader(description: str="Plain blue sky"):
     agent = Agent(
         name="SkyboxLeader",
         tools=[skyboxConsult],
-        instructions="You will be given a description of an intended Unity scene and you are to prompt an agent (through the skyboxConsult tool) to select the right asset. Name the object and use the objectConsult tool to retrieve the asset path. The agent you prompt will be looking for a skybox that corresponds to your prompt."
+        instructions="You will be given a description of an intended Unity scene and you are to prompt an agent (through the skyboxConsult tool) to select the right asset. Name the object and use the skyboxConsult tool to retrieve the asset path. The agent you prompt will be looking for a skybox that corresponds to your prompt."
     )
     
     prompt = {"Description of scene": description}
+    
     result = await Runner.run(agent, json.dumps(prompt))
     
     return f"Successfully added skybox given description '{description}'"
 
 @function_tool
-async def createGround(ground_description: str, location: str, scale:float):
+async def createGround(ground_description: str, location: str, grid_dimensions: str, unit_size: float):
     """ 
-        Location is a str: \"\"\"{"x": float, "y": float, "z": float}", for example, "{"x": -1045.6066, "y": 2196.2122, "z": 3885.3037}\"\"\"
+        ground_description: a description of what the ground should look like.
+        location: A string of proper loadable json: \"\"\"{"x": float, "y": float, "z": float}", for example, '{"x": 0.0, "y": 0.0, "z": 0.0}'\"\"\"
+        grid_dimensions: the dimenstions of the grid, roughly. For example, "10 by 10" or "20x20". Have the grid be small - no bigger than 20x20, since the grid has to be generated by an agent.
+        unit_size: the size (float) of each cell in the grid, such as 50.0. This size matches the base units of meters. unit_size = u means each grid cell is u^2 meters
+    
     """
+    assert type(unit_size) == float
+    print(location)
     agent = Agent(
         name="GroundCreator",
-        instructions="Give me a grid of floats, written out directly as rows of numbers, no code, that represents the heightmap of the ground described by the prompt.",
+        instructions="Give me a grid of floats, written out directly as rows of numbers, no code, that represents the heightmap of the ground described by the prompt. Have the grid be "+grid_dimensions+".",
         output_type=GroundData
     )
     prompt = {"Description of the ground": ground_description}
     
+    t = time.time()
     result = await Runner.run(agent, json.dumps(prompt))
-    
+    print(agent.name + ":", time.time() - t, "seconds.")
     try:
         json_location = json.loads(location)
     except Exception as e:
         print(e)
-        print("Could not JSONify")
+        print("Could not JSONify", location)
         return f"Failed to add ground (described by '{ground_description}') to {location} in the scene. Make sure to pass a correct string that can be loaded with json.loads() into JSON."
         
-    asset_path, grid_region = obj_from_grid(result.final_output.grid, json_location, scale) # writes obj
-    print("Asset written")
+    asset_path, grid_region, matrix = obj_from_grid(result.final_output.grid, json_location, unit_size) # writes obj
+    print("Ground obj written.")
     
     global unity    
     
     
     unity.add_ground(asset_path, json_location)
     
-    return f"ground created of grid\n{result.final_output.grid}\nThis grid spans {grid_region}."
+    print(matrix)
+    print("--------------ground creation done-------------------") 
+    return f"ground created with heightmap:\n{result.final_output.grid}\nEach cell is {unit_size}, and this grid goes in the -X and +Z directions. The value in each cell represents the height or Y dimension of the ground in base units. Anything below that amount will be below the ground and invisible. Keep these facts in mind for further object placement."
 
 @function_tool
 async def createGroundLeader(description: str="A mountain"):
@@ -245,6 +271,7 @@ async def createGroundLeader(description: str="A mountain"):
     )
     
     prompt = {"Description of scene": description}
+    
     result = await Runner.run(agent, json.dumps(prompt))
     
     return f"Successfully added skybox given description '{description}'" 
@@ -273,19 +300,24 @@ async def main(prompt):
 
 """ Tests """
 
-async def createGroundNotAsTool(ground_description: str, location: str):
+async def createGroundNotAsTool(ground_description: str, location: str, grid_dimensions: str, unit_size: float):
     """ 
-        Helper
+        ground_description: a description of what the ground should look like.
+        location: \"\"\"{"x": float, "y": float, "z": float}", for example, "{"x": 0, "y": 0, "z": 0}\"\"\"
+        grid_dimensions: the dimenstions of the grid, roughly. For example, "10 by 10" or "20x20
+        unit_size: the size of each cell in the grid, such as 50. This size matches the base units of meters. unit_size = u means each grid cell is u^2 meters
+    
     """
     agent = Agent(
         name="GroundCreator",
-        instructions="Give me a grid of floats, written out directly as rows of numbers, no code, that represents the heightmap of the ground described by the prompt.",
+        instructions="Give me a grid of floats, written out directly as rows of numbers, no code, that represents the heightmap of the ground described by the prompt. Have the grid be "+grid_dimensions+".",
         output_type=GroundData
     )
     prompt = {"Description of the ground": ground_description}
     
+    t = time.time()
     result = await Runner.run(agent, json.dumps(prompt))
-    
+    print(agent.name + ":", time.time() - t, "seconds.")
     try:
         json_location = json.loads(location)
     except Exception as e:
@@ -293,7 +325,7 @@ async def createGroundNotAsTool(ground_description: str, location: str):
         print("Could not JSONify")
         return f"Failed to add ground (described by '{ground_description}') to {location} in the scene. Make sure to pass a correct string that can be loaded with json.loads() into JSON."
         
-    asset_path, grid_region = obj_from_grid(result.final_output.grid, json_location, scale) # writes obj
+    asset_path, grid_region, matrix = obj_from_grid(result.final_output.grid, json_location, unit_size) # writes obj
     print("Asset written")
     
     global unity    
@@ -301,7 +333,10 @@ async def createGroundNotAsTool(ground_description: str, location: str):
     
     unity.add_ground(asset_path, json_location)
     
-    return f"ground created of grid\n{result.final_output.grid}\nThis grid spans {grid_region}."
+    print(matrix)
+    
+    return f"ground created with heightmap:\n{result.final_output.grid}\nEach cell is {unit_size}, and this grid goes in the -X and +Z directions. The value in each cell represents the height or Y dimension of the ground in base units. Anything below that amount will be below the ground and invisible. Keep these facts in mind for further object placement)."
+
 
 async def createObjectNotAsTool(description: str, location: str, other_important_info: str) -> str:
     """ 
@@ -384,14 +419,11 @@ async def test_stem(prompt="Two trees"):
     
     unity.done_and_write()
 
-async def test_create_ground(prompt={
-  "ground_description": "A heightmap designed for a river with two opposing banks. The landscape features a central river valley with a smooth water channel, flanked by elevated, gently sloping banks.",
-  "location": "{\"x\":0, \"y\":0, \"z\":0}"
-}):
+async def test_create_ground(prompt={"ground_description": "a mountain", "location": '{"x":0.0, "y":0.0, "z":0.0}', "grid_dimensions": "20 by 20", "unit_size": 10.0}):
     global unity
     unity = UnityFile("test_create_ground" + str(random.randint(100, 999)))
     
-    await createGroundNotAsTool(prompt["ground_description"], prompt["location"])
+    await createGroundNotAsTool(prompt["ground_description"], prompt["location"], prompt["grid_dimensions"], prompt["unit_size"])
     
     unity.done_and_write()
     
@@ -458,13 +490,13 @@ async def test_lab(prompt="A laboratory"):
 async def test_river(prompt="A river with two opposing banks"):
     global unity
     unity = UnityFile("test_river" + str(random.randint(100, 999)))
-    await createSkyboxLeader(prompt) # success/fail
+    
 
     
     section_leader0_w_groundleader = Agent(
         name="SectionLeaderL0wGroundLeader",
         tools=[createObject, createGround],
-        instructions="""You are an architect of a scene. According to the prompt, you design a (section of a) scene by creating objects. Reference one object per call to createObject, since some downstream agent needs to take your description and find the right asset. You should create the ground before any objects are created, so that you can properly arrange objects in the scene. To create the ground, you prompt an agent to generate a heightmap that fits the scene.""" + RESTRICTIONS,
+        instructions="""You are an architect of a scene. According to the prompt, you design a (section of a) scene by creating objects. Reference one object per call to createObject, since some downstream agent needs to take your description and find the right asset. You should create the ground before any objects are created, so that you can properly arrange objects in the scene. To create the ground, you prompt an agent to generate a heightmap that fits the scene. Make sure to place objects ATOP the ground.""",
         model=MODEL
     )
     
