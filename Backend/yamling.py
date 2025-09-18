@@ -1,5 +1,5 @@
 import yaml as pyyaml
-
+import math
 import random
 
 import re
@@ -111,7 +111,7 @@ class YAML:
         self.wrapped.append(wrapped)
         print("Asset added to YAML.")            
     
-    def add_prefab_instance(self, metaguid, prefab_path, transform, scale, transform_id=0):
+    def add_prefab_instance(self, metaguid, prefab_path, transform, rotation, transform_id=0):
         yaml = ruamel_YAML(typ='rt')
         default = list(yaml.compose_all(preprocess_text(prefab_init_text)))[0]
 
@@ -121,13 +121,10 @@ class YAML:
         
         father_ID = self.get_father_id_of_root_transform_of_prefab(prefab_path)
         # find prefabs local filenames
-        
-        try:
-            print(f"Placing object at {transform}") # MAkes sure dict is well-formed
-        except:
-            print("Failed on:", transform)
-            raise KeyError("Trying to add get x value of location dict. Failed!")
-            
+        print("Parsing init YAML...")
+        scale = 1.0
+        quaternion = euler_to_xyzw_quaternion(rotation)
+        print("Got quaternion", quaternion)
         modifications = wrapped["PrefabInstance"]["m_Modification"]["m_Modifications"]
         for mod in modifications:
             if "target" in mod and "guid" in mod["target"]:
@@ -147,14 +144,20 @@ class YAML:
                             mod["value"] = scale
                         if mod.get("propertyPath") == "m_LocalScale.z":
                             mod["value"] = scale
-                    if mod.get("propertyPath") == "m_LocalPosition.y":
-                        mod["value"] = transform["y"]
-                    if mod.get("propertyPath") == "m_LocalPosition.z":
-                        mod["value"] = transform["z"]
+                    if mod.get("propertyPath") == "m_LocalRotation.x":
+                        mod["value"] = quaternion[0]
+                    if mod.get("propertyPath") == "m_LocalRotation.y":
+                        mod["value"] = quaternion[1]
+                    if mod.get("propertyPath") == "m_LocalRotation.z":
+                        mod["value"] = quaternion[2]
+                    if mod.get("propertyPath") == "m_LocalRotation.w":
+                        mod["value"] = quaternion[3]
+                        
                     
         wrapped["PrefabInstance"]["m_SourcePrefab"]["guid"] = metaguid
         sceneroots = self.get_doc("SceneRoots")
         sceneroots["m_Roots"].append({"fileID": id_out})
+        print("Init YAML succcessfully updated.")
         self.wrapped.append(wrapped)
         print("Asset added to YAML.")
         
@@ -219,7 +222,31 @@ class YAML:
             if "&" in self.level0[doc_i]:
                 if self.level0[doc_i].split("&")[1] == id_:
                     return self.level0[doc_i + 1]
-            
+
+def euler_to_xyzw_quaternion(rotation):
+    print(rotation)
+    x_deg, y_deg, z_deg = rotation["x"], rotation["y"], rotation["z"]
+    print("degrees extracted")
+    # Convert degrees to radians
+    x = math.radians(x_deg)
+    y = math.radians(y_deg)
+    z = math.radians(z_deg)
+
+    cx = math.cos(x/2)
+    sx = math.sin(x/2)
+    cy = math.cos(y/2)
+    sy = math.sin(y/2)
+    cz = math.cos(z/2)
+    sz = math.sin(z/2)
+
+    # Unity's convention: Quaternion = (x, y, z, w)
+    # Order of rotations: Z, X, Y (same as Unity's inspector)
+    qw = cz*cx*cy + sz*sx*sy
+    qx = cz*sx*cy - sz*cx*sy
+    qy = cz*cx*sy + sz*sx*cy
+    qz = sz*cx*cy - cz*sx*sy
+    print("calculation of quaternion done")
+    return (qx, qy, qz, qw)            
 
 def set_ID(text: str, new_id: str=None) -> str:
     """ Changes the ID in the anchor line """
@@ -611,14 +638,6 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
-    - target: {fileID: 4454668921102459321, guid: cdafd6d66f108e740a95731699638c87, type: 3}
-      propertyPath: m_LocalScale.x
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 4454668921102459321, guid: cdafd6d66f108e740a95731699638c87, type: 3}
-      propertyPath: m_LocalScale.z
-      value: 1
-      objectReference: {fileID: 0}
     - target: {fileID: 0, guid: 1f9036ec905b920479091aca9ba81305, type: 3}
       propertyPath: m_Name
       value: Spruce 1

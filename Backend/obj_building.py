@@ -44,8 +44,9 @@ def facify(matrix):
                     lines += f"f {y*x_per_row + x + 1} {(y+1)*x_per_row + x + 1} {(y+1)*x_per_row + x + 2} {y*x_per_row + x + 2}\n"
     return lines, visited
 
-def obj_from_grid(grid: str = default_grid, location = {"x": 0.0, "y": 0.0, "z": 0.0}, scale=1.0):
-    
+def obj_from_grid(grid: str = default_grid):
+    location = {"x": 0.0, "y": 0.0, "z": 0.0}
+    scale = 5
     matrix = []
     obj_str = ""
     lines = grid.split("\n")
@@ -91,10 +92,9 @@ def obj_from_grid(grid: str = default_grid, location = {"x": 0.0, "y": 0.0, "z":
     print("Ground obj written to", out_path)
     
     """
-    grid_region = [location["x"], location["y"], location["x"] + len(lines)*scale, location["z"] + len(line)*scale]
     
     
-    return out_path, grid_region, matrix
+    return out_path, matrix
     # Generate faces
             
     
