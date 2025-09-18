@@ -56,7 +56,7 @@ def obj_from_grid(grid: str = default_grid, location = {"x": 0.0, "y": 0.0, "z":
 
             matrix[y].append(float(line[x]))
 
-            obj_str += f"v {float(x)*scale} {line[x]*scale} {float(y)*scale}\n"
+            obj_str += f"v {float(x)*scale} {float(line[x])*scale} {float(y)*scale}\n"
     
     
     
