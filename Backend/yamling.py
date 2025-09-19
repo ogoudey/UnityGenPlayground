@@ -36,8 +36,13 @@ class YAML:
         # self.level0 is a list of MappingNodes
         self.wrapped = [node_to_python(n) for n in self.level0]
         
-    def set_skybox(self, guid):
+        self.used_assets = dict()
+        
+    def set_skybox(self, name):
         print("Setting skybox...")
+        
+        mat_path = self.used_assets[name]
+        guid = get_guid(mat_path + ".meta")
         try:
             render_settings = self.get_doc("RenderSettings")
             render_settings["m_SkyboxMaterial"] = {"fileID": "2100000", "guid": guid, "type": 2}
@@ -111,25 +116,37 @@ class YAML:
         self.wrapped.append(wrapped)
         print("Asset added to YAML.")            
     
-    def add_prefab_instance(self, metaguid, prefab_path, transform, rotation, transform_id=0):
+    def add_prefab_instance(self, name, transform, rotation):
         yaml = ruamel_YAML(typ='rt')
         default = list(yaml.compose_all(preprocess_text(prefab_init_text)))[0]
-
         wrapped = node_to_python(default)
-
         wrapped, id_out = set_ID(wrapped) # to random ID
         
-        father_ID = self.get_father_id_of_root_transform_of_prefab(prefab_path)
+        try:
+            prefab_path = self.used_assets[name]
+            print("Found", name, "in used_assets w path", prefab_path)
+        except KeyError(name + " not in used_assets"):
+            print("Lookup in used_assets has failed.")
+        try:
+            father_ID = self.get_father_id_of_root_transform_of_prefab(prefab_path)
+        except Exception:
+            print("Could not find fatherID of root transform")
+        try:    
+            guid = get_guid(prefab_path + ".meta")
+        except Exception:
+            print("Could not get guid from .meta file:", prefab_path + ".meta")
+        
         # find prefabs local filenames
         print("Parsing init YAML...")
         scale = 1.0
+        
         quaternion = euler_to_xyzw_quaternion(rotation)
         print("Got quaternion", quaternion)
         modifications = wrapped["PrefabInstance"]["m_Modification"]["m_Modifications"]
         for mod in modifications:
             if "target" in mod and "guid" in mod["target"]:
                 mod["target"]["fileID"] = father_ID
-                mod["target"]["guid"] = metaguid
+                mod["target"]["guid"] = guid
                 if mod.get("propertyPath") == "m_Name":
                     mod["target"]["value"] = "Name of object here" # Anything?
                 else:
@@ -154,7 +171,7 @@ class YAML:
                         mod["value"] = quaternion[3]
                         
                     
-        wrapped["PrefabInstance"]["m_SourcePrefab"]["guid"] = metaguid
+        wrapped["PrefabInstance"]["m_SourcePrefab"]["guid"] = guid
         sceneroots = self.get_doc("SceneRoots")
         sceneroots["m_Roots"].append({"fileID": id_out})
         print("Init YAML succcessfully updated.")

@@ -37,8 +37,8 @@ def facify(matrix):
     lines = ""
     visited = []
     x_per_row = len(matrix)
-    for x in range(0, len(matrix)):
-        for y in range(0, len(matrix[x])):    
+    for x in range(0, len(matrix) -1):
+        for y in range(0, len(matrix[x]) -1):    
                 if not (x, y) in visited:
                     visited.append((x, y))
                     lines += f"f {y*x_per_row + x + 1} {(y+1)*x_per_row + x + 1} {(y+1)*x_per_row + x + 2} {y*x_per_row + x + 2}\n"

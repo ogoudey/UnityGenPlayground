@@ -34,10 +34,9 @@ class UnityFile:
         self.name = name
         self.yaml = yamling.YAML()
 
-    def add_skybox(self, meta_file):
+    def add_skybox(self, skybox_name):
         print("+ Skybox")
-        guid = yamling.get_guid(meta_file)
-        self.yaml.set_skybox(guid)
+        self.yaml.set_skybox(skybox_name)
         
             
     def add_prefab(self, meta_file, transform, rotation):
