@@ -98,7 +98,7 @@ async def objectConsult(object_description: str, location: str, rotation: str='{
         print(e)
         print("Could not JSONify:", e)
         return f"Failed to add object with description '{object_description}' to {location} in the scene. Make sure to pass a correct something that can be loaded with json.loads() into JSON."
-    print("JSON extracted for object with description '{object_description}'.")
+    print(f"JSON extracted for object with description '{object_description}'.")
     try:
         global unity
         print(f"An object with description '{object_description}' is going to be added to: {location}")
@@ -108,7 +108,7 @@ async def objectConsult(object_description: str, location: str, rotation: str='{
         return f"Could not add asset, likely because nothing an object with a description '{object_description}' is available in the library of assets. {asset_path}"
 
 
-CHEATS = """ IN FACT, just to make things absolutely sure, put the water at z=50. All other objects just go in the -X +Z quadrant."""
+CHEATS = """ IN FACT, just to make things absolutely sure, put the water at x=0, z=50. All other objects just go in the -X +Z quadrant OVER the ground, that is, in (x,z)=(0 -> -50, 0 -> 50), ."""
 
 @function_tool
 async def createObject(description: str, location: str, rotation: str, explanation: str="") -> str:
