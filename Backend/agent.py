@@ -67,6 +67,7 @@ class Designation(BaseModel):
 
 class GroundData(BaseModel):
     grid: str
+    explanation_of_heights: str
 
 class AssetPath(BaseModel):
     asset_path: str
@@ -119,25 +120,30 @@ async def createObject(description: str) -> PlaceableObject:
     if object_info == None:
         print(f"Cannot find {object_asset_path} in assets_info. Returning None and using random data.")
         object_name = "UnknownObject" + str(random.randint(100,999))
-    
+    else:
+        object_name = object_info["Name"]
     unity.yaml.used_assets[object_name] = object_asset_path
     print(object_name, "added to used_assets w path", object_asset_path)
     return PlaceableObject(object_name, json.dumps(object_info["Importances"]))
 
 @function_tool
-async def placeObject(object_name: str, location: str, rotation: str, explanation: str) -> str:
+async def placeObject(object_name: str, placement_of_object_origin: str, rotation: str, explanation: str) -> str:
     """
         Args:
             object_name: The name of the object you just created
-            location: \"\"\"{"x": float, "y": float, "z": float}\"\"\" - e.g. \"\"\"{"x": 75, "y": 10, "z": 70}\"\"\" (use surrounding triple-double-quotes and double-quotes on keys). Remember - Y is up and these units are in base units - meters.
-            rotation: \"\"\"{"x": float, "y": float, "z": float}\"\"\" - e.g. \"\"\"{"x": 90, "y": 0, "z": 45}\"\"\". These are the angles to rotate around the axis.
+            placement_of_object_origin: Must be a JSON-encoded string. Example:
+                "{\"x\": 75, \"y\": 10, \"z\": 70}"
+            rotation: Must be a JSON-encoded string. Example:
+                "{\"x\": 90, \"y\": 0, \"z\": 45}"
+            explanation: A human-readable explanation of why this placement was chosen. Example: "I put the water here to be above the height y=0.5 along the riverbed."
     """
-    print(f"Loading location {location} rotation {rotation}") 
+    print(f"Loading location {placement_of_object_origin} rotation {rotation}")
+    print(f"Why this placement? {explanation}")
     try:
-        json_location = json.loads(location)
+        json_location = json.loads(placement_of_object_origin)
     except ValueError:
-        print("Error loading given location into JSON")
-        return f"Failed to add object '{object_name}' to location {location} in the scene (json.loads() error). Make sure to pass a correct something that can be loaded with json.loads() into JSON."
+        print("Error loading given placement_of_centerpoint into JSON")
+        return f"Failed to add object '{object_name}' to location {placement_of_object_origin} in the scene (json.loads() error). Make sure to pass a correct something that can be loaded with json.loads() into JSON."
     try:
         json_rotation = json.loads(rotation)
     except ValueError:
@@ -150,7 +156,7 @@ async def placeObject(object_name: str, location: str, rotation: str, explanatio
         return f"Successfully added object to the scene. Recall the information of {object_name}."
     except Exception:
         print("Error adding prefab...")
-        return f"Failed to add object '{object_name}' to the scene. The name is arguments are right."
+        return f"Failed to add object '{object_name}' to the scene. The name is arguments are right. Exception:\n" + str(e) 
     
 @function_tool
 async def createSectionL0(prompt: str, region: str):
@@ -229,17 +235,19 @@ async def placeSkybox(skybox_name: str) -> str:
         return f"Failed to add '{skybox_name}' to the scene. The name argument must be right."
 
 @function_tool
-async def placeGround(ground_name: str, location: str) -> str:
+async def placeGround(ground_name: str, placement_of_ground_origin: str, explanation: str) -> str:
     """
         Args:
             ground_name: The name of the ground you just created
-            location: \"\"\"{"x": float, "y": float, "z": float}\"\"\" - e.g. \"\"\"{"x": 75, "y": 10, "z": 70}\"\"\". Remember - Y is up and these units are in base units - meters.
+            placement_of_ground_origin: \"\"\"{"x": float, "y": float, "z": float}\"\"\" - e.g. \"\"\"{"x": 75, "y": 10, "z": 70}\"\"\". Remember - Y is up and these units are in base units - meters.
+            explanation: A human-readable explanation of this placement.
     """
-    print(f"Loading location {location}") 
+    print(f"Loading placement of centerpoint {placement_of_ground_origin}") 
+    print(f"Why this ground placement? {explanation}")
     try:
-        json_location = json.loads(location)
+        json_location = json.loads(placement_of_ground_origin)
     except ValueError:
-        print(f"Error loading given location into JSON: {location}")
+        print(f"Error loading given location into JSON: {placement_of_ground_origin}")
         return f"Failed to add object '{ground_name}' to location {location} in the scene. Make sure to pass a correct something that can be loaded with json.loads() into JSON."
         
     global unity
@@ -262,7 +270,7 @@ async def createGround(ground_description: str):
 
     agent = Agent(
         name="GroundCreator",
-        instructions="Give me a 10x10 grid of floats, written out directly as rows of numbers, no code, that represents the heightmap of the ground described by the prompt.",
+        instructions="Give me a 11x11 grid of floats, written out directly as rows of numbers, no code, that represents the heightmap of the ground described by the prompt. The length and width are defined by one grid unit times 5. (So the ground is 50m x 50m.) The height is in meters, so a height of 1 is one meter. A human we'll say is 2m. Let the ground be human-scale. In your response, explain the decisions of the heightmap to aid further placement of object on the ground. ",
         output_type=GroundData
     )
     prompt = {"Description of the ground": ground_description}
@@ -272,15 +280,18 @@ async def createGround(ground_description: str):
     result = await Runner.run(agent, json.dumps(prompt))
     print(agent.name + ":", time.time() - t, "seconds.")
     
+    explanation = result.final_output.explanation_of_heights
     object_asset_path, matrix = obj_from_grid(result.final_output.grid) # writes obj
     print("Ground obj written.")
     
-    object_info = {"Name": object_asset_path.split("/")[-1], "Importances": {"grid": str(matrix), "open positions": "all positions are open for further placement", "dimensions": "50m x 50m in the -X, +Z directions.", "Notes": "centerpoint is on the +X, -Z corner."}}
+    object_info = {"Name": object_asset_path.split("/")[-1], "Importances": {"grid": str(matrix), "open positions": "all positions are open for further placement", "dimensions": "50m x 50m in the -X, +Z directions.", "Notes": "centerpoint is on the +X, -Z corner. " + explanation}}
     
     global unity
 
     object_name = object_info["Name"]
      
+    
+    
     
     unity.yaml.used_assets[object_name] = object_asset_path
     print(object_name, "added to used_assets w path", object_asset_path)

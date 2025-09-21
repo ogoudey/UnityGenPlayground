@@ -137,11 +137,11 @@ class YAML:
             print("Could not get guid from .meta file:", prefab_path + ".meta")
         
         # find prefabs local filenames
-        print("Parsing init YAML...")
+        
         scale = 1.0
         
         quaternion = euler_to_xyzw_quaternion(rotation)
-        print("Got quaternion", quaternion)
+        print("Parsing init YAML...")
         modifications = wrapped["PrefabInstance"]["m_Modification"]["m_Modifications"]
         for mod in modifications:
             if "target" in mod and "guid" in mod["target"]:
@@ -241,9 +241,9 @@ class YAML:
                     return self.level0[doc_i + 1]
 
 def euler_to_xyzw_quaternion(rotation):
-    print(rotation)
+    print("Rotation:", rotation)
     x_deg, y_deg, z_deg = rotation["x"], rotation["y"], rotation["z"]
-    print("degrees extracted")
+
     # Convert degrees to radians
     x = math.radians(x_deg)
     y = math.radians(y_deg)
@@ -262,7 +262,7 @@ def euler_to_xyzw_quaternion(rotation):
     qx = cz*sx*cy - sz*cx*sy
     qy = cz*cx*sy + sz*sx*cy
     qz = sz*cx*cy - cz*sx*sy
-    print("calculation of quaternion done")
+    print("Calculation of quaternion done:", (qx, qy, qz, qw))
     return (qx, qy, qz, qw)            
 
 def set_ID(text: str, new_id: str=None) -> str:
