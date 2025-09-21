@@ -90,14 +90,14 @@ def asset_lookup(asset_path: str) -> dict:
         raise Exception("Asset is unavailable. Please choose an another asset.")
         
 @function_tool
-async def createObject(description: str) -> PlaceableObject:
+async def planObject(description: str) -> PlaceableObject:
     """ 
         Args:
             description: Some text describing that the object should be like, refering to a singular object that's likely to be selected from a common asset library. For example, "water", "a rock", "a house", etc.
     """
     
     agent = Agent(
-        name="ObjectCreator" + str(random.randint(100, 999)),
+        name="ObjectPlanner" + str(random.randint(100, 999)),
         #instructions="It is your job to prompt an asset-retriever to get the object you are assigned to place. For example, given that you are supposed to put a rock at [1.2, 2.8, -1.5] and this location is 1m high, the object must be extend at least 1m below its center point, otherwise it is floating mid-air."
         instructions= "Retrieve the asset from the list of available assets that best matches the intended description. Then get the info of that object with asset_lookup. If the info further confirms the choice of asset as fitting the description, go ahead and return the info with the path.",
         output_type = AssetPath,
@@ -162,8 +162,8 @@ async def placeObject(object_name: str, placement_of_object_origin: str, rotatio
 async def createSectionL0(prompt: str, region: str):
     section_leaderl0 = Agent(
         name="SectionLeaderL0wGroundLeader",
-        tools=[createObject, createGround],
-        instructions="""You are an architect of a scene. According to the prompt, you design a (section of a) scene by creating objects. Reference one object per call to createObject, since some downstream agent needs to take your description and find the right asset. You should create the ground before any objects are created, so that you can properly arrange objects in the scene. To create the ground, you prompt an agent to generate a heightmap that fits the scene. Make sure to place objects ATOP the ground.""" + RESTRICTIONS + CHEATS,
+        tools=[planObject, planGround],
+        instructions="""You are an architect of a scene. According to the prompt, you design a (section of a) scene by creating objects. Reference one object per call to planObject, since some downstream agent needs to take your description and find the right asset. You should create the ground before any objects are created, so that you can properly arrange objects in the scene. To create the ground, you prompt an agent to generate a heightmap that fits the scene. Make sure to place objects ATOP the ground.""" + RESTRICTIONS + CHEATS,
         model=MODEL
     )
     
@@ -239,8 +239,11 @@ async def placeGround(ground_name: str, placement_of_ground_origin: str, explana
     """
         Args:
             ground_name: The name of the ground you just created
-            placement_of_ground_origin: \"\"\"{"x": float, "y": float, "z": float}\"\"\" - e.g. \"\"\"{"x": 75, "y": 10, "z": 70}\"\"\". Remember - Y is up and these units are in base units - meters.
-            explanation: A human-readable explanation of this placement.
+            placement_of_ground_origin: Must be a JSON-encoded string. Example:
+                "{\"x\": 0, \"y\": 0, \"z\": 0}"
+            rotation: Must be a JSON-encoded string. Example:
+                "{\"x\": 90, \"y\": 0, \"z\": 45}"
+            explanation: A brief human-readable explanation of this placement, include detail on where this object is and what space it covers.
     """
     print(f"Loading placement of centerpoint {placement_of_ground_origin}") 
     print(f"Why this ground placement? {explanation}")
@@ -263,13 +266,13 @@ async def placeGround(ground_name: str, placement_of_ground_origin: str, explana
     
 
 @function_tool
-async def createGround(ground_description: str):
+async def planGround(ground_description: str):
     """ 
         ground_description: a description of what the ground should look like.
     """
 
     agent = Agent(
-        name="GroundCreator",
+        name="GroundPlanner",
         instructions="Give me a 11x11 grid of floats, written out directly as rows of numbers, no code, that represents the heightmap of the ground described by the prompt. The length and width are defined by one grid unit times 5. (So the ground is 50m x 50m.) The height is in meters, so a height of 1 is one meter. A human we'll say is 2m. Let the ground be human-scale. In your response, explain the decisions of the heightmap to aid further placement of object on the ground. ",
         output_type=GroundData
     )
@@ -284,7 +287,7 @@ async def createGround(ground_description: str):
     object_asset_path, matrix = obj_from_grid(result.final_output.grid) # writes obj
     print("Ground obj written.")
     
-    object_info = {"Name": object_asset_path.split("/")[-1], "Importances": {"grid": str(matrix), "open positions": "all positions are open for further placement", "dimensions": "50m x 50m in the -X, +Z directions.", "Notes": "centerpoint is on the +X, -Z corner. " + explanation}}
+    object_info = {"Name": object_asset_path.split("/")[-1], "Importances": {"grid": str(matrix), "open positions": "all positions are open for further placement", "dimensions": "50m x 50m in the -X, +Z directions.", "Notes": "centerpoint is on the +X, -Z corner. " + explanation, "Unplaced!": "Make sure to use placeGround to place this object."},}
     
     global unity
 
@@ -328,7 +331,7 @@ async def test_ground(prompt="A mountain"):
     
     leader = Agent(
         name="Leader",
-        tools=[createGround, placeGround],
+        tools=[planGround, placeGround],
         instructions="You make a Unity world according to the prompt. You are the primary agent in a swarm of LLM-guided agents. It is your job to archestrate the use of tools to generate the scene described by the prompt.",
         model=MODEL
     )
@@ -345,9 +348,9 @@ async def test_river(prompt="A river"):
     
     leader = Agent(
         name="Leader",
-        tools=[createGround, placeGround, createObject, placeObject],
+        tools=[planGround, placeGround, planObject, placeObject],
         instructions="You make a Unity world according to the prompt. You are the primary agent in a swarm of LLM-guided agents. It is your job to archestrate the use of tools to generate the scene described by the prompt.\n\
-        You are the architect of the scene. According to the prompt, you design the scene by creating objects. Reference one object per call to createObject, since some downstream agent needs to take your description and find the right asset. You should create the ground before any objects are created, so that you can properly arrange objects in the scene. To create the ground, you prompt an agent to generate a heightmap that fits the scene. Make sure to place objects ATOP the ground. Make sure to PLACE every object right after you CREATE it. That is (1) create the object/ground/etc (2) place the object/ground/etc, before moving on to the next thing.",
+        You are the architect of the scene. According to the prompt, you design the scene by creating objects. Reference one object per call to planObject, since some downstream agent needs to take your description and find the right asset. You should create the ground before any objects are created, so that you can properly arrange objects in the scene. To create the ground, you prompt an agent to generate a heightmap that fits the scene. Make sure to place objects ATOP the ground. Make sure to PLACE every object right after you CREATE it. That is (1) create the object/ground/etc (2) place the object/ground/etc, before moving on to the next thing.",
         model=MODEL
     )
     
@@ -363,9 +366,9 @@ async def test_river_bridge(prompt="A river cutting through a terrain, and a bri
     
     leader = Agent(
         name="Leader",
-        tools=[createGround, placeGround, createObject, placeObject],
+        tools=[planGround, placeGround, planObject, placeObject],
         instructions="You make a Unity world according to the prompt. You are the primary agent in a swarm of LLM-guided agents. It is your job to archestrate the use of tools to generate the scene described by the prompt.\n\
-        You are the architect of the scene. According to the prompt, you design the scene by creating objects. Reference one object per call to createObject, since some downstream agent needs to take your description and find the right asset. You should create the ground before any objects are created, so that you can properly arrange objects in the scene. To create the ground, you prompt an agent to generate a heightmap that fits the scene. Make sure to place objects ATOP the ground. Make sure to PLACE all the object you CREATE.",
+        You are the architect of the scene. According to the prompt, you design the scene by creating objects. Reference one object per call to planObject, since some downstream agent needs to take your description and find the right asset. You should create the ground before any objects are created, so that you can properly arrange objects in the scene. To create the ground, you prompt an agent to generate a heightmap that fits the scene. Make sure to place objects ATOP the ground. Make sure to PLACE all the object you CREATE.",
         model=MODEL
     )
     
