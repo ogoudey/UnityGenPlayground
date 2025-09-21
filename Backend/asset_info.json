@@ -1,0 +1,25 @@
+{
+    "Note": "This file should A. (maybe) provide a way to loop up assets, and B. provide information for a retrieved asset.",
+    "../Assets/Proxy Games/Stylized Nature Kit/Prefabs/Foliage/Trees/Spruce 1.prefab":
+    {
+        "Name":"spruce 1",
+        "Importances": {"center": "at the bottom, at 0 Y. and the midpoint along the X and Z. If you place me at a point, that is correctly the base of my trunk."}
+    },
+    "../Assets/Proxy Games/Stylized Nature Kit Lite/Prefabs/Water/Detailed Water.prefab":
+    {
+        "Name": "Water",
+        "Importances": {"origin/pivot point": "I go off in the -Z, -X directions if I am placed at 0,0. In other words, my centerpoint is at my +X, +Z corner. Or if I'm placed at x=0, z=50 I will cover the -X +Z quadrant", "Dimensions": "50m x 50m - a perfect square plane"}
+    },
+    "../Assets/Proxy Games/Stylized Nature Kit Lite/Prefabs/Water/Flat Water.prefab":
+    {
+        "Name": "Water",
+        "Importances": {"origin/pivot point": "I go off in the -Z, -X directions if I am placed at 0,0. In other words, my centerpoint is at my +X, +Z corner. Or if I'm placed at x=0, z=50 I will cover the -X +Z quadrant", "Dimensions": "50m x 50m - a perfect square plane"}
+    },
+    "../Assets/Blue Polygon/Rope Bridge 3D/Mesh/rope_bridge.fbx":
+    {
+        "Name": "Bridge",
+        "Importances": {"center point/origin/pivot": "I go off in the -X direction from 0,0, my start.", "Dimensions": "I am 16m long and about 2.5m wide.", "Description": "I have 2 posts on either end, each 2m tall. There is a 1m sag in the crossing, since I am a rope bridge."}
+    }
+    
+
+}
