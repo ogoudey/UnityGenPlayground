@@ -2,7 +2,7 @@
     "Note": "This file should A. (maybe) provide a way to loop up assets, and B. provide information for a retrieved asset.",
     "../Assets/Proxy Games/Stylized Nature Kit/Prefabs/Foliage/Trees/Spruce 1.prefab":
     {
-        "Name":"spruce 1",
+        "Name":"Spruce 1",
         "Importances": {"center": "at the bottom, at 0 Y. and the midpoint along the X and Z. If you place me at a point, that is correctly the base of my trunk."}
     },
     "../Assets/Proxy Games/Stylized Nature Kit Lite/Prefabs/Water/Detailed Water.prefab":
@@ -15,11 +15,70 @@
         "Name": "Water",
         "Importances": {"origin/pivot point": "I go off in the -Z, -X directions if I am placed at 0,0. In other words, my centerpoint is at my +X, +Z corner. Or if I'm placed at x=0, z=50 I will cover the -X +Z quadrant", "Dimensions": "50m x 50m - a perfect square plane"}
     },
-    "../Assets/Blue Polygon/Rope Bridge 3D/Mesh/rope_bridge.fbx":
+    "../Assets/Blue Polygon/Rope Bridge 3D/Prefab/rope_bridge.prefab":
     {
         "Name": "Bridge",
-        "Importances": {"center point/origin/pivot": "I go off in the -X direction from 0,0, my start.", "Dimensions": "I am 16m long and about 2.5m wide.", "Description": "I have 2 posts on either end, each 2m tall. There is a 1m sag in the crossing, since I am a rope bridge."}
-    }
-    
+        "Importances": {"center point/origin/pivot": "I go off in the -X direction from 0,0, my pivot point.", "Dimensions": "I am 16m long and about 2.5m wide.", "Description": "I have 2 posts on either end, each 2m tall. There is a 1m sag in the crossing, since I am a rope bridge."}
+    },
+    "../Assets/Proxy Games/Stylized Nature Kit Lite/Prefabs/Rocks/Rock Cliffs/Rock Cliff 1.prefab":
+    {
+        "Name": "Mossy Rock Cliff Big",
+        "Importances": {"center point/origin/pivot": "object center horizontally. my base is flat along the Y (up/down) plane.", "Description": "I am 3m wide and 6m tall from my flat base. So put me under the ground a little."}
+    },
+    "../Assets/Proxy Games/Stylized Nature Kit Lite/Meshes/Rocks/Rock Cliffs/Rock Cliff 4.prefab":
+    {
+        "Name": "Mossy Rock Cliff Huge",
+        "Importances": {"center point/origin/pivot": "object center horizontally. my base is flat along the Y (up/down) plane.", "Description": "This is a huge object. I am 5m tall, wide and 6m tall, 8 m wide (4 in +/- Z), and 14 meters long (7 in the +/- X direction). My base is flat."}
+    },
+    "../Assets/Proxy Games/Stylized Nature Kit Lite/Prefabs/Foliage/Branch/Branch.prefab":
+    {
+        "Name": "Branch",
+        "Importances": {"center point/origin/pivot": "center/pivot point at center of object", "Description": "Just a straight stick that's about 2m long in the Z direction and 1 m wide in the X direction. Negligibly tall - i rest on the Y plane."}
+    },
+    "../Assets/Proxy Games/Stylized Nature Kit Lite/Prefabs/Foliage/Bush/Bush.prefab":
+    {
+        "Name": "Bush",
+        "Importances": {"center point/origin/pivot": "center/pivot point at center of object but at the lowest point of the object in on the Y axis.", "Description": "A 1m radius bush. (relatively big) I lie on top of the Y plane so perhaps move me down a little bit."}
+    },
+    "../Assets/Proxy Games/Stylized Nature Kit Lite/Prefabs/Foliage/Flower/Flower.prefab":
+    {
+        "Name": "Flower",
+        "Importances": {"origin": "at the base of the flower on its Y axis, otherwise centered.", "Description": "1m high flower, neglibibly wide."}
+    },
+    "../Assets/Proxy Games/Stylized Nature Kit Lite/Prefabs/Foliage/Grass/Grass.prefab":
+    {
+        "Name": "Grass",
+        "Importances": {"origin": "at the center of the object - the geometric middle.", "Description": "2m square patch of grass. Flat at its base."}
+    },
+    "../Assets/Proxy Games/Stylized Nature Kit Lite/Prefabs/Foliage/Log/Log.prefab":
+    {
+        "Name": "Log",
+        "Importances": {"origin": "in the middle of the log.", "Description": "2m wide along the x axis. Negligibly wide, and rests on the Y plane."}
+    },
+    "../Assets/Proxy Games/Stylized Nature Kit Lite/Prefabs/Foliage/Mushroom/Mushrooms Patch.prefab":
+    {
+        "Name": "Mushroom",
+        "Importances": {"origin": "at the mushroom's base in its center", "Description": "A small object. <.5m in the X and Z directions. About .3m tall."}
+    },
+    "../Assets/Proxy Games/Stylized Nature Kit Lite/Prefabs/Rocks/Standard Rocks/Standard Rock 1.prefab":
+    {
+        "Name": "Rock1",
+        "Importances": {"origin": "at the object 3D center midpoint", "Description": "About 1m cubed."}
+    },
+    "../Assets/Proxy Games/Stylized Nature Kit Lite/Prefabs/Rocks/Standard Rocks/Standard Rock 2.prefab":
+    {
+        "Name": "Rock2",
+        "Importances": {"origin": "at the object 3D center midpoint", "Description": "4m along the X axis and 2m along the Z axis. About .5m above and below the Yplane."}
+    },
+    "../Assets/Proxy Games/Stylized Nature Kit Lite/Prefabs/Rocks/Standard Rocks/Standard Rock 3.prefab":
+    {
+        "Name": "Rock3",
+        "Importances": {"origin": "at the object 3D center midpoint", "Description": "4m along the X axis and 3m along the Z axis. About 1m above the Y plane."}
+    },
+    "../Assets/Proxy Games/Stylized Nature Kit Lite/Prefabs/Rocks/Standard Rocks/Standard Rock 4.prefab":
+    {
+        "Name": "Rock4",
+        "Importances": {"origin": "at the object's XZ center, but the lowest point on the Y axis. the base is flat on the Y plane.", "Description": "2m over the X and Z axes. About 3m tall."}
+    },
 
 }

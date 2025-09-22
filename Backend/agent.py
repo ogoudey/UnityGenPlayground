@@ -24,7 +24,6 @@ from obj_building import obj_from_grid
 import assets
 prefab_tree = assets.get_found(".prefab")
 fbx_tree = assets.get_found(".fbx")
-prefab_tree += fbx_tree
 material_tree = assets.get_found(".mat")
 
 with open("asset_info.json", "r") as f:
@@ -115,11 +114,13 @@ async def planObject(description: str) -> PlaceableObject:
     
     global unity
     object_asset_path = result.final_output.asset_path
-    print(f"Looking up {object_asset_path}")
+    print(f"\t----> {object_asset_path}")
     object_info = asset_lookup(object_asset_path)
+    print("Looking up...")
     if object_info == None:
-        print(f"Cannot find {object_asset_path} in assets_info. Returning None and using random data.")
+        print(f"Cannot find {object_asset_path} in assets_info. Returning None and useless information.")
         object_name = "UnknownObject" + str(random.randint(100,999))
+        object_info = {"Importances": "Place this object as normal."}
     else:
         object_name = object_info["Name"]
     unity.yaml.used_assets[object_name] = object_asset_path
@@ -360,7 +361,7 @@ async def test_river(prompt="A river"):
     
     unity.done_and_write()
 
-async def test_river_bridge(prompt="A river cutting through a terrain, and a bridge going over it."):
+async def test_river_bridge(prompt="A river cutting through a terrain with some foliage, and a bridge going over it connecting two banks."):
     global unity
     unity = UnityFile("test_river_bridge" + str(random.randint(100, 999)))
     
