@@ -37,6 +37,7 @@ class YAML:
         self.wrapped = [node_to_python(n) for n in self.level0]
         
         self.used_assets = dict()
+        self.placed_assets = dict()
         
     def set_skybox(self, name):
         print("Setting skybox...")
@@ -137,6 +138,7 @@ class YAML:
             print("Could not get guid from .meta file:", prefab_path + ".meta")
         
         # find prefabs local filenames
+        self.placed_assets[name] = {"transform": transform, "rotation": rotation}
         
         scale = 1.0
         

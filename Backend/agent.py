@@ -23,17 +23,59 @@ from dataclasses import dataclass, asdict
 from obj_building import obj_from_grid
 
 import assets
-prefab_tree = assets.get_found(".prefab")
+prefab_leaves = assets.get_found(".prefab")
 fbx_tree = assets.get_found(".fbx")
-material_tree = assets.get_found(".mat")
+material_leaves = assets.get_found(".mat")
+
+
 
 with open("asset_info.json", "r") as f:
     j = f.read()
     assets_info = json.loads(j)
+print(f"\nAsset info sheet loaded with {len(assets_info)} entries")
+
+with open("synopsis_file.json", "r") as s:
+    v = s.read()
+    synopses = json.loads(v)
+print(f"\nSynopsis file loaded with {len(synopses)} entries")
+
+async def update_synopsis_file():
+    i = 1
+    for asset_path, asset_info in assets_info.items():
+        found = False
+        for synopsis, ante_asset_path in synopses.items():
+            if ante_asset_path == asset_path:
+                found = True
+                break # on to next asset
+        if found == True:
+            continue
+        else:
+            print(asset_path, "not found in synopses...")
+            print(f"Generating synopsis... {i}/{len(synopses)}")
+            i += 1
+            new_synopsis = await generate_synopsis(asset_info)
+            synopses[new_synopsis] = asset_path
+            print(asset_info)
+            print("------>", new_synopsis)
+    print("Synopsis file up to date.")
+
+
+
+async def generate_synopsis(asset_info):
+    synopsis_generator = Agent(
+        name="SynopsisGenerator",
+        instructions = "Give a brief description of the asset, given supplied info. Context: You are describing a .prefab asset for a Unity world. Later these synopses will be used to assist retrieval of the asset based on a new desired description. For example, later, something like 'a small rock with moss' will be passed to an agent who then looks at synopses like the one you are generating and returns the corresponding asset info. So keep it brief. Put your answer as a 'noun phrase' - no 'this object is...' but rather 'a rock with such and such...'",
+        model=MODEL
+    )
+    prompt = {"Asset info": asset_info}
+    result = await Runner.run(synopsis_generator, json.dumps(prompt))
+    return result.final_output
 
 MODEL="o3-mini"
 
-RESTRICTIONS="""In fact, only describe objects that are commonly found in scenes built in the game engine Unity. IN FACT, ONLY USE THESE ASSETS:\n"""+str(prefab_tree)+"""."""
+RESTRICTIONS="""In fact, only describe objects that are commonly found in scenes built in the game engine Unity. IN FACT, ONLY USE THESE ASSETS:\n"""+str(prefab_leaves)+"""."""
+
+
 
 class UnityFile:
     def __init__(self, name="testingtesting123"):
@@ -61,6 +103,11 @@ class UnityFile:
         if not file_name:
             file_name = self.name
         self.yaml.to_unity_yaml(file_name)
+ 
+@function_tool
+async def get_ground_matrix():
+    global unity
+    return unity.ground_matrix     
         
 global unity
 global used_assets
@@ -83,6 +130,7 @@ class PlaceableObject():
 CHEATS = """ IN FACT, just to make things absolutely sure, put the water at x=0, z=50. All other objects just go in the -X +Z quadrant OVER the ground, that is, in (x,z)=(0 -> -50, 0 -> 50), ."""
 
 
+
 def asset_lookup(asset_path: str) -> dict:
     if asset_path in list(assets_info.keys()):
         return assets_info[asset_path]
@@ -91,25 +139,35 @@ def asset_lookup(asset_path: str) -> dict:
         print(asset_path, "not in", list(assets_info.keys()))
         return None
         raise Exception("Asset is unavailable. Please choose an another asset.")
-        
+
+
+planObjectMode = "SYNOPSIS"
+#planObjectMode = "PREFAB_LEAVES"
+
 @function_tool
 async def planObject(description: str) -> PlaceableObject:
     """ 
         Args:
             description: Some text describing that the object should be like, refering to a singular object that's likely to be selected from a common asset library. For example, "water", "a rock", "a house", etc.
     """
+    if planObjectMode == "SYNOPSIS":
+        agent = Agent(
+            name="ObjectPlanner" + str(random.randint(100, 999)),
+            #instructions="It is your job to prompt an asset-retriever to get the object you are assigned to place. For example, given that you are supposed to put a rock at [1.2, 2.8, -1.5] and this location is 1m high, the object must be extend at least 1m below its center point, otherwise it is floating mid-air."
+            instructions= "Retrieve the synopsis that best matches the intended description. Return exactly the synopsis.",
+            model=MODEL
+        )
+        prompt = {"Description of object": description, "Synopses to choose from": list(synopses.keys())}
+    else:    
+        agent = Agent(
+            name="ObjectPlanner" + str(random.randint(100, 999)),
+            #instructions="It is your job to prompt an asset-retriever to get the object you are assigned to place. For example, given that you are supposed to put a rock at [1.2, 2.8, -1.5] and this location is 1m high, the object must be extend at least 1m below its center point, otherwise it is floating mid-air."
+            instructions= "Retrieve the asset from the list of available assets that best matches the intended description. Then get the info of that object with asset_lookup. If the info further confirms the choice of asset as fitting the description, go ahead and return the info with the path.",
+            output_type = AssetPath,
+            model=MODEL
+        )
     
-    agent = Agent(
-        name="ObjectPlanner" + str(random.randint(100, 999)),
-        #instructions="It is your job to prompt an asset-retriever to get the object you are assigned to place. For example, given that you are supposed to put a rock at [1.2, 2.8, -1.5] and this location is 1m high, the object must be extend at least 1m below its center point, otherwise it is floating mid-air."
-        instructions= "Retrieve the asset from the list of available assets that best matches the intended description. Then get the info of that object with asset_lookup. If the info further confirms the choice of asset as fitting the description, go ahead and return the info with the path.",
-        output_type = AssetPath,
-        model=MODEL
-    )
-    
-    
-    
-    prompt = {"Description of object": description, "Available assets": prefab_tree}
+        prompt = {"Description of object": description, "Available assets": prefab_leaves}
     
     t = time.time()
     print(agent.name, "started.")
@@ -117,7 +175,16 @@ async def planObject(description: str) -> PlaceableObject:
     print(agent.name + ":", time.time() - t, "seconds.")
     
     global unity
-    object_asset_path = result.final_output.asset_path
+    if planObjectMode == "SYNOPSIS":
+        print(f"Matched description '{description}' to '{result.final_output}'")
+        try:
+            object_asset_path = synopses[result.final_output]
+        except KeyError:
+            print(result.final_output, "is not in synopsis file")
+            
+    
+    else:
+        object_asset_path = result.final_output.asset_path
     print(f"\t----> {object_asset_path}")
     object_info = asset_lookup(object_asset_path)
     print("\tLooking up asset path in info sheet...")
@@ -164,6 +231,8 @@ async def placeObject(object_name: str, placement_of_object_origin: str, rotatio
             if (json_location["x"], json_location["y"], json_location["z"]) in unity.contact_points[parent]:
                 print("POPPING contact point", (json_location["x"], json_location["y"], json_location["z"]), "from contact points")
                 unity.contact_points[object_name].remove((json_location["x"], json_location["y"], json_location["z"]))
+                
+                
         unity.add_prefab(object_name, json_location, json_rotation)
         return f"Successfully added object to the scene. Recall the information of {object_name}."
     except Exception as e:
@@ -200,7 +269,7 @@ async def planSkybox(skybox_description: str) -> Designation:
         model=MODEL
     )
     prompt = {"Object description": skybox_description,
-                "Available assets": material_tree}
+                "Available assets": material_leaves}
 
     t = time.time()
     print(agent.name, "started")
@@ -255,12 +324,13 @@ async def placeSkybox(skybox_name: str) -> str:
 async def placeGround(ground_name: str, placement_of_ground_origin: str, explanation: str) -> str:
     """
         Args:
-            ground_name: The name of the ground you just created
+            ground_name: The name of the ground you just planned. That is, PlaceableObject.name
             placement_of_ground_origin: Must be a JSON-encoded string. Example:
                 "{\"x\": 0, \"y\": 0, \"z\": 0}"
             rotation: Must be a JSON-encoded string. Example:
                 "{\"x\": 90, \"y\": 0, \"z\": 45}"
             explanation: A brief human-readable explanation of this placement, include detail on where this object is and what space it covers.
+        Cannot be called twice. Once the ground is placed, it's placed.
     """
     print(f"Loading placement of ground ---> {placement_of_ground_origin}") 
     print(f"Why this ground placement? {explanation}")
@@ -298,7 +368,7 @@ Rules:
 - Each number is the ground height in meters. A height of 0 means flat ground at sea level. 
 - The grid covers 50m x 50m (each cell is 5m x 5m). 
 - Keep human scale: a human is ~2m tall, so do not make cliffs or holes taller/deeper than 10m unless the prompt requires it. 
-- Shape the terrain according to the prompt, e.g. slopes, rivers, banks, plateaus. 
+- Shape the terrain according to the prompt, and form around the placed objects. 
 - After the grid, add one concise sentence explaining the main heightmap features to guide object placement. 
 
 Output format must follow GroundData:
@@ -307,9 +377,16 @@ Output format must follow GroundData:
 """
 
 @function_tool
+async def get_contact_points() -> str:
+    """
+        Returns the points in the scene which are available to place objects on.
+    """
+
+@function_tool
 async def planGround(ground_description: str):
     """ 
         ground_description: a description of what the ground should look like.
+    Can be called multiple times, to reshape the ground, to fit the object that are static, immalleable.
     """
 
     agent = Agent(
@@ -409,19 +486,17 @@ instruction_v2 = """You are the Leader agent responsible for generating a Unity 
 You must orchestrate tool usage in the following structured order:
 
 1. SKYBOX: First, call planSkybox once to describe an appropriate skybox, then call placeSkybox to place it. 
-2. GROUND: Next, call planGround to design the terrain/heightmap, then call placeGround to place it. 
+2. GROUND: Next, call planGround to design the terrain/heightmap, then call placeGround to place it. This is an initial guess for the terrain of the ground. In further steps, you may call planGround again to fit various "bulky objects".
 3. OBJECTS: After the ground is placed, plan each object one by one with planObject. For each planObject call, 
    immediately follow it with a corresponding placeObject call. 
-   - Each object must be positioned relative to the ground (atop or aligned with it). 
+   - Each object must be placed over the ground (atop or aligned with it). 
    - Bridges, rivers, foliage, rocks, or props must all be handled in this way. 
    - Do not plan multiple objects in a single call. 
-4. CONTACT POINTS: When placing ground and objects, specify helpful 3D coordinates (contact points) 
-   that can guide where future objects should be placed. These points must not be obstructed. 
+4. REGROUNDING: Some objects (e.g. a long bridge), may require the ground to have a certain shape to make sense in, forcing you to reconsier the heightmap of the ground. In this case, call planGround again with requires heights mentioned to in a sense "excavate" the existing ground.
 5. COMPLETENESS: Ensure that all elements mentioned in the user prompt are represented in the scene. 
    If something is vague (e.g. "foliage"), interpret it reasonably and cover the intent. 
 
 General rules:
-- Follow the order strictly: skybox → ground → objects.
 - Always PLAN before PLACE.
 - Use all tools at least once when appropriate.
 - Stop once the world clearly reflects the prompt.
@@ -432,6 +507,16 @@ Your role is to reliably build a coherent, grounded Unity world from the descrip
 
 
 
+checker_instructions_v1 = """
+You are responsible for checking the placed assets in a Unity scene. You will be given an object, and the ability to get the ground matrix (which is scaled by x5). Essentially you must ask:
+    Given the
+        1. Ground heightmap (matrix),
+        2. Reference info about the object,
+        3. Actual placement of the object in the scene...
+    Is the placement good or bad? Well positioned or somehow off - either in the ground or floating, offset or wrong in some other way?
+    If there's not enough information to deduce the correctness of placement, be sure to explain that.
+    Keep your answer brief and to the point.
+"""
 
 async def test_river_bridge(prompt="A 5m deep river cutting through a terrain with some foliage, and a bridge going over it connecting two banks.", instructions=""):
     global unity
@@ -447,6 +532,32 @@ async def test_river_bridge(prompt="A 5m deep river cutting through a terrain wi
     prompt = {"Description of the scene": prompt}
     
     await Runner.run(leader, json.dumps(prompt), max_turns=20)
+    
+    print("\n\n__Checking__\nGoing through used assets:", unity.yaml.placed_assets)
+    
+    checker = Agent(
+        name="Checker",
+        tools=[get_ground_matrix],
+        instructions=checker_instructions_v1,
+        model=MODEL
+    )
+    for asset_name, placement in unity.yaml.placed_assets.items():
+        
+        print("Checking", asset_name, "...")
+        if asset_name in list(unity.yaml.used_assets.keys()):
+            path = unity.yaml.used_assets[asset_name]
+            reference_info = assets_info[path]
+        elif "ground" in asset_name:
+            reference_info = {"grid": unity.ground_matrix, "other info": "scaled by 5 and covering the -X +Z quadrant. 50m by 50m."}
+        else:
+            reference_info = None
+            print(asset_name, "not in asset info sheet (which is ")
+         
+        prompt = {"Reference info": reference_info, "Actual placement": placement}
+             
+        result = await Runner.run(checker, json.dumps(prompt), max_turns=10)
+        print(result.final_output) 
+    
     
     unity.done_and_write()
 
@@ -469,6 +580,8 @@ test_dispatcher = {
 
 import sys
 if __name__ == "__main__":
+    asyncio.run(update_synopsis_file())
+    
     asyncio.run(test_river_bridge(instructions=instruction_v1))
     
     
