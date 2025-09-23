@@ -145,11 +145,15 @@ class YAML:
         modifications = wrapped["PrefabInstance"]["m_Modification"]["m_Modifications"]
         for mod in modifications:
             if "target" in mod and "guid" in mod["target"]:
-                mod["target"]["fileID"] = father_ID
+                
                 mod["target"]["guid"] = guid
                 if mod.get("propertyPath") == "m_Name":
+                    mod["target"]["fileID"] = father_ID
                     mod["target"]["value"] = "Name of object here" # Anything?
+                elif mod.get("propertyPath") == "m_Materials.Array.data[0]":
+                    mod["target"]["fileID"] = -7635826562936255635
                 else:
+                    mod["target"]["fileID"] = father_ID
                     if mod.get("propertyPath") == "m_LocalPosition.x":
                         mod["value"] = transform["x"]
                     if mod.get("propertyPath") == "m_LocalPosition.y":
@@ -169,7 +173,9 @@ class YAML:
                         mod["value"] = quaternion[2]
                     if mod.get("propertyPath") == "m_LocalRotation.w":
                         mod["value"] = quaternion[3]
-                        
+                      
+                      
+                -7635826562936255635  
                     
         wrapped["PrefabInstance"]["m_SourcePrefab"]["guid"] = guid
         sceneroots = self.get_doc("SceneRoots")

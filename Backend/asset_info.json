@@ -1,6 +1,6 @@
 {
     "Note": "This file should A. (maybe) provide a way to loop up assets, and B. provide information for a retrieved asset.",
-    "../Assets/Proxy Games/Stylized Nature Kit/Prefabs/Foliage/Trees/Spruce 1.prefab":
+    "../Assets/Proxy Games/Stylized Nature Kit Lite/Prefabs/Foliage/Trees/Spruce 1.prefab":
     {
         "Name":"Spruce 1",
         "Importances": {"center": "at the bottom, at 0 Y. and the midpoint along the X and Z. If you place me at a point, that is correctly the base of my trunk."}
@@ -8,12 +8,12 @@
     "../Assets/Proxy Games/Stylized Nature Kit Lite/Prefabs/Water/Detailed Water.prefab":
     {
         "Name": "Water",
-        "Importances": {"origin/pivot point": "I go off in the -Z, -X directions if I am placed at 0,0. In other words, my centerpoint is at my +X, +Z corner. Or if I'm placed at x=0, z=50 I will cover the -X +Z quadrant", "Dimensions": "50m x 50m - a perfect square plane"}
+        "Importances": {"origin/pivot point": "I go off in the -Z, -X directions if I am placed at 0,0. In other words, my centerpoint is at my +X, +Z corner. Or if I'm placed at x=0, z=50 I will cover the -X +Z quadrant", "Dimensions": "50m x 50m - a perfect square plane", "Notes": "Have me overlap the whole ground. Make sure my Y coordinate provides the right water level if the prompt refers to a body of water."}
     },
     "../Assets/Proxy Games/Stylized Nature Kit Lite/Prefabs/Water/Flat Water.prefab":
     {
         "Name": "Water",
-        "Importances": {"origin/pivot point": "I go off in the -Z, -X directions if I am placed at 0,0. In other words, my centerpoint is at my +X, +Z corner. Or if I'm placed at x=0, z=50 I will cover the -X +Z quadrant", "Dimensions": "50m x 50m - a perfect square plane"}
+        "Importances": {"origin/pivot point": "I go off in the -Z, -X directions if I am placed at 0,0. In other words, my centerpoint is at my +X, +Z corner. Or if I'm placed at x=0, z=50 I will cover the -X +Z quadrant.", "Dimensions": "50m x 50m - a perfect square plane.", "Notes": "Have me overlap the whole ground. Make sure my Y coordinate provides the right water level if the prompt refers to a body of water."}
     },
     "../Assets/Blue Polygon/Rope Bridge 3D/Prefab/rope_bridge.prefab":
     {
@@ -25,7 +25,7 @@
         "Name": "Mossy Rock Cliff Big",
         "Importances": {"center point/origin/pivot": "object center horizontally. my base is flat along the Y (up/down) plane.", "Description": "I am 3m wide and 6m tall from my flat base. So put me under the ground a little."}
     },
-    "../Assets/Proxy Games/Stylized Nature Kit Lite/Meshes/Rocks/Rock Cliffs/Rock Cliff 4.prefab":
+    "../Assets/Proxy Games/Stylized Nature Kit Lite/Prefabs/Rocks/Rock Cliffs/Rock Cliff 4.prefab":
     {
         "Name": "Mossy Rock Cliff Huge",
         "Importances": {"center point/origin/pivot": "object center horizontally. my base is flat along the Y (up/down) plane.", "Description": "This is a huge object. I am 5m tall, wide and 6m tall, 8 m wide (4 in +/- Z), and 14 meters long (7 in the +/- X direction). My base is flat."}
@@ -79,6 +79,6 @@
     {
         "Name": "Rock4",
         "Importances": {"origin": "at the object's XZ center, but the lowest point on the Y axis. the base is flat on the Y plane.", "Description": "2m over the X and Z axes. About 3m tall."}
-    },
+    }
 
 }

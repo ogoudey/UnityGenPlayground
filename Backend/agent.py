@@ -1,4 +1,5 @@
 import sys
+import os
 from threading import Thread
 import time # sub for actual prompting
 
@@ -38,6 +39,9 @@ class UnityFile:
     def __init__(self, name="testingtesting123"):
         self.name = name
         self.yaml = yamling.YAML()
+        
+        self.ground_matrix = []
+        self.contact_points = dict()
 
     def add_skybox(self, skybox_name):
         self.yaml.set_skybox(skybox_name)
@@ -116,15 +120,16 @@ async def planObject(description: str) -> PlaceableObject:
     object_asset_path = result.final_output.asset_path
     print(f"\t----> {object_asset_path}")
     object_info = asset_lookup(object_asset_path)
-    print("Looking up...")
+    print("\tLooking up asset path in info sheet...")
     if object_info == None:
-        print(f"Cannot find {object_asset_path} in assets_info. Returning None and useless information.")
+        print(f"\t!!! Cannot find {object_asset_path} in assets_info. Returning None and useless information.")
         object_name = "UnknownObject" + str(random.randint(100,999))
         object_info = {"Importances": "Place this object as normal."}
     else:
+        print(f"\tFound:\n{object_info}")
         object_name = object_info["Name"]
     unity.yaml.used_assets[object_name] = object_asset_path
-    print(object_name, "added to used_assets w path", object_asset_path)
+    print(f"\t{object_name} added to used_assets w path {object_asset_path}")
     return PlaceableObject(object_name, json.dumps(object_info["Importances"]))
 
 @function_tool
@@ -136,12 +141,13 @@ async def placeObject(object_name: str, placement_of_object_origin: str, rotatio
                 "{\"x\": 75, \"y\": 10, \"z\": 70}"
             rotation: Must be a JSON-encoded string. Example:
                 "{\"x\": 90, \"y\": 0, \"z\": 45}"
-            explanation: A human-readable explanation of why this placement was chosen. Example: "I put the water here to be above the height y=0.5 along the riverbed."
+            explanation: A human-readable explanation of why this placement was chosen. Example: "I put the water here to be above the height y=0.5 along the riverbed. Be sure to explain the height with regard to the contact points and the open spaces of the heightmap."
     """
-    print(f"Loading location {placement_of_object_origin} rotation {rotation}")
+    print(f"Placement for {object_name} ---> {placement_of_object_origin} with rotation {rotation}")
     print(f"Why this placement? {explanation}")
     try:
         json_location = json.loads(placement_of_object_origin)
+
     except ValueError:
         print("Error loading given placement_of_centerpoint into JSON")
         return f"Failed to add object '{object_name}' to location {placement_of_object_origin} in the scene (json.loads() error). Make sure to pass a correct something that can be loaded with json.loads() into JSON."
@@ -153,10 +159,20 @@ async def placeObject(object_name: str, placement_of_object_origin: str, rotatio
     print(f"Parsed location and rotation into JSON for '{object_name}'")
     global unity
     try:
+        for parent, contact_points in unity.contact_points.items():
+            if (json_location["x"], json_location["y"], json_location["z"]) in unity.contact_points[parent]:
+                print("POPPING contact point", (json_location["x"], json_location["y"], json_location["z"]), "from contact points")
+                unity.contact_points[object_name].remove((json_location["x"], json_location["y"], json_location["z"]))
         unity.add_prefab(object_name, json_location, json_rotation)
         return f"Successfully added object to the scene. Recall the information of {object_name}."
-    except Exception:
-        print("Error adding prefab...")
+    except Exception as e:
+        exc_type, exc_obj, exc_tb = sys.exc_info()
+        fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
+        line_number = exc_tb.tb_lineno
+        print(f"Error: {e}")
+        print(f"Type: {exc_type}")
+        print(f"File: {fname}")
+        print(f"Line Number: {line_number}")
         return f"Failed to add object '{object_name}' to the scene. The name is arguments are right. Exception:\n" + str(e) 
     
 @function_tool
@@ -175,13 +191,12 @@ async def createSectionL0(prompt: str, region: str):
 
 
 @function_tool
-async def createSkybox(skybox_description: str) -> Designation:
+async def planSkybox(skybox_description: str) -> Designation:
     agent = Agent(
         name="SkyboxCreator" + str(random.randint(100, 999)),
         output_type = AssetPath,
         instructions="Given the directory structure (asset tree), return the path to the file of the desired asset.",
         model=MODEL
-        
     )
     prompt = {"Object description": skybox_description,
                 "Available assets": material_tree}
@@ -207,7 +222,7 @@ async def createSkybox(skybox_description: str) -> Designation:
 
     return PlaceableObject(object_name, json.dumps(object_info["Importances"]))
 
-async def createSkyboxLeader(description: str="Plain blue sky"):
+async def planSkyboxLeader(description: str="Plain blue sky"):
     
     agent = Agent(
         name="SkyboxLeader",
@@ -246,23 +261,33 @@ async def placeGround(ground_name: str, placement_of_ground_origin: str, explana
                 "{\"x\": 90, \"y\": 0, \"z\": 45}"
             explanation: A brief human-readable explanation of this placement, include detail on where this object is and what space it covers.
     """
-    print(f"Loading placement of centerpoint {placement_of_ground_origin}") 
+    print(f"Loading placement of ground ---> {placement_of_ground_origin}") 
     print(f"Why this ground placement? {explanation}")
     try:
         json_location = json.loads(placement_of_ground_origin)
     except ValueError:
         print(f"Error loading given location into JSON: {placement_of_ground_origin}")
-        return f"Failed to add object '{ground_name}' to location {location} in the scene. Make sure to pass a correct something that can be loaded with json.loads() into JSON."
+        return f"Failed to add object '{ground_name}' to location {placement_of_ground_origin} in the scene. Make sure to pass a correct something that can be loaded with json.loads() into JSON."
         
     global unity
 
 
     try:
         unity.add_ground(ground_name, json_location)
-
+        unity.contact_points[ground_name] = []
+        for i in range(0, len(unity.ground_matrix)):
+            for j in range(0, len(unity.ground_matrix[i])):
+                contact_point = (i * 5 + float(json_location["x"]), j *5 + float(json_location["y"]), unity.ground_matrix[i][j] + float(json_location["z"]))
+                unity.contact_points[ground_name].append(contact_point)
         return f"Successfully added ground to the scene. Recall the information of {ground_name}: {'all positions are open for further placement. the dimensions are 50m x 50m in the -X, +Z directions.'}."
     except Exception as e:
-        print("Error adding ground...", e)
+        exc_type, exc_obj, exc_tb = sys.exc_info()
+        fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
+        line_number = exc_tb.tb_lineno
+        print(f"Error: {e}")
+        print(f"Type: {exc_type}")
+        print(f"File: {fname}")
+        print(f"Line Number: {line_number}")
         return f"Failed to add '{ground_name}' to the scene. Make sure the arguments are right."
     
 
@@ -274,7 +299,7 @@ async def planGround(ground_description: str):
 
     agent = Agent(
         name="GroundPlanner",
-        instructions="Give me a 11x11 grid of floats, written out directly as rows of numbers, no code, that represents the heightmap of the ground described by the prompt. The length and width are defined by one grid unit times 5. (So the ground is 50m x 50m.) The height is in meters, so a height of 1 is one meter. A human we'll say is 2m. Let the ground be human-scale. In your response, explain the decisions of the heightmap to aid further placement of object on the ground. ",
+        instructions="Give me a 11x11 grid of floats, written out directly as rows of numbers, no code, that represents the heightmap of the ground described by the prompt. The length and width are defined by one grid unit times 5. (So the ground is 50m x 50m.) The height is in meters, so a height of 1 is one meter. A human we'll say is 2m. Let the ground be human-scale. In your response, briefly explain (one sentence) the decisions of the heightmap to aid further placement of object on the ground. ",
         output_type=GroundData
     )
     prompt = {"Description of the ground": ground_description}
@@ -284,13 +309,15 @@ async def planGround(ground_description: str):
     result = await Runner.run(agent, json.dumps(prompt))
     print(agent.name + ":", time.time() - t, "seconds.")
     
+    global unity
+    
     explanation = result.final_output.explanation_of_heights
-    object_asset_path, matrix = obj_from_grid(result.final_output.grid) # writes obj
+    object_asset_path, unity.ground_matrix = obj_from_grid(result.final_output.grid) # writes obj
     print("Ground obj written.")
     
-    object_info = {"Name": object_asset_path.split("/")[-1], "Importances": {"grid": str(matrix), "open positions": "all positions are open for further placement", "dimensions": "50m x 50m in the -X, +Z directions.", "Notes": "centerpoint is on the +X, -Z corner. " + explanation, "Unplaced!": "Make sure to use placeGround to place this object."},}
+    object_info = {"Name": object_asset_path.split("/")[-1], "Importances": {"grid": str(unity.ground_matrix), "open contact points": "all positions are open for further placement", "dimensions": "50m x 50m in the -X, +Z directions.", "Local origin": "origin is on the +X, -Z corner." + explanation, "Unplaced!": "Make sure to use placeGround to place this object."},}
     
-    global unity
+
 
     object_name = object_info["Name"]
      
@@ -313,7 +340,7 @@ async def test_skybox(prompt="A blue sky"):
     
     leader = Agent(
         name="Leader",
-        tools=[createSkybox, placeSkybox],
+        tools=[planSkybox, placeSkybox],
         instructions="You make a Unity world according to the prompt. You are the primary agent in a swarm of LLM-guided agents. It is your job to archestrate the use of tools to generate the scene described by the prompt.",
         model=MODEL
     )
@@ -361,21 +388,20 @@ async def test_river(prompt="A river"):
     
     unity.done_and_write()
 
-async def test_river_bridge(prompt="A river cutting through a terrain with some foliage, and a bridge going over it connecting two banks."):
+async def test_river_bridge(prompt="A 5m deep river cutting through a terrain with some foliage, and a bridge going over it connecting two banks."):
     global unity
     unity = UnityFile("test_river_bridge" + str(random.randint(100, 999)))
     
     leader = Agent(
         name="Leader",
-        tools=[planGround, placeGround, planObject, placeObject],
-        instructions="You make a Unity world according to the prompt. You are the primary agent in a swarm of LLM-guided agents. It is your job to archestrate the use of tools to generate the scene described by the prompt.\n\
-        You are the architect of the scene. According to the prompt, you design the scene by creating objects. Reference one object per call to planObject, since some downstream agent needs to take your description and find the right asset. You should create the ground before any objects are created, so that you can properly arrange objects in the scene. To create the ground, you prompt an agent to generate a heightmap that fits the scene. Make sure to place objects ATOP the ground. Make sure to PLACE all the object you CREATE.",
+        tools=[planSkybox, placeSkybox, planGround, placeGround, planObject, placeObject],
+        instructions="You make a Unity world according to the prompt. You are the primary agent in a swarm of LLM-guided agents. It is your job to orchestrate the use of tools to generate the scene described by the prompt. Reference one object per call to planObject, since some downstream agent needs to take your description and find the right asset. First you PLAN something, then you PLACE. Furthermore, you should place the ground before you place any other objects, so that all the objects are correctly related to the ground. To plan out the ground, you prompt an agent to generate a heightmap that fits the given description of the scene. Make sure to place objects ATOP the ground. The skybox should also loosely match the description. 'Contact points' will be points 3D coordinates that are unobstructed and useful for placing further objects, such as the coordinates atop the ground. They are just supposed to be guides, though not necessary to use.",
         model=MODEL
     )
     
     prompt = {"Description of the scene": prompt}
     
-    await Runner.run(leader, json.dumps(prompt))
+    await Runner.run(leader, json.dumps(prompt), max_turns=20)
     
     unity.done_and_write()
 
