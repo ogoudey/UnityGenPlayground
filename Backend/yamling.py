@@ -117,6 +117,15 @@ class YAML:
         self.wrapped.append(wrapped)
         print("Asset added to YAML.")            
     
+    def remove_prefab_instance_if_exists(self, name):
+        for doc in self.wrapped:
+            for mod in doc["PrefabInstance"]["m_Modification"]["m_Modifications"]:
+                if mod.get("propertyPath") == "m_Name":
+                    if mod["target"]["value"] == name:
+                        self.wrapped.remove(doc)
+                        return True
+        return False
+    
     def add_prefab_instance(self, name, transform, rotation):
         yaml = ruamel_YAML(typ='rt')
         default = list(yaml.compose_all(preprocess_text(prefab_init_text)))[0]
@@ -151,7 +160,7 @@ class YAML:
                 mod["target"]["guid"] = guid
                 if mod.get("propertyPath") == "m_Name":
                     mod["target"]["fileID"] = father_ID
-                    mod["target"]["value"] = "Name of object here" # Anything?
+                    mod["target"]["value"] = name # Anything?
                 elif mod.get("propertyPath") == "m_Materials.Array.data[0]":
                     mod["target"]["fileID"] = -7635826562936255635
                 else:

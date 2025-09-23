@@ -41,6 +41,7 @@ print(f"\nSynopsis file loaded with {len(synopses)} entries")
 
 async def update_synopsis_file():
     i = 1
+    updates_needed = len(assets_info) - len(synopses)
     for asset_path, asset_info in assets_info.items():
         found = False
         for synopsis, ante_asset_path in synopses.items():
@@ -51,13 +52,21 @@ async def update_synopsis_file():
             continue
         else:
             print(asset_path, "not found in synopses...")
-            print(f"Generating synopsis... {i}/{len(synopses)}")
+            print(f"Generating synopsis... {i}/{updates_needed}")
             i += 1
             new_synopsis = await generate_synopsis(asset_info)
             synopses[new_synopsis] = asset_path
             print(asset_info)
             print("------>", new_synopsis)
     print("Synopsis file up to date.")
+    if updates_needed > 0:
+        with open("synopsis_file.json", "w") as s:
+            output_str = json.dumps(synopses, indent=2)
+            s.write(output_str)
+            print("Synopsis file updated.")
+
+
+    
 
 
 
@@ -94,6 +103,7 @@ class UnityFile:
          
               
     def add_ground(self, ground_name, transform={"x":0.0, "y":0.0, "z":0.0}):
+        unity.yaml.remove_prefab_instanceif_exists(ground_name)
         guid = uuid.uuid4().hex
         yamling.write_obj_meta(self.yaml.used_assets[ground_name], guid)
         self.yaml.add_ground_prefab_instance(guid, transform)
@@ -204,14 +214,16 @@ async def planObject(description: str) -> PlaceableObject:
 async def placeObject(object_name: str, placement_of_object_origin: str, rotation: str, explanation: str) -> str:
     """
         Args:
-            object_name: The name of the object you just created
+            object_name: The name of the object you have planned, PlaceableObject.name. (Must match exactly that name.)
             placement_of_object_origin: Must be a JSON-encoded string. Example:
                 "{\"x\": 75, \"y\": 10, \"z\": 70}"
             rotation: Must be a JSON-encoded string. Example:
                 "{\"x\": 90, \"y\": 0, \"z\": 45}"
             explanation: A human-readable explanation of why this placement was chosen. Example: "I put the water here to be above the height y=0.5 along the riverbed. Be sure to explain the height with regard to the contact points and the open spaces of the heightmap."
     """
-    print(f"Placement for {object_name} ---> {placement_of_object_origin} with rotation {rotation}")
+    print(f"Placing '{object_name}' ---> {placement_of_object_origin} with rotation {rotation}")
+    global unity
+    assert object_name in unity.yaml.used_assets
     print(f"Why this placement? {explanation}")
     try:
         json_location = json.loads(placement_of_object_origin)
@@ -225,9 +237,10 @@ async def placeObject(object_name: str, placement_of_object_origin: str, rotatio
         print("Error loading given rotation into JSON")
         return f"Failed to add object '{object_name}' to rotation {rotation} in the scene (json.loads() error) Make sure to pass a correct something that can be loaded with json.loads() into JSON."
     print(f"Parsed location and rotation into JSON for '{object_name}'")
-    global unity
+    
     try:
         for parent, contact_points in unity.contact_points.items():
+            # Popping contact points
             if (json_location["x"], json_location["y"], json_location["z"]) in unity.contact_points[parent]:
                 print("POPPING contact point", (json_location["x"], json_location["y"], json_location["z"]), "from contact points")
                 unity.contact_points[object_name].remove((json_location["x"], json_location["y"], json_location["z"]))
@@ -344,13 +357,16 @@ async def placeGround(ground_name: str, placement_of_ground_origin: str, explana
 
 
     try:
+        
         unity.add_ground(ground_name, json_location)
+        
+        # Add new contact points under ground
         unity.contact_points[ground_name] = []
         for i in range(0, len(unity.ground_matrix)):
             for j in range(0, len(unity.ground_matrix[i])):
                 contact_point = (i * 5 + float(json_location["x"]), j *5 + float(json_location["y"]), unity.ground_matrix[i][j] + float(json_location["z"]))
                 unity.contact_points[ground_name].append(contact_point)
-        return f"Successfully added ground to the scene. Recall the information of {ground_name}: {'all positions are open for further placement. the dimensions are 50m x 50m in the -X, +Z directions.'}."
+        return f"Successfully added ground to the scene. Recall the information of {ground_name}: {'all positions are open for further placement. the dimensions are 50m x 50m in the -X, +Z directions.'}. In other words, the ground goes from (0,0) to (-50, 50) All objects should be on top of me."
     except Exception as e:
         exc_type, exc_obj, exc_tb = sys.exc_info()
         fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
@@ -360,6 +376,7 @@ async def placeGround(ground_name: str, placement_of_ground_origin: str, explana
         print(f"File: {fname}")
         print(f"Line Number: {line_number}")
         return f"Failed to add '{ground_name}' to the scene. Make sure the arguments are right."
+        
 plan_ground_insturctions_v1 = """Give me a 11x11 grid of floats, written out directly as rows of numbers, no code, that represents the heightmap of the ground described by the prompt. The length and width are defined by one grid unit times 5. (So the ground is 50m x 50m.) The height is in meters, so a height of 1 is one meter. A human we'll say is 2m. Let the ground be human-scale. In your response, briefly explain (one sentence) the decisions of the heightmap to aid further placement of object on the ground.
 """    
 plan_ground_instructions_v2 = """Return a heightmap for the ground as an 11x11 grid of floats. 
@@ -381,6 +398,9 @@ async def get_contact_points() -> str:
     """
         Returns the points in the scene which are available to place objects on.
     """
+    global unity
+    
+    return json.dumps(unity.contact_points)
 
 @function_tool
 async def planGround(ground_description: str):
@@ -498,7 +518,9 @@ You must orchestrate tool usage in the following structured order:
 
 General rules:
 - Always PLAN before PLACE.
-- Use all tools at least once when appropriate.
+- Use get_contact_points to get an estimate of exact (x, y, z) coordinates available for placing objects on.
+- Use all other tools at least once when appropriate.
+- Use planGround/placeGround multiple times if need be.
 - Stop once the world clearly reflects the prompt.
 
 Your role is to reliably build a coherent, grounded Unity world from the description."""
@@ -524,7 +546,7 @@ async def test_river_bridge(prompt="A 5m deep river cutting through a terrain wi
     
     leader = Agent(
         name="Leader",
-        tools=[planSkybox, placeSkybox, planGround, placeGround, planObject, placeObject],
+        tools=[get_contact_points, planSkybox, placeSkybox, planGround, placeGround, planObject, placeObject],
         instructions=instruction_v2,
         model=MODEL
     )
@@ -557,6 +579,7 @@ async def test_river_bridge(prompt="A 5m deep river cutting through a terrain wi
              
         result = await Runner.run(checker, json.dumps(prompt), max_turns=10)
         print(result.final_output) 
+        print("----------------")
     
     
     unity.done_and_write()

@@ -1,2 +1,18 @@
 {
+  "a spruce tree with its pivot at the base center, ensuring correct ground alignment": "../Assets/Proxy Games/Stylized Nature Kit Lite/Prefabs/Foliage/Trees/Spruce 1.prefab",
+  "a 50m square water plane with pivot at its positive X and Z corner": "../Assets/Proxy Games/Stylized Nature Kit Lite/Prefabs/Water/Detailed Water.prefab",
+  "a 50m x 50m water plane with a pivot at its +X, +Z corner": "../Assets/Proxy Games/Stylized Nature Kit Lite/Prefabs/Water/Flat Water.prefab",
+  "a 16m rope bridge with 2m tall posts and a 1m sag in the middle": "../Assets/Blue Polygon/Rope Bridge 3D/Prefab/rope_bridge.prefab",
+  "a large mossy rock cliff with a flat base centered horizontally": "../Assets/Proxy Games/Stylized Nature Kit Lite/Prefabs/Rocks/Rock Cliffs/Rock Cliff 1.prefab",
+  "a huge mossy rock cliff with a flat base": "../Assets/Proxy Games/Stylized Nature Kit Lite/Prefabs/Rocks/Rock Cliffs/Rock Cliff 4.prefab",
+  "a long, flat branch stick approximately 2m long and 1m wide resting on the horizontal plane": "../Assets/Proxy Games/Stylized Nature Kit Lite/Prefabs/Foliage/Branch/Branch.prefab",
+  "a 1m radius bush with a central pivot positioned at the object's lowest Y point": "../Assets/Proxy Games/Stylized Nature Kit Lite/Prefabs/Foliage/Bush/Bush.prefab",
+  "a 1m tall, narrow flower with its pivot at the base on the Y axis": "../Assets/Proxy Games/Stylized Nature Kit Lite/Prefabs/Foliage/Flower/Flower.prefab",
+  "a 2m square patch of flat grass centered on its geometric middle": "../Assets/Proxy Games/Stylized Nature Kit Lite/Prefabs/Foliage/Grass/Grass.prefab",
+  "a 2-meter-long, negligibly-thin log centered on its midpoint and aligned along the x-axis": "../Assets/Proxy Games/Stylized Nature Kit Lite/Prefabs/Foliage/Log/Log.prefab",
+  "a small mushroom with a centrally located base, under 0.5m wide and roughly 0.3m tall": "../Assets/Proxy Games/Stylized Nature Kit Lite/Prefabs/Foliage/Mushroom/Mushrooms Patch.prefab",
+  "a roughly 1m cubed rock with a centered 3D midpoint origin": "../Assets/Proxy Games/Stylized Nature Kit Lite/Prefabs/Rocks/Standard Rocks/Standard Rock 1.prefab",
+  "a rock positioned 4m along the X axis, 2m along the Z axis, with a 0.5m vertical range around its center point": "../Assets/Proxy Games/Stylized Nature Kit Lite/Prefabs/Rocks/Standard Rocks/Standard Rock 2.prefab",
+  "a rock centered at 4m on the X axis, 3m on the Z axis, and 1m above the Y plane": "../Assets/Proxy Games/Stylized Nature Kit Lite/Prefabs/Rocks/Standard Rocks/Standard Rock 3.prefab",
+  "a rock approximately 2m wide and 3m tall with a flat base aligned to the Y-plane": "../Assets/Proxy Games/Stylized Nature Kit Lite/Prefabs/Rocks/Standard Rocks/Standard Rock 4.prefab"
 }
