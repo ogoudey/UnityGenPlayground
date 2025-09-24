@@ -40,7 +40,14 @@ Used assets:
 [Bridge](https://assetstore.unity.com/packages/3d/environments/rope-bridge-3d-222563)
 
 
-
+## VR Setup
+(Assuming a VIVE headset and a wireless adapter, a Windows computer, etc.)
+1. Plug the headset into the power brick (make sure the power brick is ON)
+2. Open up the Unity project (through the Unity Hub, takes a minute)
+3. Open up SteamVR (takes a minute)
+4. Open up VIVE Wireless (takes a minute)
+5. Open up a Unity world with the OpenVR package imported.
+6. Hit play to send the game to the headset.
 
 Note:
 Change Quality / Rendering / Rendering Pipeline Asset to None
