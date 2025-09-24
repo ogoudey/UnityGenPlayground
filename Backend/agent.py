@@ -272,6 +272,34 @@ async def createSectionL0(prompt: str, region: str):
     await Runner.run(section_leader0_w_groundleader, json.dumps(prompt))
     return f"Successfully allocated generation of this section which has description '{description}'."
 
+@function_tool
+def place_vr_human_player(transform: str, rotation: str = "{\"x\": 75, \"y\": 10, \"z\": 70}"):
+    """
+    This function places the human player (who's wearing VR) in the scene. The player can walk around 1m from where they are placed.
+    transform: Must be a JSON-encoded string. Example:
+        "{\"x\": 75, \"y\": 10, \"z\": 70}"
+    rotation: Must be a JSON-encoded string. Example:
+        "{\"x\": 90, \"y\": 0, \"z\": 45}"
+    explanation: A human-readable explanation of why this placement was chosen. Example: "I put player here on the surface along the riverbed. Be sure to explain the height with regard to the contact points and the open spaces of the heightmap."
+    """
+    print(f"Placing human VR player ---> location {transform}, rotation {rotation}")
+    global unity
+    assert object_name in unity.yaml.used_assets
+    print(f"Why this placement? {explanation}")
+    try:
+        json_location = json.loads(transform)
+    except ValueError:
+        print("Error loading given placement_of_centerpoint into JSON")
+        return f"Failed to add player to location {location} in the scene (json.loads() error). Make sure to pass a correct something that can be loaded with json.loads() into JSON."
+    try:
+        json_rotation = json.loads(rotation)
+    except ValueError:
+        print("Error loading given rotation into JSON")
+        return f"Failed to add object player to rotation {rotation} in the scene (json.loads() error) Make sure to pass a correct something that can be loaded with json.loads() into JSON."
+    print(f"Parsed player's location and rotation into JSON")
+    unity.set_vr_player(transform, rotation)
+    return f"Successfully added player to the scene at {location}."
+    
 
 @function_tool
 async def planSkybox(skybox_description: str) -> Designation:

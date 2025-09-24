@@ -125,7 +125,45 @@ class YAML:
                         self.wrapped.remove(doc)
                         return True
         return False
-    
+        
+    def set_vr_player(self, transform:str, rotation: str):
+        yaml = ruamel_YAML(typ='rt')
+        default = list(yaml.compose_all(preprocess_text(vr_setup_init_text)))[0]
+        wrapped = node_to_python(default)
+        
+        quaternion = euler_to_xyzw_quaternion(rotation)
+        print("Parsing init YAML...")
+        modifications = wrapped["PrefabInstance"]["m_Modification"]["m_Modifications"]
+        for mod in modifications:
+            if "target" in mod and "guid" in mod["target"]:
+                if mod.get("propertyPath") == "m_LocalPosition.x":
+                    mod["value"] = transform["x"]
+                if mod.get("propertyPath") == "m_LocalPosition.y":
+                    mod["value"] = transform["y"]
+                if mod.get("propertyPath") == "m_LocalPosition.z":
+                    mod["value"] = transform["z"]
+                if not scale == 1.0:
+                    if mod.get("propertyPath") == "m_LocalScale.x":
+                        mod["value"] = scale
+                    if mod.get("propertyPath") == "m_LocalScale.z":
+                        mod["value"] = scale
+                if mod.get("propertyPath") == "m_LocalRotation.x":
+                    mod["value"] = quaternion[0]
+                if mod.get("propertyPath") == "m_LocalRotation.y":
+                    mod["value"] = quaternion[1]
+                if mod.get("propertyPath") == "m_LocalRotation.z":
+                    mod["value"] = quaternion[2]
+                if mod.get("propertyPath") == "m_LocalRotation.w":
+                    mod["value"] = quaternion[3]
+        
+        prefab_id = wrapped["anchor"] # constant 1214490813
+        
+        sceneroots = self.get_doc("SceneRoots")
+        sceneroots["m_Roots"].append({"fileID": prefab_id})
+        print("Init YAML succcessfully updated.")
+        self.wrapped.append(wrapped)
+        print("VR Player successfully added to YAML.")
+        
     def add_prefab_instance(self, name, transform, rotation):
         yaml = ruamel_YAML(typ='rt')
         default = list(yaml.compose_all(preprocess_text(prefab_init_text)))[0]
@@ -418,9 +456,73 @@ def write_obj_meta(obj_path, guid):
     with open(obj_path + ".meta", "w") as f:
         f.write(yaml_str)
         
+    print("Meta file with updated GUID written")
     
 
-    print("Meta file with updated GUID written")
+
+vr_setup_init_text = """
+--- !u!1001 &1214490813
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 0}
+    m_Modifications:
+    - target: {fileID: 175660, guid: cb3370c18187bb444b240cfb08dcc02f, type: 3}
+      propertyPath: m_Name
+      value: ViveCameraRig
+      objectReference: {fileID: 0}
+    - target: {fileID: 463184, guid: cb3370c18187bb444b240cfb08dcc02f, type: 3}
+      propertyPath: m_RootOrder
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 463184, guid: cb3370c18187bb444b240cfb08dcc02f, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 463184, guid: cb3370c18187bb444b240cfb08dcc02f, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 463184, guid: cb3370c18187bb444b240cfb08dcc02f, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 463184, guid: cb3370c18187bb444b240cfb08dcc02f, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 463184, guid: cb3370c18187bb444b240cfb08dcc02f, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 463184, guid: cb3370c18187bb444b240cfb08dcc02f, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 463184, guid: cb3370c18187bb444b240cfb08dcc02f, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 463184, guid: cb3370c18187bb444b240cfb08dcc02f, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 463184, guid: cb3370c18187bb444b240cfb08dcc02f, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 463184, guid: cb3370c18187bb444b240cfb08dcc02f, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: cb3370c18187bb444b240cfb08dcc02f, type: 3}
+ """
 
 obj_meta_init_text = """
 fileFormatVersion: 2
