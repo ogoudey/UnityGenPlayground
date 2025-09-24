@@ -568,7 +568,7 @@ You are responsible for checking the placed assets in a Unity scene. You will be
     Keep your answer brief and to the point.
 """
 
-async def test_river_bridge(prompt="A 5m deep river cutting through a terrain with some foliage, and a bridge going over it connecting two banks.", instructions=""):
+async def test_river_bridge(prompt="A 5m deep river cutting through a terrain with some foliage, and a bridge going over it connecting two banks."):
     global unity
     unity = UnityFile("test_river_bridge" + str(random.randint(100, 999)))
     
@@ -612,6 +612,49 @@ async def test_river_bridge(prompt="A 5m deep river cutting through a terrain wi
     
     unity.done_and_write()
 
+async def test_river_bridge_vr(prompt="A 5m deep river cutting through a terrain with some foliage, and a bridge going over it connecting two banks. With a VR player to be placed.", instructions=""):
+    global unity
+    unity = UnityFile("test_river_bridge" + str(random.randint(100, 999)))
+    
+    leader = Agent(
+        name="Leader",
+        tools=[get_contact_points, place_vr_human_player, planSkybox, placeSkybox, planGround, placeGround, planObject, placeObject],
+        instructions=instruction_v2,
+        model=MODEL
+    )
+    
+    prompt = {"Description of the scene": prompt}
+    
+    await Runner.run(leader, json.dumps(prompt), max_turns=20)
+    
+    print("\n\n__Checking__\nGoing through used assets:", unity.yaml.placed_assets)
+    
+    checker = Agent(
+        name="Checker",
+        tools=[get_ground_matrix],
+        instructions=checker_instructions_v1,
+        model=MODEL
+    )
+    for asset_name, placement in unity.yaml.placed_assets.items():
+        
+        print("Checking", asset_name, "...")
+        if asset_name in list(unity.yaml.used_assets.keys()):
+            path = unity.yaml.used_assets[asset_name]
+            reference_info = assets_info[path]
+        elif "ground" in asset_name:
+            reference_info = {"grid": unity.ground_matrix, "other info": "scaled by 5 and covering the -X +Z quadrant. 50m by 50m."}
+        else:
+            reference_info = None
+            print(asset_name, "not in asset info sheet (which is ")
+         
+        prompt = {"Reference info": reference_info, "Actual placement": placement}
+             
+        result = await Runner.run(checker, json.dumps(prompt), max_turns=10)
+        print(result.final_output) 
+        print("----------------")
+    
+    
+    unity.done_and_write()
 
 test_dispatcher = {
     # = deprecated test
@@ -625,7 +668,7 @@ test_dispatcher = {
     "test_ground": test_ground,
     "test_river": test_river,
     "test_river_bridge": test_river_bridge,
-
+    "test_vr": test_river_bridge_vr,
 
 }
 
@@ -633,22 +676,18 @@ import sys
 if __name__ == "__main__":
     asyncio.run(update_synopsis_file())
     
-    asyncio.run(test_river_bridge(instructions=instruction_v1))
     
+
     
-    """
-    prompt = "A forest"
     if sys.argv[1]:
         try:
             test_function = test_dispatcher[sys.argv[1]]
-        except KeyError("Invalid test name. Choose from: " + str(test_dispatcher)):
-            test_function = input("Choice:\n")
-            test_function = test_dispatcher[test_function]
+        except KeyError("Invalid test name. Choose from: " + str(list(test_dispatcher.keys()))):
+            return 0
         asyncio.run(test_function())
         
     else:
-        asyncio.run(main(prompt))
-    """
+        print("Please include test from:", list(test_dispatcher.keys()))
 
 
 
