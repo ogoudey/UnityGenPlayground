@@ -18,7 +18,10 @@
 
 **Available assets**: a small deck of prefabs from /Prefabs in [Nature stuff](https://assetstore.unity.com/packages/3d/environments/unl-ultimate-nature-lite-176906)
 
-**Settings**: One main agent plans the scene with help of others, and then places the objects in XYZ space. The ground is a generated heightmap.
+**Settings**:
+1. One main agent plans with the help of subagents, and then places the objects its planned. The ground is a generated heightmap. Then
+2. The positions of the objects are checked against the ground, these checks go into a list of feedbacks.
+3. The feedback is considered by a third agent who reforms the objects given the feedback.
 
 **Notes**: 
 * Either LLM's "short term memory" issue, or a miscommunication issue - each asset is locally different from the others, affecting correct __visual__ placement.
