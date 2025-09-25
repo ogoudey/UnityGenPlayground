@@ -1,8 +1,14 @@
 import os
+import sys
+import random
+import time
+import json
 from dataclasses import dataclass, asdict
 
 from agents import function_tool, Runner
 from pydantic import BaseModel
+
+from subagents import ObjectPlanner, GroundPlanner, SkyboxPlanner
 
 from obj_building import obj_from_grid
 
@@ -40,7 +46,7 @@ async def planObject(description: str) -> PlaceableObject:
             description: Some text describing that the object should be like, refering to a singular object that's likely to be selected from a common asset library. For example, "water", "a rock", "a house", etc.
     """
 
-    agent = ObjectPlanner()
+    agent = ObjectPlanner(tools=[get_ground_matrix])
     prompt = {"Description of object": description, "Synopses to choose from": list(synopses.keys())}
 
     
@@ -51,7 +57,7 @@ async def planObject(description: str) -> PlaceableObject:
     
     global unity
 
-    print(f"Matched description '{description}' to '{result.final_output}'")
+    print(f"Matched synopsis '{result.final_output}' to description '{description}'")
     try:
         object_asset_path = synopses[result.final_output]
     except KeyError:
@@ -148,12 +154,7 @@ def place_vr_human_player(transform: str, rotation: str = "{\"x\": 75, \"y\": 10
 
 @function_tool
 async def planSkybox(skybox_description: str) -> Designation:
-    agent = Agent(
-        name="SkyboxCreator" + str(random.randint(100, 999)),
-        output_type = AssetPath,
-        instructions="Given the directory structure (asset tree), return the path to the file of the desired asset.",
-        model=MODEL
-    )
+    agent = SkyboxPlanner(tools=[get_ground_matrix])
     prompt = {"Object description": skybox_description,
                 "Available assets": material_leaves}
 
@@ -213,12 +214,8 @@ async def placeGround(ground_name: str, placement_of_ground_origin: str, explana
         return f"Failed to add object '{ground_name}' to location {placement_of_ground_origin} in the scene. Make sure to pass a correct something that can be loaded with json.loads() into JSON."
         
     global unity
-
-
     try:
-        
         unity.add_ground(ground_name, json_location)
-        
         # Add new contact points under ground
         unity.contact_points[ground_name] = []
         for i in range(0, len(unity.ground_matrix)):
@@ -242,7 +239,6 @@ async def get_contact_points() -> str:
         Returns the points in the scene which are available to place objects on.
     """
     global unity
-    
     return json.dumps(unity.contact_points)
 
 @function_tool
@@ -252,11 +248,7 @@ async def planGround(ground_description: str):
     Can be called multiple times, to reshape the ground, to fit the object that are static, immalleable.
     """
 
-    agent = Agent(
-        name="GroundPlanner",
-        instructions=plan_ground_instructions_v2,
-        output_type=GroundData
-    )
+    agent = GroundPlanner(tools=[get_ground_matrix])
     prompt = {"Description of the ground": ground_description}
     
     t = time.time()
@@ -265,7 +257,6 @@ async def planGround(ground_description: str):
     print(agent.name + ":", time.time() - t, "seconds.")
     
     global unity
-    
     explanation = result.final_output.explanation_of_heights
     object_asset_path, unity.ground_matrix = obj_from_grid(result.final_output.grid) # writes obj
     print("Ground obj written.")
@@ -273,7 +264,6 @@ async def planGround(ground_description: str):
     object_info = {"Name": object_asset_path.split("/")[-1], "Importances": {"grid": str(unity.ground_matrix), "open contact points": "all positions are open for further placement", "dimensions": "50m x 50m in the -X, +Z directions.", "Local origin": "origin is on the +X, -Z corner." + explanation, "Unplaced!": "Make sure to use placeGround to place this object."},}
     
     object_name = object_info["Name"]
-    
     unity.yaml.used_assets[object_name] = object_asset_path
     print(object_name, "added to used_assets w path", object_asset_path)
     return PlaceableObject(object_name, json.dumps(object_info["Importances"]))

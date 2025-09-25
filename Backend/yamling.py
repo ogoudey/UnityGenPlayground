@@ -47,9 +47,9 @@ class YAML:
         try:
             render_settings = self.get_doc("RenderSettings")
             render_settings["m_SkyboxMaterial"] = {"fileID": "2100000", "guid": guid, "type": 2}
-            print("Skybox set in YAML.")
+            print("\rSkybox set in YAML.")
         except Exception:
-            print("Failed to set skybox.")
+            print("\rFailed to set skybox.")
             
     def add_transform(self, guid: str, transform: dict):
         yaml = ruamel_YAML(typ='rt')
@@ -226,12 +226,12 @@ class YAML:
                         mod["value"] = quaternion[3]
                       
                       
-                -7635826562936255635  
+
                     
         wrapped["PrefabInstance"]["m_SourcePrefab"]["guid"] = guid
         sceneroots = self.get_doc("SceneRoots")
         sceneroots["m_Roots"].append({"fileID": id_out})
-        print("Init YAML succcessfully updated.")
+        print("\rInit YAML succcessfully updated.")
         self.wrapped.append(wrapped)
         print("Asset added to YAML.")
         

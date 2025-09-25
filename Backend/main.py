@@ -12,7 +12,7 @@ import asyncio
 
 from agents import Runner
 import coordinator as agents
-from coordinator import ObjectPlanner, GroundPlanner, Checker, Reformer, Coordinator
+from coordinator import Checker, Reformer, Coordinator
 from tools import get_ground_matrix, planObject, placeObject, place_vr_human_player, planSkybox, placeSkybox, placeGround, get_contact_points, planGround
 
 from scene import UnityFile
