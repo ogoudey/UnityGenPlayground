@@ -119,11 +119,12 @@ class YAML:
     
     def remove_prefab_instance_if_exists(self, name):
         for doc in self.wrapped:
-            for mod in doc["PrefabInstance"]["m_Modification"]["m_Modifications"]:
-                if mod.get("propertyPath") == "m_Name":
-                    if mod["target"]["value"] == name:
-                        self.wrapped.remove(doc)
-                        return True
+            if "PrefabInstance" in doc:
+                for mod in doc["PrefabInstance"]["m_Modification"]["m_Modifications"]:
+                    if mod.get("propertyPath") == "m_Name":
+                        if mod["target"]["value"] == name:
+                            self.wrapped.remove(doc)
+                            return True
         return False
         
     def set_vr_player(self, transform:str, rotation: str):
@@ -163,6 +164,7 @@ class YAML:
         print("Init YAML succcessfully updated.")
         self.wrapped.append(wrapped)
         print("VR Player successfully added to YAML.")
+        
         
     def add_prefab_instance(self, name, transform, rotation):
         yaml = ruamel_YAML(typ='rt')

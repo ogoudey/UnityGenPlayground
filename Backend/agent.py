@@ -103,7 +103,8 @@ class UnityFile:
          
               
     def add_ground(self, ground_name, transform={"x":0.0, "y":0.0, "z":0.0}):
-        unity.yaml.remove_prefab_instanceif_exists(ground_name)
+        if unity.yaml.remove_prefab_instance_if_exists(ground_name):
+            print(ground_name, "Removed existing ground from YAML")
         guid = uuid.uuid4().hex
         yamling.write_obj_meta(self.yaml.used_assets[ground_name], guid)
         self.yaml.add_ground_prefab_instance(guid, transform)
@@ -117,6 +118,7 @@ class UnityFile:
 @function_tool
 async def get_ground_matrix():
     global unity
+    print("Recalling ground matrix...")
     return unity.ground_matrix     
         
 global unity
@@ -136,6 +138,11 @@ class AssetPath(BaseModel):
 class PlaceableObject():
     name: str
     info: str
+    
+class Check(BaseModel):
+    #object_name: str
+    check_status: bool
+    reason: str
 
 CHEATS = """ IN FACT, just to make things absolutely sure, put the water at x=0, z=50. All other objects just go in the -X +Z quadrant OVER the ground, that is, in (x,z)=(0 -> -50, 0 -> 50), ."""
 
@@ -280,12 +287,9 @@ def place_vr_human_player(transform: str, rotation: str = "{\"x\": 75, \"y\": 10
         "{\"x\": 75, \"y\": 10, \"z\": 70}"
     rotation: Must be a JSON-encoded string. Example:
         "{\"x\": 90, \"y\": 0, \"z\": 45}"
-    explanation: A human-readable explanation of why this placement was chosen. Example: "I put player here on the surface along the riverbed. Be sure to explain the height with regard to the contact points and the open spaces of the heightmap."
     """
     print(f"Placing human VR player ---> location {transform}, rotation {rotation}")
     global unity
-    assert object_name in unity.yaml.used_assets
-    print(f"Why this placement? {explanation}")
     try:
         json_location = json.loads(transform)
     except ValueError:
@@ -540,7 +544,7 @@ You must orchestrate tool usage in the following structured order:
    - Each object must be placed over the ground (atop or aligned with it). 
    - Bridges, rivers, foliage, rocks, or props must all be handled in this way. 
    - Do not plan multiple objects in a single call. 
-4. REGROUNDING: Some objects (e.g. a long bridge), may require the ground to have a certain shape to make sense in, forcing you to reconsier the heightmap of the ground. In this case, call planGround again with requires heights mentioned to in a sense "excavate" the existing ground.
+4. REGROUNDING: Some objects (e.g. a long bridge), may require the ground to have a certain shape to make sense in, forcing you to reconsider the heightmap of the ground. In this case, call planGround again with requires heights mentioned to in a sense "excavate" the existing ground.
 5. COMPLETENESS: Ensure that all elements mentioned in the user prompt are represented in the scene. 
    If something is vague (e.g. "foliage"), interpret it reasonably and cover the intent. 
 
@@ -568,6 +572,10 @@ You are responsible for checking the placed assets in a Unity scene. You will be
     Keep your answer brief and to the point.
 """
 
+reform_instructions_v1 = """
+Suppose you have already built a Unity scene. Now it is your job to incorporate the feedback of an agent who has provided feedback on misplaced objects. Place again, more precisely, the objects that are said to be in the wrong location. You can do this with placeObject. Another approach to correct the misplaced objects is to change the ground. Do this by (for example) changing the ground heightmap with planGround, then replace the ground in the scene with placeGround. Some objects (e.g. a long bridge), may require the ground to have a certain shape to make sense in, forcing you to reconsider the heightmap in this manner.
+"""
+
 async def test_river_bridge(prompt="A 5m deep river cutting through a terrain with some foliage, and a bridge going over it connecting two banks."):
     global unity
     unity = UnityFile("test_river_bridge" + str(random.randint(100, 999)))
@@ -583,14 +591,19 @@ async def test_river_bridge(prompt="A 5m deep river cutting through a terrain wi
     
     await Runner.run(leader, json.dumps(prompt), max_turns=20)
     
+    unity.done_and_write()
+    unity.name += "_v2"
+    
     print("\n\n__Checking__\nGoing through used assets:", unity.yaml.placed_assets)
     
     checker = Agent(
         name="Checker",
         tools=[get_ground_matrix],
         instructions=checker_instructions_v1,
+        output_type=Check,
         model=MODEL
     )
+    feedback = {}
     for asset_name, placement in unity.yaml.placed_assets.items():
         
         print("Checking", asset_name, "...")
@@ -606,8 +619,26 @@ async def test_river_bridge(prompt="A 5m deep river cutting through a terrain wi
         prompt = {"Reference info": reference_info, "Actual placement": placement}
              
         result = await Runner.run(checker, json.dumps(prompt), max_turns=10)
-        print(result.final_output) 
-        print("----------------")
+        check_status = result.final_output.check_status
+        reason = result.final_output.reason
+        if not check_status:
+            feedback[asset_name] = reason
+    
+    
+    
+    print(feedback)
+
+    reformer = Agent(
+        name="Reformer",
+        tools=[placeObject, planGround, placeGround],
+        instructions=reform_instructions_v1,
+        model=MODEL
+    )
+    
+    print(f"Giving feedback on {len(feedback)} objects...")
+    prompt = {"Feedback": feedback}
+    result = await Runner.run(reformer, json.dumps(prompt), max_turns=10)
+    print(f"{result.final_output}")
     
     
     unity.done_and_write()
@@ -633,8 +664,10 @@ async def test_river_bridge_vr(prompt="A 5m deep river cutting through a terrain
         name="Checker",
         tools=[get_ground_matrix],
         instructions=checker_instructions_v1,
+        output_type=Check,
         model=MODEL
     )
+    
     for asset_name, placement in unity.yaml.placed_assets.items():
         
         print("Checking", asset_name, "...")
@@ -650,8 +683,27 @@ async def test_river_bridge_vr(prompt="A 5m deep river cutting through a terrain
         prompt = {"Reference info": reference_info, "Actual placement": placement}
              
         result = await Runner.run(checker, json.dumps(prompt), max_turns=10)
-        print(result.final_output) 
-        print("----------------")
+        check = result.check_status
+        result = await Runner.run(checker, json.dumps(prompt), max_turns=10)
+        check_status = result.final_output.check_status
+        reason = result.final_output.reason
+        if not check_status:
+            feedback[asset_name] = reason
+        
+    print(feedback)
+
+    checker = Agent(
+        name="Reformer",
+        tools=[placeObject],
+        instructions=checker_instructions_v1,
+        output_type=Check,
+        model=MODEL
+    )
+    
+    print(f"Giving feedback on {len(feedback)} objects...")
+    prompt = {"Feedback": feedback}
+    result = await Runner.run(checker, json.dumps(prompt), max_turns=10)
+        
     
     
     unity.done_and_write()
@@ -683,7 +735,7 @@ if __name__ == "__main__":
         try:
             test_function = test_dispatcher[sys.argv[1]]
         except KeyError("Invalid test name. Choose from: " + str(list(test_dispatcher.keys()))):
-            return 0
+            sys.exit(1)
         asyncio.run(test_function())
         
     else:
