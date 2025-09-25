@@ -49,5 +49,5 @@ Used assets:
 5. Open up a Unity world with the OpenVR package imported.
 6. Hit play to send the game to the headset.
 
-Note:
+### Note:
 Change Quality / Rendering / Rendering Pipeline Asset to None
