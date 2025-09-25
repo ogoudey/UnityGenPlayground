@@ -3,8 +3,10 @@ import os
 import re
 import pathlib
 from collections import defaultdict
+import json
 
-def load()
+
+def load():
     with open("asset_info.json", "r") as f:
         j = f.read()
         assets_info = json.loads(j)

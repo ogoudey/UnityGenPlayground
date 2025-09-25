@@ -1,3 +1,6 @@
+import os
+from dataclasses import dataclass, asdict
+
 from agents import function_tool, Runner
 from pydantic import BaseModel
 
@@ -20,12 +23,15 @@ MODEL = (os.getenv("MODEL") or "o3-mini").strip() or "o3-mini"
 class PlaceableObject():
     name: str
     info: str
+    
+class Designation(BaseModel):
+    asset_path: str
 
 @function_tool
 async def get_ground_matrix():
     global unity
     print("Recalling ground matrix...")
-    return {"Grid": unity.ground_matrix, "Information": "The ground goes from (0,0) to (-50, 50). That is, the top left of the matrix is -50, 50. All objects should be on over the ground."   
+    return {"Grid": unity.ground_matrix, "Information": "The ground goes from (0,0) to (-50, 50). That is, the top left of the matrix is -50, 50. All objects should be on over the ground."}   
 
 @function_tool
 async def planObject(description: str) -> PlaceableObject:

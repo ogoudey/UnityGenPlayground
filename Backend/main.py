@@ -8,63 +8,29 @@ import json
 import random
 
 import asyncio
-from dataclasses import dataclass, asdict
+
 
 from agents import Runner
-from coordinator import ObjectPlanner, GroundPlanner, Checker, Reformer, Coordinator, Runner
+import coordinator as agents
+from coordinator import ObjectPlanner, GroundPlanner, Checker, Reformer, Coordinator
+from tools import get_ground_matrix, planObject, placeObject, place_vr_human_player, planSkybox, placeSkybox, placeGround, get_contact_points, planGround
+
+from scene import UnityFile
 
 async def test_river_bridge(prompt="A 5m deep river cutting through a terrain with some foliage, and a bridge going over it connecting two banks."):
     scene_suffix = "draft1"
-    scene_name = f"test_river_bridge{random.randint(100, 999)}{scene_suffix}
-    agents.tools.unity = agents.tools.UnityFile(scene_name)
+    scene_name = f"test_river_bridge{random.randint(100, 999)}{scene_suffix}"
+    agents.tools.unity = UnityFile(scene_name)
+    
     coordinator = Coordinator(tools=[get_contact_points, planSkybox, placeSkybox, planGround, placeGround, planObject, placeObject])
     prompt = {"Description of the scene": prompt}
+    print("__Starting Coordinator___")
     await Runner.run(coordinator, json.dumps(prompt), max_turns=20)
     agents.tools.unity.done_and_write()
     
     
     scene_suffix = "draft2"
     agents.tools.unity.name = scene_name
-    print("\n\n__Checking__\nGoing through used assets:", unity.yaml.placed_assets)
-    checker = Checker()
-    feedback = {}
-    for asset_name, placement in agents.tools.unity.yaml.placed_assets.items():
-        print(f"Checking {asset_name}...")
-        if asset_name in list(agents.tools.unity.yaml.used_assets.keys()):
-            path = agents.tools.unity.yaml.used_assets[asset_name]
-            reference_info = agents.tools.assets_info[path]
-        elif "ground" in asset_name:
-            reference_info = {"grid": agents.tools.unity.ground_matrix, "other info": "scaled by 5 and covering the -X +Z quadrant. 50m by 50m."}
-        else:
-            reference_info = None
-            print(asset_name, "not in asset info sheet.")
-        prompt = {"Reference info": reference_info, "Actual placement": placement}
-        result = await Runner.run(checker, json.dumps(prompt), max_turns=10)
-        check_status = result.final_output.check_status
-        reason = result.final_output.reason
-        if not check_status:
-            feedback[asset_name] = reason
-    print(feedback)
-
-    reformer = Reformer()
-    print(f"Giving feedback on {len(feedback)} objects...")
-    prompt = {"Feedback": feedback}
-    result = await Runner.run(reformer, json.dumps(prompt), max_turns=10)
-    print(f"{result.final_output}")
-    unity.done_and_write()
-
-async def test_river_bridge_vr(prompt="A 5m deep river cutting through a terrain with some foliage, and a bridge going over it connecting two banks."):
-    scene_suffix = "draft1"
-    scene_name = f"test_river_bridge_vr{random.randint(100, 999)}{scene_suffix}
-    agents.tools.unity = agents.tools.UnityFile(scene_name)
-    coordinator = Coordinator() # Max tool usage
-    prompt = {"Description of the scene": prompt}
-    await Runner.run(coordinator, json.dumps(prompt), max_turns=20)
-    agents.tools.unity.done_and_write()
-    
-    scene_suffix = "draft2"
-    agents.tools.unity.name = scene_name
-    print(agents.tools.unity.name, "!!!!!!!!!!!!!!!!!!!1")
     print("\n\n__Checking__\nGoing through used assets:", unity.yaml.placed_assets)
     checker = Checker()
     feedback = {}
@@ -97,7 +63,7 @@ async def test_river_bridge_vr(prompt="A 5m deep river cutting through a terrain
 test_dispatcher = {
     # = deprecated test
     "test_river_bridge": test_river_bridge, # outputs 2 drafts
-    "test_vr": test_river_bridge_vr,
+    #"test_vr": test_river_bridge_vr,
 
 }
 

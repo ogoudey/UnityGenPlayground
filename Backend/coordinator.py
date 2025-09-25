@@ -1,15 +1,16 @@
+import os
+import random
+
 from agents import Agent
+from pydantic import BaseModel
+
+
+import tools
+from tools import get_ground_matrix, planObject, placeObject, place_vr_human_player, planSkybox, placeSkybox, placeGround, get_contact_points, planGround
 
 MODEL = (os.getenv("MODEL") or "o3-mini").strip() or "o3-mini"
 
-from scene import UnityFile
-
-from tools import get_ground_matrix, planObject, placeObject, place_vr_human_player, planSkybox, placeSkybox, placeGround, get_contact_points, planGround
-
 """ Useful classes """
-class Designation(BaseModel):
-    asset_path: str
-
 class GroundData(BaseModel):
     grid: str
     explanation_of_heights: str
@@ -23,7 +24,7 @@ class Check(BaseModel):
     reason: str
 
 class Checker(Agent):
-    instructions: """
+    instructions= """
 You are responsible for checking the placed assets in a Unity scene. You will be given an object, and the ability to get the ground matrix (which is scaled by x5). Essentially you must ask:
     Given the
         1. Ground heightmap (matrix),
@@ -37,42 +38,37 @@ You are responsible for checking the placed assets in a Unity scene. You will be
     def __init__(self, name=None, instructions=None):
         super().__init__(
             name=name or f"Checker{random.randint(100,999)}",
-            instructions=instructions or self.instructions,
+            instructions=instructions or Checker.instructions,
             tools=[get_ground_matrix],
             output_type=Check,
             model=MODEL,
         )
 
 class ObjectPlanner(Agent):
-    instructions: "Retrieve the synopsis that best matches the intended description. Return exactly the synopsis."
+    instructions= "Retrieve the synopsis that best matches the intended description. Return exactly the synopsis."
     
     def __init__(self, name=None, instructions=None):
         super().__init__(
             name=name or f"ObjectPlanner{random.randint(100,999)}",
-            instructions=instructions or self.instructions,
+            instructions=instructions or ObjectPlanner.instructions,
             tools=[get_ground_matrix],
             model=MODEL,
         )
         
 class SkyboxPlanner(Agent):
-    instructions: "Given the directory structure (asset tree), return the path to the file of the desired asset."
-    agent = Agent(
-        name="SkyboxCreator" + str(random.randint(100, 999)),
-        output_type = AssetPath,
-        instructions="Given the directory structure (asset tree), return the path to the file of the desired asset.",
-        model=MODEL
-    )
+    instructions= "Given the directory structure (asset tree), return the path to the file of the desired asset."
+    
     def __init__(self, name=None, instructions=None):
         super().__init__(
             name=name or f"SkyboxPlanner{random.randint(100,999)}",
-            instructions=instructions or self.instructions,
+            instructions=instructions or SkyboxPlanner.instructions,
             tools=[get_ground_matrix],
             output_type=AssetPath,
             model=MODEL,
         )
         
 class GroundPlanner(Agent):
-    instructions:"""Return a heightmap for the ground as an 11x11 grid of floats. 
+    instructions="""Return a heightmap for the ground as an 11x11 grid of floats. 
 Rules:
 - Write the grid directly as 11 rows of 11 numbers each, separated by spaces. Do not add code, JSON, or extra symbols. 
 - Each number is the ground height in meters. A height of 0 means flat ground at sea level. 
@@ -89,15 +85,15 @@ Output format must follow GroundData:
     def __init__(self, name=None, instructions=None):
         super().__init__(
             name=name or f"ObjectPlanner{random.randint(100,999)}",
-            instructions=instructions or self.instructions,
+            instructions=instructions or GroundPlanner.instructions,
             tools=[get_ground_matrix],
             model=MODEL,
             output_type=GroundData
         )
 
 class Coordinator(Agent):    
-    instruction_v1: "You make a Unity world according to the prompt. You are the primary agent in a swarm of LLM-guided agents. It is your job to orchestrate the use of tools to generate the scene described by the prompt. Reference one object per call to planObject, since some downstream agent needs to take your description and find the right asset. First you PLAN something, then you PLACE. Furthermore, you should place the ground before you place any other objects, so that all the objects are correctly related to the ground. To plan out the ground, you prompt an agent to generate a heightmap that fits the given description of the scene. Make sure to place objects ATOP the ground. The skybox should also loosely match the description. 'Contact points' will be points 3D coordinates that are unobstructed and useful for placing further objects, such as the coordinates atop the ground. They are just supposed to be guides, though not necessary to use."
-    instruction_v2: """You are the Coordinator agent responsible for generating a Unity scene that matches the user prompt. 
+    instructions_v1= "You make a Unity world according to the prompt. You are the primary agent in a swarm of LLM-guided agents. It is your job to orchestrate the use of tools to generate the scene described by the prompt. Reference one object per call to planObject, since some downstream agent needs to take your description and find the right asset. First you PLAN something, then you PLACE. Furthermore, you should place the ground before you place any other objects, so that all the objects are correctly related to the ground. To plan out the ground, you prompt an agent to generate a heightmap that fits the given description of the scene. Make sure to place objects ATOP the ground. The skybox should also loosely match the description. 'Contact points' will be points 3D coordinates that are unobstructed and useful for placing further objects, such as the coordinates atop the ground. They are just supposed to be guides, though not necessary to use."
+    instructions_v2= """You are the Coordinator agent responsible for generating a Unity scene that matches the user prompt. 
 You must orchestrate tool usage in the following structured order:
 
 1. SKYBOX: First, call planSkybox once to describe an appropriate skybox, then call placeSkybox to place it. 
@@ -123,7 +119,7 @@ Your role is to reliably build a coherent, grounded Unity world from the descrip
     def __init__(self, name=None, instructions=None, tools=None):
         super().__init__(
             name=name or f"Coordinator{random.randint(100,999)}",
-            instructions=instructions or self.instructions_v2,
+            instructions=instructions or Coordinator.instructions_v2,
             tools=tools or [get_contact_points, place_vr_human_player, planSkybox, placeSkybox, planGround, placeGround, planObject, placeObject],
             model=MODEL,
         )
@@ -133,9 +129,10 @@ class Reformer(Agent):
     instructions_v1 = """
 Suppose you have already built a Unity scene. Now it is your job to incorporate the feedback of an agent who has provided feedback on misplaced objects. Place again, more precisely, the objects that are said to be in the wrong location. You can do this with placeObject. Another approach to correct the misplaced objects is to change the ground. Do this by (for example) changing the ground heightmap with planGround, then replace the ground in the scene with placeGround. Some objects (e.g. a long bridge), may require the ground to have a certain shape to make sense in, forcing you to reconsider the heightmap in this manner.
 """
-    super().__init__(
-        name=name or f"Reformer{random.randint(100,999)}",
-        instructions=instructions or self.instructions_v1,
-        tools=[placeObject, planGround, placeGround],
-        model=MODEL,
-    )
+    def __init__(self, name=None, instructions=None):
+        super().__init__(
+            name=name or f"Reformer{random.randint(100,999)}",
+            instructions=instructions or self.instructions_v1,
+            tools=[placeObject, planGround, placeGround],
+            model=MODEL,
+        )

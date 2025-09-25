@@ -1,15 +1,17 @@
 import os
-MODEL = (os.getenv("MODEL") or "o3-mini").strip() or "o3-mini"
+import json
 
 from agents import Agent, Runner
 import asyncio
 
-def load(assets_info)
+MODEL = (os.getenv("MODEL") or "o3-mini").strip() or "o3-mini"
+
+def load(assets_info):
     with open("synopsis_file.json", "r") as s:
         v = s.read()
         synopses = json.loads(v)
     print(f"\nSynopsis file loaded with {len(synopses)} entries")
-    asynchio.run(update_synopsis_file(assets_info, synopses))
+    asyncio.run(update_synopsis_file(assets_info, synopses))
     return synopses
 
 async def update_synopsis_file(assets_info, synopses):
