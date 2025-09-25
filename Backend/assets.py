@@ -29,7 +29,7 @@ def get_found(file_type=".prefab", folder="../Assets"):
 
     # Normalize paths (optional, makes everything consistent)
     files = [str(pathlib.Path(f).as_posix()) for f in files]
-    print(f"\n\tThere are {len(files)} files of type {file_type} in this static library. These are the assets that objects will be chosen from.")
+    print(f"\n\tThere are {len(files)} files of type {file_type} in this static library.")
     return files
 
 

@@ -99,12 +99,14 @@ class UnityFile:
         
             
     def add_prefab(self, name, location, rotation):
+        if unity.yaml.remove_prefab_instance_if_exists(name):
+            print(f"Removed existing object {name} from YAML")
         self.yaml.add_prefab_instance(name, location, rotation)
          
               
     def add_ground(self, ground_name, transform={"x":0.0, "y":0.0, "z":0.0}):
         if unity.yaml.remove_prefab_instance_if_exists(ground_name):
-            print(ground_name, "Removed existing ground from YAML")
+            print(f"Removed existing ground {ground_name} from YAML")
         guid = uuid.uuid4().hex
         yamling.write_obj_meta(self.yaml.used_assets[ground_name], guid)
         self.yaml.add_ground_prefab_instance(guid, transform)
@@ -119,7 +121,7 @@ class UnityFile:
 async def get_ground_matrix():
     global unity
     print("Recalling ground matrix...")
-    return unity.ground_matrix     
+    return {"Grid": unity.ground_matrix, "Information": "The ground goes from (0,0) to (-50, 50). That is, the top left of the matrix is -50, 50. All objects should be on over the ground."   
         
 global unity
 global used_assets
@@ -187,7 +189,7 @@ async def planObject(description: str) -> PlaceableObject:
         prompt = {"Description of object": description, "Available assets": prefab_leaves}
     
     t = time.time()
-    print(agent.name, "started.")
+    print(f"{agent.name} started on {description}")
     result = await Runner.run(agent, json.dumps(prompt))
     print(agent.name + ":", time.time() - t, "seconds.")
     
@@ -231,7 +233,7 @@ async def placeObject(object_name: str, placement_of_object_origin: str, rotatio
     print(f"Placing '{object_name}' ---> {placement_of_object_origin} with rotation {rotation}")
     global unity
     assert object_name in unity.yaml.used_assets
-    print(f"Why this placement? {explanation}")
+    print(f"Why this placement?:\n\t{explanation}")
     try:
         json_location = json.loads(placement_of_object_origin)
 
@@ -398,7 +400,7 @@ async def placeGround(ground_name: str, placement_of_ground_origin: str, explana
             for j in range(0, len(unity.ground_matrix[i])):
                 contact_point = (i * 5 + float(json_location["x"]), j *5 + float(json_location["y"]), unity.ground_matrix[i][j] + float(json_location["z"]))
                 unity.contact_points[ground_name].append(contact_point)
-        return f"Successfully added ground to the scene. Recall the information of {ground_name}: {'all positions are open for further placement. the dimensions are 50m x 50m in the -X, +Z directions.'}. In other words, the ground goes from (0,0) to (-50, 50) All objects should be on top of me."
+        return f"Successfully added ground to the scene. Recall the information of {ground_name}: {'all positions are open for further placement. the dimensions are 50m x 50m in the -X, +Z directions.'}. In other words, the ground goes from (0,0) to (-50, 50). That is, the top left of the matrix is -50, 50. All objects should be atop the ground."
     except Exception as e:
         exc_type, exc_obj, exc_tb = sys.exc_info()
         fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
@@ -569,7 +571,7 @@ You are responsible for checking the placed assets in a Unity scene. You will be
         3. Actual placement of the object in the scene...
     Is the placement good or bad? Well positioned or somehow off - either in the ground or floating, offset or wrong in some other way?
     If there's not enough information to deduce the correctness of placement, be sure to explain that.
-    Keep your answer brief and to the point.
+    Keep your answer brief and to the point. 
 """
 
 reform_instructions_v1 = """
@@ -606,7 +608,7 @@ async def test_river_bridge(prompt="A 5m deep river cutting through a terrain wi
     feedback = {}
     for asset_name, placement in unity.yaml.placed_assets.items():
         
-        print("Checking", asset_name, "...")
+        print(f"Checking {asset_name}...")
         if asset_name in list(unity.yaml.used_assets.keys()):
             path = unity.yaml.used_assets[asset_name]
             reference_info = assets_info[path]

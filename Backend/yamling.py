@@ -256,10 +256,14 @@ class YAML:
         print("Attempting to write to", file_name)
         out = ["%YAML 1.1", "%TAG !u! tag:unity3d.com,2011:"]
         for entry in self.wrapped:
-            tag = entry.pop("tag")
-            anchor = entry.pop("anchor")
-            # remaining single top-level key is the object name
-            [(objname, objdata)] = entry.items()
+            #tag = entry.pop("tag")
+            #anchor = entry.pop("anchor")
+            tag = entry["tag"]
+            anchor = entry["anchor"]
+
+
+            objname = list(entry.keys())[2]
+            objdata = entry[objname]
             out.append(f"--- !u!{tag} &{anchor}")
             out.append(f"{objname}:")
             out.extend(dict_to_yaml(objdata, 2))
