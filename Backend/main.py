@@ -1,146 +1,128 @@
-""" Test.py """
 import sys
+import os
 from threading import Thread
-import time # sub for actual prompting
-
 from flask import Flask, send_from_directory, jsonify, request
 from flask_cors import CORS
 
-
-from dataclasses import dataclass, asdict
 import json
+import random
 
-import prompting
-    
-app = Flask(__name__, static_folder="../dist")
-CORS(app)
+import asyncio
+from dataclasses import dataclass, asdict
 
-last_ready = False
+from agents import Runner
+from coordinator import ObjectPlanner, GroundPlanner, Checker, Reformer, Coordinator, Runner
 
-@dataclass
-class Data:
-    """ Example dataclass for potential structuring of scene. """
-    name: str
-    i: int
-
-d = None
-
-active_prompting_threads = []
-class Prompting(Thread):
-    """ Class that wraps prompting module """
-    def __str__(self):
-        return self.prompt
-    
-    def __init__(self, prompt, make_last):
-        super().__init__()
-        self.prompt = prompt
-        self.make_last = make_last
-
-    def run(self):
-        global last_ready
-        last_ready = False
-        result = prompting.run_prompt(self.prompt, self.make_last)
-        last_ready = True
-        
-class Correcting(Thread):
-    """ Class that wraps prompting module """
-    def __str__(self):
-        return "Corrections to " + self.path.split("Scenes/")[-1]
-    
-    def __init__(self, path, errors, make_last):
-        super().__init__()
-        self.errors = errors
-        self.path = path
-        self.make_last = make_last
-
-    def run(self):
-        global last_ready
-        last_ready = False
-        result = prompting.run_correction(self.path, self.errors, self.make_last)
-        last_ready = True
-
-
-
-@app.route("/wait")
-def wait():
-    global last_ready
-    if last_ready:
-        last_ready = False
-        return_ = "last_ready"
-    else:
-        return_ = "last_not_ready" 
-    print(" --> processing...")
-    return return_   
-    
-@app.route("/prompt", methods=['POST'])
-def prompt():
-    prompt = request.form["prompt"]
-    make_last = request.form["make_last"] == "True"
-    
-    print("Recieved:", request.form["make_last"], "of type", type(request.form["make_last"]))
-    print("Prompt received with make_last ==", make_last)
-    # start prompting thread
-    new_thread = Prompting(prompt, make_last)
+async def test_river_bridge(prompt="A 5m deep river cutting through a terrain with some foliage, and a bridge going over it connecting two banks."):
+    scene_suffix = "draft1"
+    scene_name = f"test_river_bridge{random.randint(100, 999)}{scene_suffix}
+    agents.tools.unity = agents.tools.UnityFile(scene_name)
+    coordinator = Coordinator(tools=[get_contact_points, planSkybox, placeSkybox, planGround, placeGround, planObject, placeObject])
+    prompt = {"Description of the scene": prompt}
+    await Runner.run(coordinator, json.dumps(prompt), max_turns=20)
+    agents.tools.unity.done_and_write()
     
     
-    new_thread.start()
-    active_prompting_threads.append(new_thread)
-    response = "prompting"
-    return response    
-
-@app.route("/errors", methods=['POST'])
-def take_errors():
-    path = request.form["path"]
-    errors = request.form["errors"]
-    print("Errors received")
-    # start prompting thread
-    new_thread = Correcting(path, errors, make_last=True)
-    
-    
-    new_thread.start()
-    active_prompting_threads.append(new_thread)
-    response = "prompting"
-    return response 
-
-"""      
-@app.route("/prompt", methods=['POST'])
-
-    if message == "Deploy.":
-        if d:
-            return json.dumps(asdict(d), indent=4)
-        
+    scene_suffix = "draft2"
+    agents.tools.unity.name = scene_name
+    print("\n\n__Checking__\nGoing through used assets:", unity.yaml.placed_assets)
+    checker = Checker()
+    feedback = {}
+    for asset_name, placement in agents.tools.unity.yaml.placed_assets.items():
+        print(f"Checking {asset_name}...")
+        if asset_name in list(agents.tools.unity.yaml.used_assets.keys()):
+            path = agents.tools.unity.yaml.used_assets[asset_name]
+            reference_info = agents.tools.assets_info[path]
+        elif "ground" in asset_name:
+            reference_info = {"grid": agents.tools.unity.ground_matrix, "other info": "scaled by 5 and covering the -X +Z quadrant. 50m by 50m."}
         else:
-            
-            return "World not ready yet."
+            reference_info = None
+            print(asset_name, "not in asset info sheet.")
+        prompt = {"Reference info": reference_info, "Actual placement": placement}
+        result = await Runner.run(checker, json.dumps(prompt), max_turns=10)
+        check_status = result.final_output.check_status
+        reason = result.final_output.reason
+        if not check_status:
+            feedback[asset_name] = reason
+    print(feedback)
 
-"""
+    reformer = Reformer()
+    print(f"Giving feedback on {len(feedback)} objects...")
+    prompt = {"Feedback": feedback}
+    result = await Runner.run(reformer, json.dumps(prompt), max_turns=10)
+    print(f"{result.final_output}")
+    unity.done_and_write()
 
-def run_flask():
-    host = sys.argv[1] if len(sys.argv) > 1 else "localhost"
-    print("Running on", host)
-    #d = Data(name="Phil", i=2)    # Do in parallel with server
-    app.run(host=host, port=5000) # Do in parallel with prompting
-  
+async def test_river_bridge_vr(prompt="A 5m deep river cutting through a terrain with some foliage, and a bridge going over it connecting two banks."):
+    scene_suffix = "draft1"
+    scene_name = f"test_river_bridge_vr{random.randint(100, 999)}{scene_suffix}
+    agents.tools.unity = agents.tools.UnityFile(scene_name)
+    coordinator = Coordinator() # Max tool usage
+    prompt = {"Description of the scene": prompt}
+    await Runner.run(coordinator, json.dumps(prompt), max_turns=20)
+    agents.tools.unity.done_and_write()
+    
+    scene_suffix = "draft2"
+    agents.tools.unity.name = scene_name
+    print(agents.tools.unity.name, "!!!!!!!!!!!!!!!!!!!1")
+    print("\n\n__Checking__\nGoing through used assets:", unity.yaml.placed_assets)
+    checker = Checker()
+    feedback = {}
+    for asset_name, placement in agents.tools.unity.yaml.placed_assets.items():
+        print(f"Checking {asset_name}...")
+        if asset_name in list(agents.tools.unity.yaml.used_assets.keys()):
+            path = agents.tools.unity.yaml.used_assets[asset_name]
+            reference_info = agents.tools.assets_info[path]
+        elif "ground" in asset_name:
+            reference_info = {"grid": agents.tools.unity.ground_matrix, "other info": "scaled by 5 and covering the -X +Z quadrant. 50m by 50m."}
+        else:
+            reference_info = None
+            print(asset_name, "not in asset info sheet.")
+        prompt = {"Reference info": reference_info, "Actual placement": placement}
+        result = await Runner.run(checker, json.dumps(prompt), max_turns=10)
+        check_status = result.final_output.check_status
+        reason = result.final_output.reason
+        if not check_status:
+            feedback[asset_name] = reason
+    print(feedback)
 
-app_thread = Thread(target=run_flask)
+    reformer = Reformer()
+    print(f"Giving feedback on {len(feedback)} objects...")
+    prompt = {"Feedback": feedback}
+    result = await Runner.run(reformer, json.dumps(prompt), max_turns=10)
+    print(f"{result.final_output}")
+    unity.done_and_write()
 
-try:
-    app_thread.start()
-    while True:
-        print(f"\r\033[K{len(active_prompting_threads)} active threads: {[str(t) for t in active_prompting_threads]}", end="")
-        threads_to_rm = []
-        for thread in active_prompting_threads:
-            if not thread.is_alive():
-                threads_to_rm.append(thread)
-        for thread in threads_to_rm:
-            print(f"\nPrompt '{str(thread)}' complete.")
-            active_prompting_threads.remove(thread)
-        
-        pass
-finally:
-    app_thread.join()
-    for thread in active_prompting_threads:
-        thread.join()
+
+test_dispatcher = {
+    # = deprecated test
+    "test_river_bridge": test_river_bridge, # outputs 2 drafts
+    "test_vr": test_river_bridge_vr,
+
+}
+
+if __name__ == "__main__":
+    if sys.argv[1]:
+        try:
+            test_function = test_dispatcher[sys.argv[1]]
+        except KeyError("Invalid test name. Choose from: " + str(list(test_dispatcher.keys()))):
+            sys.exit(1)
+        asyncio.run(test_function())   
+    else:
+        print("Please include test from:", list(test_dispatcher.keys()))
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

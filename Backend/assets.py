@@ -4,6 +4,14 @@ import re
 import pathlib
 from collections import defaultdict
 
+def load()
+    with open("asset_info.json", "r") as f:
+        j = f.read()
+        assets_info = json.loads(j)
+    print(f"\nAsset info sheet loaded with {len(assets_info)} entries")
+    return assets_info
+
+
 def get_tree(file_type=".prefab", folder="../Assets"):
     folder = "../Assets"
 
@@ -16,6 +24,8 @@ def get_tree(file_type=".prefab", folder="../Assets"):
     assets = result.stdout
 
     return assets
+
+
 
 def get_found(file_type=".prefab", folder="../Assets"):
     result = subprocess.run(
