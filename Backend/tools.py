@@ -88,12 +88,14 @@ async def placeObject(object_name: str, placement_of_object_origin: str, rotatio
     """
         Args:
             object_name: The name of the object you have planned, PlaceableObject.name. (Must match exactly that name.)
-            placement_of_object_origin: Must be a JSON-encoded string. Example:
-                "{\"x\": 75, \"y\": 10, \"z\": 70}"
-            rotation: Must be a JSON-encoded string. Example:
-                "{\"x\": 90, \"y\": 0, \"z\": 45}"
-            explanation: A human-readable explanation of why this placement was chosen. Example: "I put the water here to be above the height y=0.5 along the riverbed. Be sure to explain the height with regard to the contact points and the open spaces of the heightmap."
+            placement_of_object_origin: Must be a JSON-encoded string. OPTIONALLY, can be a list of such strings in order to place a sequence objects. Examples:
+                "{\"x\": 75, \"y\": 2.8, \"z\": 70}", "[{\"x\": 75, \"y\": 10, \"z\": 70}, {\"x\": 70, \"y\": 1.2, \"z\": 65}, ...]"
+            rotation: Must be a JSON-encoded string. OPTIONALLY, can be a list of such strings in order to place a sequence objects. Example:
+                "{\"x\": 90, \"y\": 0, \"z\": 45}", "[{\"x\": 90, \"y\": 0, \"z\": 45}, {\"x\": 0, \"y\": 0, \"z\": 270}]"
+            explanation: A human-readable explanation of the placement(s). Example: "I put the water here to be above the height y=0.5 along the riverbed", or "I put a patch of trees in this section". Be sure to explain the height with regard to the contact points and the open spaces of the heightmap."
     """
+    
+    
     print(f"Placing '{object_name}' ---> {placement_of_object_origin} with rotation {rotation}")
     global unity
     assert object_name in unity.yaml.used_assets
@@ -111,6 +113,21 @@ async def placeObject(object_name: str, placement_of_object_origin: str, rotatio
         return f"Failed to add object '{object_name}' to rotation {rotation} in the scene (json.loads() error) Make sure to pass a correct something that can be loaded with json.loads() into JSON."
     print(f"Parsed location and rotation into JSON for '{object_name}'")
     
+    #HEre we check if its a list or a singleton
+    objects_to_sequence = []
+    if type(json_location) == list:
+        if type(json_rotation) == list:
+            objects_to_sequence.append((json_location, json_rotation))
+        else:
+            return f"If you sequentially place the location/placement of origin, you must pass that amount of rotations too."
+    else:
+        if type(json_rotation) == list:
+            return f"If you sequentially place the rotation, you must pass that amount of locations too."
+        else:
+            objects_to_sequence = [(json_location, json_rotation)]
+            
+    while len(objects_to_sequence) > 0:
+        json_location, json_rotation = objects_to_sequence.pop(0)
     try:
         for parent, contact_points in unity.contact_points.items():
             # Popping contact points
