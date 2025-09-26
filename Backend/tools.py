@@ -15,10 +15,13 @@ from obj_building import obj_from_grid
 import assets
 import synopsis_generator
 
+""" Preprocessing """
 assets_info = assets.load()
 synopses = synopsis_generator.load(assets_info)
 
 material_leaves = assets.get_found(".mat") # for planning the skybox
+
+""" End preprocessing """
 
 global unity
 global used_assets
@@ -192,6 +195,8 @@ async def placeSkybox(skybox_name: str) -> str:
     except Exception:
         print("Error adding skybox...")
         return f"Failed to add '{skybox_name}' to the scene. The name argument must be right."
+        
+
 
 @function_tool
 async def placeGround(ground_name: str, placement_of_ground_origin: str, explanation: str) -> str:
@@ -242,15 +247,65 @@ async def get_contact_points() -> str:
     return json.dumps(unity.contact_points)
 
 @function_tool
+async def placeSun(length_of_day: float, percentage_daylight: float, time_of_day: float, sun_brightness: float):
+    """
+        Args:
+            length_of_day: planet rotation - how many hours in a day?
+            percentage_daylight: scene position on planet's longitude
+            time_of_day: scene position on the planet's latitude
+            sun_brightness: planet distance from the sun/ sun's brightness
+    """
+    global unity
+    unity.add_sun(length_of_day, percentage_daylight, time_of_day, sun_brightness)
+    return f"Successfully added the Sun"
+
+@function_tool
+async def planandplaceSun(description_of_sun_behavior: str) -> str:
+    """
+        Plan and place the Sun in the scene in one go. Every scene must have a Sun. No location necessary, just describe the object.
+    """
+    agent = SunPlanner(tools=[placeSun])
+    prompt = {"Description of desired sun behavior": description_of_sun_behavior}
+
+    t = time.time()
+    print(agent.name, "started")
+    result = await Runner.run(agent, json.dumps(prompt))
+    print(agent.name + ":", time.time() - t, "seconds.")
+    
+    global unity
+    unity.addSun()
+    
+    return mat_asset_path
+    
+@function_tool
+async def planTexture(material_of_object_description: str) -> str:
+    """
+        Returns the path to a material asset that matches the description.
+    """
+    agent = TexturePlanner()
+    prompt = {"Material description": material_of_object_description,
+                "Available assets": material_leaves}
+
+    t = time.time()
+    print(agent.name, "started")
+    result = await Runner.run(agent, json.dumps(prompt))
+    print(agent.name + ":", time.time() - t, "seconds.")
+    
+    global unity
+    mat_asset_path = result.final_output.asset_path
+    
+    return mat_asset_path
+
+@function_tool
 async def planGround(ground_description: str):
     """ 
         ground_description: a description of what the ground should look like.
     Can be called multiple times, to reshape the ground, to fit the object that are static, immalleable.
     """
 
-    agent = GroundPlanner(tools=[get_ground_matrix])
+    agent = GroundPlanner(tools=[get_ground_matrix, planTexture])
     prompt = {"Description of the ground": ground_description}
-    
+    planTexture
     t = time.time()
     print(agent.name, "started")
     result = await Runner.run(agent, json.dumps(prompt))
@@ -260,11 +315,14 @@ async def planGround(ground_description: str):
     explanation = result.final_output.explanation_of_heights
     object_asset_path, unity.ground_matrix = obj_from_grid(result.final_output.grid) # writes obj
     print("Ground obj written.")
+    texture_path = result.final_output.texture_path
+    
     
     object_info = {"Name": object_asset_path.split("/")[-1], "Importances": {"grid": str(unity.ground_matrix), "open contact points": "all positions are open for further placement", "dimensions": "50m x 50m in the -X, +Z directions.", "Local origin": "origin is on the +X, -Z corner." + explanation, "Unplaced!": "Make sure to use placeGround to place this object."},}
     
     object_name = object_info["Name"]
-    unity.yaml.used_assets[object_name] = object_asset_path
+    
+    unity.yaml.used_assets[object_name] = {"Ground": object_asset_path, "Texture": texture_path}
     print(object_name, "added to used_assets w path", object_asset_path)
     return PlaceableObject(object_name, json.dumps(object_info["Importances"]))
     

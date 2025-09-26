@@ -31,7 +31,7 @@ async def test_river_bridge(prompt="A 5m deep river cutting through a terrain wi
     
     scene_suffix = "draft2"
     agents.tools.unity.name = scene_name
-    print("\n\n__Checking__\nGoing through used assets:", unity.yaml.placed_assets)
+    print("\n\n__Checking__\nGoing through used assets:", agents.tools.unity.yaml.placed_assets)
     checker = Checker()
     feedback = {}
     for asset_name, placement in agents.tools.unity.yaml.placed_assets.items():
@@ -63,6 +63,7 @@ async def test_river_bridge(prompt="A 5m deep river cutting through a terrain wi
 test_dispatcher = {
     # = deprecated test
     "test_river_bridge": test_river_bridge, # outputs 2 drafts
+    "test_light_and_texture": test_light_and_texture,
     #"test_vr": test_river_bridge_vr,
 
 }

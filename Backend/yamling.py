@@ -38,6 +38,27 @@ class YAML:
         
         self.used_assets = dict()
         self.placed_assets = dict()
+    
+    def set_sun(self):
+        print("Setting sun in YAML...")
+        yaml = ruamel_YAML(typ='rt')
+        default = list(yaml.compose_all(preprocess_text(sun_init_text)))
+        wrapped = [node_to_python(n) for n in default]
+        for doc in wrapped:
+            if "Transform" in doc.keys():
+                if doc["Transform"]["m_Father"]["fileID"] == "0":
+                    father_id = doc["anchor"]
+                    
+            # Edit parameters
+            
+            self.wrapped.append(doc)
+        if not father_id:
+            print("Failed to find root transform of Sun stuff:\n", wrapped)
+
+        sceneroots = self.get_doc("SceneRoots")
+        sceneroots["m_Roots"].append({"fileID": father_id})
+        print("\rSun added to YAML.")
+            
         
     def set_skybox(self, name):
         print("Setting skybox...")
@@ -92,13 +113,24 @@ class YAML:
         
         wrapped, id_out = set_ID(wrapped) # to random ID
         
-            
+        texture = None
+        try:
+            used_assets_entry = self.used_assets[name]
+            print("Found", name, "in used_assets w entry", used_assets_entry)
+            texture_path = used_assets_entry["Texture"]
+            texture_metaguid = get_guid(texture_path + ".meta")
+        except KeyError(name + " not in used_assets"):
+            print("Lookup in used_assets has failed.")
+        
+    # texture blue: 28638862ea1084726a3511cd325fc53d
         modifications = wrapped["PrefabInstance"]["m_Modification"]["m_Modifications"]
         for mod in modifications:
             if "target" in mod and "guid" in mod["target"]:
                 mod["target"]["fileID"] = "-8679921383154817045"
                 mod["target"]["guid"] = metaguid
-                if mod.get("propertyPath") == "m_Name":
+                if mod.get("propertyPath") == "m_Materials.Array.data[0]":
+                    mod["target"]["objectReference"]["guid"] = texture_metaguid
+                elif mod.get("propertyPath") == "m_Name":
                     mod["target"]["value"] = "Name of object here" # Anything?
                 else:
                     if mod.get("propertyPath") == "m_LocalPosition.x":
@@ -107,9 +139,6 @@ class YAML:
                         mod["value"] = transform["y"]
                     if mod.get("propertyPath") == "m_LocalPosition.z":
                         mod["value"] = transform["z"]
-        """
-        If you set the fileID to -8679921383154817045 you can change the transform.
-        """
                     
         wrapped["PrefabInstance"]["m_SourcePrefab"]["guid"] = metaguid
         sceneroots = self.get_doc("SceneRoots")
@@ -118,6 +147,9 @@ class YAML:
         print("Asset added to YAML.")            
     
     def remove_prefab_instance_if_exists(self, name):
+        if name in self.used_assets:
+            self.used_assets.pop(name)
+    
         for doc in self.wrapped:
             if "PrefabInstance" in doc:
                 for mod in doc["PrefabInstance"]["m_Modification"]["m_Modifications"]:
@@ -301,6 +333,10 @@ class YAML:
                 if self.level0[doc_i].split("&")[1] == id_:
                     return self.level0[doc_i + 1]
 
+def get_texture_meta(meta_path):
+    with open(meta_path, "r") as f:
+        data = pyyaml.safe_load(f)
+
 def euler_to_xyzw_quaternion(rotation):
     print("Rotation:", rotation)
     x_deg, y_deg, z_deg = rotation["x"], rotation["y"], rotation["z"]
@@ -464,7 +500,137 @@ def write_obj_meta(obj_path, guid):
         
     print("Meta file with updated GUID written")
     
-
+sun_init_text = """
+--- !u!1 &786546698
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 786546699}
+  - component: {fileID: 786546700}
+  m_Layer: 0
+  m_Name: Directional Light
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &786546699
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 786546698}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0.668346, y: -0.12872267, z: -0.119008936, w: 0.7228977}
+  m_LocalPosition: {x: 15.31607, y: 9.356531, z: 8.9202175}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1629422138}
+  m_LocalEulerAnglesHint: {x: 90, y: 0, z: 0}
+--- !u!108 &786546700
+Light:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 786546698}
+  m_Enabled: 1
+  serializedVersion: 11
+  m_Type: 1
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_Intensity: 1
+  m_Range: 10
+  m_SpotAngle: 30
+  m_InnerSpotAngle: 21.80208
+  m_CookieSize: 10
+  m_Shadows:
+    m_Type: 0
+    m_Resolution: -1
+    m_CustomResolution: -1
+    m_Strength: 1
+    m_Bias: 0.05
+    m_NormalBias: 0.4
+    m_NearPlane: 0.2
+    m_CullingMatrixOverride:
+      e00: 1
+      e01: 0
+      e02: 0
+      e03: 0
+      e10: 0
+      e11: 1
+      e12: 0
+      e13: 0
+      e20: 0
+      e21: 0
+      e22: 1
+      e23: 0
+      e30: 0
+      e31: 0
+      e32: 0
+      e33: 1
+    m_UseCullingMatrixOverride: 0
+  m_Cookie: {fileID: 0}
+  m_DrawHalo: 0
+  m_Flare: {fileID: 0}
+  m_RenderMode: 0
+  m_CullingMask:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_RenderingLayerMask: 1
+  m_Lightmapping: 4
+  m_LightShadowCasterMode: 0
+  m_AreaSize: {x: 1, y: 1}
+  m_BounceIntensity: 1
+  m_ColorTemperature: 6570
+  m_UseColorTemperature: 0
+  m_BoundingSphereOverride: {x: 0, y: 0, z: 0, w: 0}
+  m_UseBoundingSphereOverride: 0
+  m_UseViewFrustumForShadowCasterCull: 1
+  m_ForceVisible: 0
+  m_ShadowRadius: 0
+  m_ShadowAngle: 0
+  m_LightUnit: 1
+  m_LuxAtDistance: 1
+  m_EnableSpotReflector: 1
+--- !u!1 &1629422137
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1629422138}
+  m_Layer: 0
+  m_Name: GameObject
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1629422138
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1629422137}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 786546699}
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+"""
 
 vr_setup_init_text = """
 --- !u!1001 &1214490813
