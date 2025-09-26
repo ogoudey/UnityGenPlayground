@@ -30,6 +30,7 @@ async def test_river_bridge(prompt="A 5m deep river cutting through a terrain wi
     
     
     scene_suffix = "draft2"
+    scene_name = f"test_river_bridge{random.randint(100, 999)}{scene_suffix}"
     agents.tools.unity.name = scene_name
     print("\n\n__Checking__\nGoing through used assets:", agents.tools.unity.yaml.placed_assets)
     checker = Checker()
@@ -53,6 +54,7 @@ async def test_river_bridge(prompt="A 5m deep river cutting through a terrain wi
     print(feedback)
 
     reformer = Reformer()
+    print("__Revising started__")
     print(f"Giving feedback on {len(feedback)} objects...")
     prompt = {"Feedback": feedback}
     result = await Runner.run(reformer, json.dumps(prompt), max_turns=10)

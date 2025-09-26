@@ -29,6 +29,7 @@ global unity
 global used_assets
     
 MODEL = (os.getenv("MODEL") or "o3-mini").strip() or "o3-mini"
+print(f"\nThe model running is {MODEL}. Use \033[1m\033[36mexport MODEL='<model_name>'\033[0m to change it.")
 
 @dataclass
 class PlaceableObject():
@@ -117,7 +118,8 @@ async def placeObject(object_name: str, placement_of_object_origin: str, rotatio
     objects_to_sequence = []
     if type(json_location) == list:
         if type(json_rotation) == list:
-            objects_to_sequence.append((json_location, json_rotation))
+            for i in range(0, len(json_location)):
+                objects_to_sequence.append((json_location[i], json_rotation[i])) # a zip
         else:
             return f"If you sequentially place the location/placement of origin, you must pass that amount of rotations too."
     else:
@@ -128,8 +130,11 @@ async def placeObject(object_name: str, placement_of_object_origin: str, rotatio
          
     failed_placements = [] 
     max_len = len(objects_to_sequence)
+    print(objects_to_sequence)
     while len(objects_to_sequence) > 0:
         json_location, json_rotation = objects_to_sequence.pop(0)
+        print(json_location)
+        print(json_rotation)
         try:
             for parent, contact_points in unity.contact_points.items():
                 # Popping contact points
