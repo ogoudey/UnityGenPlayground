@@ -19,8 +19,8 @@ class SunPlanner(Agent):
     
     def __init__(self, tools, name=None, instructions=None, ):
         super().__init__(
-            name=name or f"ObjectPlanner{random.randint(100,999)}",
-            instructions=instructions or ObjectPlanner.instructions,
+            name=name or f"SunPlanner{random.randint(100,999)}",
+            instructions=instructions or SunPlanner.instructions,
             tools=tools,
             model=MODEL,
         )
@@ -39,11 +39,10 @@ class ObjectPlanner(Agent):
 class SkyboxPlanner(Agent):
     instructions= "Given the directory structure (asset tree), return the path to the file of the desired asset."
     
-    def __init__(self, tools, name=None, instructions=None):
+    def __init__(self, name=None, instructions=None):
         super().__init__(
             name=name or f"SkyboxPlanner{random.randint(100,999)}",
             instructions=instructions or SkyboxPlanner.instructions,
-            tools=tools,
             output_type=AssetPath,
             model=MODEL,
         )
@@ -51,11 +50,10 @@ class SkyboxPlanner(Agent):
 class TexturePlanner(Agent):
     instructions= "Given the directory structure (asset tree), return the path of a material asset that matches the description."
     
-    def __init__(self, tools, name=None, instructions=None):
+    def __init__(self, name=None, instructions=None):
         super().__init__(
             name=name or f"TexturePlanner{random.randint(100,999)}",
             instructions=instructions or TexturePlanner.instructions,
-            tools=tools,
             output_type=AssetPath,
             model=MODEL,
         )
@@ -73,12 +71,13 @@ Rules:
 
 Output format must follow GroundData:
 - grid: the 11x11 float grid as plain text. 
+- texture_path: the path to the asset of the material for this ground, as returned by the planTexture tool.
 - explanation_of_heights: the one-sentence explanation.
 """
     
     def __init__(self, tools, name=None, instructions=None):
         super().__init__(
-            name=name or f"ObjectPlanner{random.randint(100,999)}",
+            name=name or f"GroundPlanner{random.randint(100,999)}",
             instructions=instructions or GroundPlanner.instructions,
             tools=tools,
             model=MODEL,

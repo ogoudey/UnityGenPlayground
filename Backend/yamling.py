@@ -105,7 +105,8 @@ class YAML:
         transform_body["Transform"]["m_GameObject"]["fileID"] = id_out
         return id_out      
     
-    def add_ground_prefab_instance(self, metaguid, transform):
+    def add_ground_prefab_instance(self, name, metaguid, transform):
+        print("Adding ground to YAML...")
         yaml = ruamel_YAML(typ='rt')
         default = list(yaml.compose_all(preprocess_text(prefab_init_text)))[0]
         
@@ -122,17 +123,19 @@ class YAML:
         except KeyError(name + " not in used_assets"):
             print("Lookup in used_assets has failed.")
         
-    # texture blue: 28638862ea1084726a3511cd325fc53d
+
         modifications = wrapped["PrefabInstance"]["m_Modification"]["m_Modifications"]
         for mod in modifications:
             if "target" in mod and "guid" in mod["target"]:
-                mod["target"]["fileID"] = "-8679921383154817045"
+                
                 mod["target"]["guid"] = metaguid
                 if mod.get("propertyPath") == "m_Materials.Array.data[0]":
-                    mod["target"]["objectReference"]["guid"] = texture_metaguid
+                    mod["objectReference"]["guid"] = texture_metaguid
                 elif mod.get("propertyPath") == "m_Name":
-                    mod["target"]["value"] = "Name of object here" # Anything?
+                    mod["target"]["fileID"] = "-8679921383154817045"
+                    mod["target"]["value"] = name
                 else:
+                    mod["target"]["fileID"] = "-8679921383154817045"
                     if mod.get("propertyPath") == "m_LocalPosition.x":
                         mod["value"] = transform["x"]
                     if mod.get("propertyPath") == "m_LocalPosition.y":
@@ -147,9 +150,7 @@ class YAML:
         print("Asset added to YAML.")            
     
     def remove_prefab_instance_if_exists(self, name):
-        if name in self.used_assets:
-            self.used_assets.pop(name)
-    
+
         for doc in self.wrapped:
             if "PrefabInstance" in doc:
                 for mod in doc["PrefabInstance"]["m_Modification"]["m_Modifications"]:
@@ -990,11 +991,23 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: -7635826562936255635, guid: 2c2afc1a4f0c4d298e6b04d7c4babd1a, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value: 
+      objectReference: {fileID: 2100000, guid: 94ea32e4f0f6cab4e98928aadb7d9992, type: 2}
+
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 1f9036ec905b920479091aca9ba81305, type: 3}
+"""
+
+"""
+    - target: {fileID: -7635826562936255635, guid: a973d619bfe74a0ea69f55314cf2a8f9, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value: 
+      objectReference: {fileID: 2100000, guid: 45eb7efec0c8f504285b382733758e52, type: 2}
 """
 
 game_object_init_text = """

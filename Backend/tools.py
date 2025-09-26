@@ -8,7 +8,7 @@ from dataclasses import dataclass, asdict
 from agents import function_tool, Runner
 from pydantic import BaseModel
 
-from subagents import ObjectPlanner, GroundPlanner, SkyboxPlanner
+from subagents import ObjectPlanner, GroundPlanner, SkyboxPlanner, TexturePlanner, SunPlanner
 
 from obj_building import obj_from_grid
 
@@ -20,6 +20,8 @@ assets_info = assets.load()
 synopses = synopsis_generator.load(assets_info)
 
 material_leaves = assets.get_found(".mat") # for planning the skybox
+
+screened_material_leaves = assets.get_found(file_type=".mat", folder="../Assets/Ground Materials") 
 
 """ End preprocessing """
 
@@ -157,7 +159,7 @@ def place_vr_human_player(transform: str, rotation: str = "{\"x\": 75, \"y\": 10
 
 @function_tool
 async def planSkybox(skybox_description: str) -> Designation:
-    agent = SkyboxPlanner(tools=[get_ground_matrix])
+    agent = SkyboxPlanner()
     prompt = {"Object description": skybox_description,
                 "Available assets": material_leaves}
 
@@ -205,8 +207,6 @@ async def placeGround(ground_name: str, placement_of_ground_origin: str, explana
             ground_name: The name of the ground you just planned. That is, PlaceableObject.name
             placement_of_ground_origin: Must be a JSON-encoded string. Example:
                 "{\"x\": 0, \"y\": 0, \"z\": 0}"
-            rotation: Must be a JSON-encoded string. Example:
-                "{\"x\": 90, \"y\": 0, \"z\": 45}"
             explanation: A brief human-readable explanation of this placement, include detail on where this object is and what space it covers.
         Cannot be called twice. Once the ground is placed, it's placed.
     """
@@ -222,6 +222,7 @@ async def placeGround(ground_name: str, placement_of_ground_origin: str, explana
     try:
         unity.add_ground(ground_name, json_location)
         # Add new contact points under ground
+        print("Back from adding ground to scene.")
         unity.contact_points[ground_name] = []
         for i in range(0, len(unity.ground_matrix)):
             for j in range(0, len(unity.ground_matrix[i])):
@@ -250,10 +251,10 @@ async def get_contact_points() -> str:
 async def placeSun(length_of_day: float, percentage_daylight: float, time_of_day: float, sun_brightness: float):
     """
         Args:
-            length_of_day: planet rotation - how many hours in a day?
-            percentage_daylight: scene position on planet's longitude
-            time_of_day: scene position on the planet's latitude
-            sun_brightness: planet distance from the sun/ sun's brightness
+            length_of_day: It is like the planet rotation - how many hours in a day? In Earth-hours (example 18.0). 
+            percentage_daylight: It is like the scene's position on planet's longitude. From 0.0 to 100.0.
+            time_of_day: It is like the scene's position on the planet's latitude. Falls between 0.0 and `length_of_day`.
+            sun_brightness: It is like the planet's distance from the sun, or like sun's luminosity, etc. Keep it from 0.0 to 10.0.
     """
     global unity
     unity.add_sun(length_of_day, percentage_daylight, time_of_day, sun_brightness)
@@ -262,20 +263,19 @@ async def placeSun(length_of_day: float, percentage_daylight: float, time_of_day
 @function_tool
 async def planandplaceSun(description_of_sun_behavior: str) -> str:
     """
-        Plan and place the Sun in the scene in one go. Every scene must have a Sun. No location necessary, just describe the object.
+        Plan and place the Sun in the scene. Call this once and only once for each scene. Just describe the Sun and its thematic context briefly. You are effectively prompting another sub-agent to actually deal with positioning the Sun.
     """
     agent = SunPlanner(tools=[placeSun])
     prompt = {"Description of desired sun behavior": description_of_sun_behavior}
 
     t = time.time()
     print(agent.name, "started")
-    result = await Runner.run(agent, json.dumps(prompt))
+    await Runner.run(agent, json.dumps(prompt))
     print(agent.name + ":", time.time() - t, "seconds.")
+
     
-    global unity
-    unity.addSun()
-    
-    return mat_asset_path
+    # No PlaceableObject. Consider it placed.
+    return f"Successfully placed the Sun in the scene"
     
 @function_tool
 async def planTexture(material_of_object_description: str) -> str:
@@ -284,8 +284,7 @@ async def planTexture(material_of_object_description: str) -> str:
     """
     agent = TexturePlanner()
     prompt = {"Material description": material_of_object_description,
-                "Available assets": material_leaves}
-
+                "Available assets": screened_material_leaves}
     t = time.time()
     print(agent.name, "started")
     result = await Runner.run(agent, json.dumps(prompt))
@@ -293,7 +292,7 @@ async def planTexture(material_of_object_description: str) -> str:
     
     global unity
     mat_asset_path = result.final_output.asset_path
-    
+    print("Found", mat_asset_path, "for", material_of_object_description)
     return mat_asset_path
 
 @function_tool
@@ -305,7 +304,6 @@ async def planGround(ground_description: str):
 
     agent = GroundPlanner(tools=[get_ground_matrix, planTexture])
     prompt = {"Description of the ground": ground_description}
-    planTexture
     t = time.time()
     print(agent.name, "started")
     result = await Runner.run(agent, json.dumps(prompt))

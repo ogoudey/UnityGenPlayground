@@ -29,8 +29,8 @@ class UnityFile:
         if self.yaml.remove_prefab_instance_if_exists(ground_name):
             print(f"Removed existing ground {ground_name} from YAML")
         guid = uuid.uuid4().hex
-        yamling.write_obj_meta(self.yaml.used_assets[ground_name], guid)
-        self.yaml.add_ground_prefab_instance(guid, transform)
+        yamling.write_obj_meta(self.yaml.used_assets[ground_name]["Ground"], guid)
+        self.yaml.add_ground_prefab_instance(ground_name, guid, transform)
         
         
     def done_and_write(self, file_name=None):

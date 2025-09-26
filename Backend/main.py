@@ -1,5 +1,6 @@
 import sys
 import os
+import time
 from threading import Thread
 from flask import Flask, send_from_directory, jsonify, request
 from flask_cors import CORS
@@ -13,7 +14,7 @@ import asyncio
 from agents import Runner
 import coordinator as agents
 from coordinator import Checker, Reformer, Coordinator
-from tools import get_ground_matrix, planObject, placeObject, place_vr_human_player, planSkybox, placeSkybox, placeGround, get_contact_points, planGround
+from tools import get_ground_matrix, planObject, placeObject, place_vr_human_player, planSkybox, placeSkybox, placeGround, get_contact_points, planGround, planandplaceSun
 
 from scene import UnityFile
 
@@ -57,7 +58,21 @@ async def test_river_bridge(prompt="A 5m deep river cutting through a terrain wi
     prompt = {"Feedback": feedback}
     result = await Runner.run(reformer, json.dumps(prompt), max_turns=10)
     print(f"{result.final_output}")
-    unity.done_and_write()
+    agents.tools.unity.done_and_write()
+
+async def test_light_and_texture(prompt="A blue sky with a bright sun high in the skynoon over a ground with any texture."):
+    scene_suffix = "draft1"
+    scene_name = f"test_light_and_texture{random.randint(100, 999)}{scene_suffix}"
+    agents.tools.unity = UnityFile(scene_name)
+    
+    
+    coordinator = Coordinator(instructions="You are generating a Unity world given the prompt. Use the tool planGround to generate a heightmap with a description of the ground, and place the ground with placeGround. Then, place the sun with the planandplaceSun tool. Simply describe the desired Sun theme. Call each tool once.", tools=[planGround, placeGround, planandplaceSun])
+    prompt = {"Description of the scene": prompt}
+    print("\n__Starting Coordinator___")
+    t = time.time()
+    await Runner.run(coordinator, json.dumps(prompt), max_turns=20)
+    print(coordinator.name + ":", time.time() - t, "seconds.")
+    agents.tools.unity.done_and_write()
 
 
 test_dispatcher = {
@@ -65,7 +80,6 @@ test_dispatcher = {
     "test_river_bridge": test_river_bridge, # outputs 2 drafts
     "test_light_and_texture": test_light_and_texture,
     #"test_vr": test_river_bridge_vr,
-
 }
 
 if __name__ == "__main__":

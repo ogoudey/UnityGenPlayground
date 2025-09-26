@@ -41,7 +41,7 @@ def facify(matrix):
         for y in range(0, len(matrix[x]) -1):    
                 if not (x, y) in visited:
                     visited.append((x, y))
-                    lines += f"f {y*x_per_row + x + 1} {(y+1)*x_per_row + x + 1} {(y+1)*x_per_row + x + 2} {y*x_per_row + x + 2}\n"
+                    lines += f"f {y*x_per_row + x + 1}/{y*x_per_row + x + 1} {(y+1)*x_per_row + x + 1}/{(y+1)*x_per_row + x + 1} {(y+1)*x_per_row + x + 2}/{(y+1)*x_per_row + x + 2} {y*x_per_row + x + 2}/{y*x_per_row + x + 2}\n"
     return lines, visited
 
 def obj_from_grid(grid: str = default_grid):
@@ -58,12 +58,25 @@ def obj_from_grid(grid: str = default_grid):
             matrix[y].append(float(line[x]))
             try:
                 obj_str += f"v {float(x)*scale} {float(line[x])} {float(y)*scale}\n"
+                
+                
             except Exception:
                 print(line[x], "is an arifact of the grid. Ignoring...")
-    
-    
-    
-    
+                
+
+
+    for y in range(0, len(lines)):
+        line = lines[y].split(" ")
+        for x in range(0, len(line)):
+            try:
+                u = x / (len(line) - 1) * scale*scale
+                v = y / (len(lines) - 1) * scale*scale
+                obj_str += f"vt {u:.6f} {v:.6f}\n"
+                
+            except Exception:
+                print("Could not add vt")         
+                
+                
     """ 1st pass """
     obj_str1 = obj_str
     face_data, visits = facify(matrix)

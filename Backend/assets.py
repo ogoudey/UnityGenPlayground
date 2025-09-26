@@ -10,12 +10,11 @@ def load():
     with open("asset_info.json", "r") as f:
         j = f.read()
         assets_info = json.loads(j)
-    print(f"\nAsset info sheet loaded with {len(assets_info)} entries")
+    print(f"\n* Asset info sheet loaded with {len(assets_info)} entries")
     return assets_info
 
 
 def get_tree(file_type=".prefab", folder="../Assets"):
-    folder = "../Assets"
 
     result = subprocess.run(
         ["tree", "-P", "*" + file_type, folder],
@@ -41,7 +40,7 @@ def get_found(file_type=".prefab", folder="../Assets"):
 
     # Normalize paths (optional, makes everything consistent)
     files = [str(pathlib.Path(f).as_posix()) for f in files]
-    print(f"\nThis library has {len(files)} {file_type} assets.")
+    print(f"\n* The library at {folder} has {len(files)} {file_type} assets.")
     return files
 
 
