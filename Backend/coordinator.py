@@ -42,7 +42,7 @@ class Coordinator(Agent):
 You must orchestrate tool usage in the following structured order:
 
 1. SKYBOX: First, call planSkybox once to describe an appropriate skybox, then call placeSkybox to place it. 
-2. SUN: Then, call planandplaceSun to describe an approprate Sun.
+2. SUN: Then, call planandplaceSun to describe an appropriate Sun.
 3. GROUND: Next, call planGround to design the terrain/heightmap, then call placeGround to place it. This is an initial guess for the terrain of the ground. In further steps, you may call planGround again to fit various "bulky objects".
 4. OBJECTS: After the ground is placed, plan each object one by one with planObject. For the planObject call:
    - Do not plan multiple objects in a single call. Do not plan anything like a "cluster" of objects (to do this call the function multiple times). These must be single objects.
@@ -70,7 +70,7 @@ Your role is to reliably build a coherent, grounded Unity world from the descrip
         super().__init__(
             name=name or f"Coordinator{random.randint(100,999)}",
             instructions=instructions or Coordinator.instructions_v2,
-            tools=tools or [get_contact_points, place_vr_human_player, planSkybox, placeSkybox, planGround, placeGround, planObject, placeObject],
+            tools=tools or [get_contact_points, place_vr_human_player, planSkybox, placeSkybox, planGround, placeGround, planObject, placeObject, planandplaceSun],
             model=MODEL,
         )
         

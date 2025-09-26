@@ -2,15 +2,14 @@ import sys
 import os
 import time
 from threading import Thread
-from flask import Flask, send_from_directory, jsonify, request
-from flask_cors import CORS
+
+#from flask import Flask, send_from_directory, jsonify, request
+#from flask_cors import CORS
 
 import json
 import random
 
 import asyncio
-
-
 from agents import Runner
 import coordinator as agents
 from coordinator import Checker, Reformer, Coordinator
@@ -23,7 +22,7 @@ async def test_river_bridge(prompt="A 5m deep river cutting through a terrain wi
     scene_name = f"test_river_bridge{random.randint(100, 999)}{scene_suffix}"
     agents.tools.unity = UnityFile(scene_name)
     
-    coordinator = Coordinator(tools=[get_contact_points, planSkybox, placeSkybox, planGround, placeGround, planObject, placeObject])
+    coordinator = Coordinator(tools=[get_contact_points, planSkybox, placeSkybox, planGround, placeGround, planObject, placeObject, planandplaceSun])
     prompt = {"Description of the scene": prompt}
     print("__Starting Coordinator___")
     await Runner.run(coordinator, json.dumps(prompt), max_turns=20)

@@ -96,7 +96,7 @@ async def placeObject(object_name: str, placement_of_object_origin: str, rotatio
     """
     
     
-    print(f"Placing '{object_name}' ---> {placement_of_object_origin} with rotation {rotation}")
+    print(f"Placing '{object_name}' ---> {placement_of_object_origin} with rotation(s) {rotation}")
     global unity
     assert object_name in unity.yaml.used_assets
     print(f"Why this placement?:\n\t{explanation}")
@@ -125,28 +125,33 @@ async def placeObject(object_name: str, placement_of_object_origin: str, rotatio
             return f"If you sequentially place the rotation, you must pass that amount of locations too."
         else:
             objects_to_sequence = [(json_location, json_rotation)]
-            
+         
+    failed_placements = [] 
+    max_len = len(objects_to_sequence)
     while len(objects_to_sequence) > 0:
         json_location, json_rotation = objects_to_sequence.pop(0)
-    try:
-        for parent, contact_points in unity.contact_points.items():
-            # Popping contact points
-            if (json_location["x"], json_location["y"], json_location["z"]) in unity.contact_points[parent]:
-                print("POPPING contact point", (json_location["x"], json_location["y"], json_location["z"]), "from contact points")
-                unity.contact_points[object_name].remove((json_location["x"], json_location["y"], json_location["z"]))
-                
-                
-        unity.add_prefab(object_name, json_location, json_rotation)
-        return f"Successfully added object to the scene. Recall the information of {object_name}."
-    except Exception as e:
-        exc_type, exc_obj, exc_tb = sys.exc_info()
-        fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
-        line_number = exc_tb.tb_lineno
-        print(f"Error: {e}")
-        print(f"Type: {exc_type}")
-        print(f"File: {fname}")
-        print(f"Line Number: {line_number}")
-        return f"Failed to add object '{object_name}' to the scene. The name is arguments are right. Exception:\n" + str(e) 
+        try:
+            for parent, contact_points in unity.contact_points.items():
+                # Popping contact points
+                if (json_location["x"], json_location["y"], json_location["z"]) in unity.contact_points[parent]:
+                    print("POPPING contact point", (json_location["x"], json_location["y"], json_location["z"]), "from contact points")
+                    unity.contact_points[object_name].remove((json_location["x"], json_location["y"], json_location["z"]))
+                    
+                    
+            unity.add_prefab(object_name, json_location, json_rotation)
+
+        except Exception as e:
+            exc_type, exc_obj, exc_tb = sys.exc_info()
+            fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
+            line_number = exc_tb.tb_lineno
+            print(f"Error: {e}")
+            print(f"Type: {exc_type}")
+            print(f"File: {fname}")
+            print(f"Line Number: {line_number}")
+            failed_placements.append((json_location, json_rotation))
+    if len(failed_placements) == max_len:
+        return f"Failed to place one or all of {object_name}. Failed placements:\n{failed_placements}"
+    return f"Successfully added object to the scene. Recall the information of {object_name}."
     
 @function_tool
 def place_vr_human_player(transform: str, rotation: str = "{\"x\": 75, \"y\": 10, \"z\": 70}"):
@@ -245,7 +250,7 @@ async def placeGround(ground_name: str, placement_of_ground_origin: str, explana
             for j in range(0, len(unity.ground_matrix[i])):
                 contact_point = (i * 5 + float(json_location["x"]), j *5 + float(json_location["y"]), unity.ground_matrix[i][j] + float(json_location["z"]))
                 unity.contact_points[ground_name].append(contact_point)
-        return f"Successfully added ground to the scene. Recall the information of {ground_name}: {'all positions are open for further placement. the dimensions are 50m x 50m in the -X, +Z directions.'}. In other words, the ground goes from (0,0) to (-50, 50). That is, the top left of the matrix is -50, 50. All objects should be atop the ground."
+        return f"Successfully added ground to the scene. Recall the information of {ground_name}: {'all positions are open for further placement. the dimensions are 50m x 50m in the -X, +Z directions.'}. In other words, the ground goes from (0,0) to (-50, 50) with these heights:\n{unity.ground_matrix}. That is, the top left of the matrix is -50, 50. All objects should be atop the ground."
     except Exception as e:
         exc_type, exc_obj, exc_tb = sys.exc_info()
         fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
