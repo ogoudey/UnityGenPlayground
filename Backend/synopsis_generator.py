@@ -39,6 +39,18 @@ async def update_synopsis_file(assets_info, synopses):
             output_str = json.dumps(synopses, indent=2)
             s.write(output_str)
             print("Synopsis file updated.")
+    unrepresented_assets = 0
+    for synopsis, ante_asset_path in synopses.items():
+        found = False
+        for asset_path in list(assets_info.keys()):
+            if ante_asset_path == asset_path:
+                found = True
+        if not found:
+            unrepresented_assets += 1
+            del synopses[synopsis]
+    if unrepresented_assets > 0:
+        print(f"{len(unrepresented_assets)} marked as irrelevant because the assets are not imported.")
+        
     # synopses updated
 
 

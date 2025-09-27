@@ -24,7 +24,7 @@ You are responsible for checking the placed assets in a Unity scene. You will be
         3. Actual placement of the object in the scene...
     Is the placement good or bad? Well positioned or somehow off - either in the ground or floating, offset or wrong in some other way?
     If there's not enough information to deduce the correctness of placement, be sure to explain that.
-    Keep your answer brief and to the point. 
+    Keep your answer brief and to the point. It is recommended to use get_ground_matrix for all checks. 
 """
 
     def __init__(self, name=None, instructions=None):
@@ -86,3 +86,19 @@ Suppose you have already built a Unity scene. Now it is your job to incorporate 
             tools=[placeObject, planGround, placeGround],
             model=MODEL,
         )
+        
+""" Tests """   
+
+test_dispatcher = {
+    # = deprecated test
+}
+
+if __name__ == "__main__":
+    if sys.argv[1]:
+        try:
+            test_function = test_dispatcher[sys.argv[1]]
+        except KeyError("Invalid test name. Choose from: " + str(list(test_dispatcher.keys()))):
+            sys.exit(1)
+        asyncio.run(test_function())   
+    else:
+        print("Please include test from:", list(test_dispatcher.keys()))

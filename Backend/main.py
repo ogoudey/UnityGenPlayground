@@ -24,7 +24,7 @@ async def test_river_bridge(prompt="A 5m deep river cutting through a terrain wi
     
     coordinator = Coordinator(tools=[get_contact_points, planSkybox, placeSkybox, planGround, placeGround, planObject, placeObject, planandplaceSun])
     prompt = {"Description of the scene": prompt}
-    print("__Starting Coordinator___")
+    print("\n__Starting Coordinator___")
     await Runner.run(coordinator, json.dumps(prompt), max_turns=20)
     agents.tools.unity.done_and_write()
     
