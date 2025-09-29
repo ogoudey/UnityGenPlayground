@@ -30,7 +30,8 @@
 Put contents of this repo in a Unity project folder.
 
 Then do (Linux):
-``` 
+```
+export OPENAI_API_KEY="..."
 cd Backend
 python3 -m venv .venv
 # install requirements
@@ -38,6 +39,8 @@ python3 main.py <arg>
 ```
 (Windows):
 ```
+setx OPENAI_API_KEY="..."
+# open up a new command prompt to load the environment variable
 cd Backend
 .\.venv\Scripts\activate.bat
 # install requirements
