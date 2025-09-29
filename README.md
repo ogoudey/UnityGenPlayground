@@ -29,12 +29,19 @@
 ## Installation
 Put contents of this repo in a Unity project folder.
 
-Then do
-```
+Then do (Linux):
+``` 
 cd Backend
 python3 -m venv .venv
 # install requirements
-python3 Test.py
+python3 main.py <arg>
+```
+(Windows):
+```
+cd Backend
+.\.venv\Scripts\activate.bat
+# install requirements
+python3 main.py <arg>
 ```
 
 
