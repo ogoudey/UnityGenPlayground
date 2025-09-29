@@ -38,6 +38,32 @@ class YAML:
         
         self.used_assets = dict()
         self.placed_assets = dict()
+    
+    def set_sun(self, length_of_day, time_of_day, sun_brightness):
+        # turn TOD to rotation via ratio with LOD 
+        rotation = {x: 0, y: 0, z: rot}
+        # get quaternion
+        # set rotation of the gaemobject
+        print("Setting sun in YAML...")
+        yaml = ruamel_YAML(typ='rt')
+        default = list(yaml.compose_all(preprocess_text(sun_init_text)))
+        wrapped = [node_to_python(n) for n in default]
+        for doc in wrapped:
+            if "Transform" in doc.keys():
+                if doc["Transform"]["m_Father"]["fileID"] == "0":
+                    father_id = doc["anchor"]
+            if "Light" in doc.keys():
+                doc["m_Intensity"] = sun_brightness        
+            # Edit parameters
+            
+            self.wrapped.append(doc)
+        if not father_id:
+            print("Failed to find root transform of Sun stuff:\n", wrapped)
+
+        sceneroots = self.get_doc("SceneRoots")
+        sceneroots["m_Roots"].append({"fileID": father_id})
+        print("\rSun added to YAML.")
+            
         
     def set_skybox(self, name):
         print("Setting skybox...")
@@ -47,9 +73,9 @@ class YAML:
         try:
             render_settings = self.get_doc("RenderSettings")
             render_settings["m_SkyboxMaterial"] = {"fileID": "2100000", "guid": guid, "type": 2}
-            print("Skybox set in YAML.")
+            print("\rSkybox set in YAML.")
         except Exception:
-            print("Failed to set skybox.")
+            print("\rFailed to set skybox.")
             
     def add_transform(self, guid: str, transform: dict):
         yaml = ruamel_YAML(typ='rt')
@@ -84,7 +110,8 @@ class YAML:
         transform_body["Transform"]["m_GameObject"]["fileID"] = id_out
         return id_out      
     
-    def add_ground_prefab_instance(self, metaguid, transform):
+    def add_ground_prefab_instance(self, name, metaguid, transform):
+        print("Adding ground to YAML...")
         yaml = ruamel_YAML(typ='rt')
         default = list(yaml.compose_all(preprocess_text(prefab_init_text)))[0]
         
@@ -92,24 +119,36 @@ class YAML:
         
         wrapped, id_out = set_ID(wrapped) # to random ID
         
-            
+        texture = None
+        try:
+            used_assets_entry = self.used_assets[name]
+            print("Found", name, "in used_assets w entry", used_assets_entry)
+            texture_path = used_assets_entry["Texture"]
+            if not texture_path == "None":
+                texture_metaguid = get_guid(texture_path + ".meta")
+        except Exception(name + " not in used_assets, or " + texture_path):
+            print("Lookup in used_assets has failed.")
+        
+
         modifications = wrapped["PrefabInstance"]["m_Modification"]["m_Modifications"]
         for mod in modifications:
             if "target" in mod and "guid" in mod["target"]:
-                mod["target"]["fileID"] = "-8679921383154817045"
+                
                 mod["target"]["guid"] = metaguid
-                if mod.get("propertyPath") == "m_Name":
-                    mod["target"]["value"] = "Name of object here" # Anything?
+                if mod.get("propertyPath") == "m_Materials.Array.data[0]":
+                    if not texture_path == "None":
+                       mod["objectReference"]["guid"] = texture_metaguid
+                elif mod.get("propertyPath") == "m_Name":
+                    mod["target"]["fileID"] = "-8679921383154817045"
+                    mod["target"]["value"] = name
                 else:
+                    mod["target"]["fileID"] = "-8679921383154817045"
                     if mod.get("propertyPath") == "m_LocalPosition.x":
                         mod["value"] = transform["x"]
                     if mod.get("propertyPath") == "m_LocalPosition.y":
                         mod["value"] = transform["y"]
                     if mod.get("propertyPath") == "m_LocalPosition.z":
                         mod["value"] = transform["z"]
-        """
-        If you set the fileID to -8679921383154817045 you can change the transform.
-        """
                     
         wrapped["PrefabInstance"]["m_SourcePrefab"]["guid"] = metaguid
         sceneroots = self.get_doc("SceneRoots")
@@ -118,14 +157,55 @@ class YAML:
         print("Asset added to YAML.")            
     
     def remove_prefab_instance_if_exists(self, name):
+
         for doc in self.wrapped:
-            for mod in doc["PrefabInstance"]["m_Modification"]["m_Modifications"]:
-                if mod.get("propertyPath") == "m_Name":
-                    if mod["target"]["value"] == name:
-                        self.wrapped.remove(doc)
-                        return True
+            if "PrefabInstance" in doc:
+                for mod in doc["PrefabInstance"]["m_Modification"]["m_Modifications"]:
+                    if mod.get("propertyPath") == "m_Name":
+                        if mod["target"]["value"] == name:
+                            self.wrapped.remove(doc)
+                            return True
         return False
-    
+        
+    def set_vr_player(self, transform:str, rotation: str):
+        yaml = ruamel_YAML(typ='rt')
+        default = list(yaml.compose_all(preprocess_text(vr_setup_init_text)))[0]
+        wrapped = node_to_python(default)
+        
+        quaternion = euler_to_xyzw_quaternion(rotation)
+        print("Parsing init YAML...")
+        modifications = wrapped["PrefabInstance"]["m_Modification"]["m_Modifications"]
+        for mod in modifications:
+            if "target" in mod and "guid" in mod["target"]:
+                if mod.get("propertyPath") == "m_LocalPosition.x":
+                    mod["value"] = transform["x"]
+                if mod.get("propertyPath") == "m_LocalPosition.y":
+                    mod["value"] = transform["y"]
+                if mod.get("propertyPath") == "m_LocalPosition.z":
+                    mod["value"] = transform["z"]
+                if not scale == 1.0:
+                    if mod.get("propertyPath") == "m_LocalScale.x":
+                        mod["value"] = scale
+                    if mod.get("propertyPath") == "m_LocalScale.z":
+                        mod["value"] = scale
+                if mod.get("propertyPath") == "m_LocalRotation.x":
+                    mod["value"] = quaternion[0]
+                if mod.get("propertyPath") == "m_LocalRotation.y":
+                    mod["value"] = quaternion[1]
+                if mod.get("propertyPath") == "m_LocalRotation.z":
+                    mod["value"] = quaternion[2]
+                if mod.get("propertyPath") == "m_LocalRotation.w":
+                    mod["value"] = quaternion[3]
+        
+        prefab_id = wrapped["anchor"] # constant 1214490813
+        
+        sceneroots = self.get_doc("SceneRoots")
+        sceneroots["m_Roots"].append({"fileID": prefab_id})
+        print("Init YAML succcessfully updated.")
+        self.wrapped.append(wrapped)
+        print("VR Player successfully added to YAML.")
+        
+        
     def add_prefab_instance(self, name, transform, rotation):
         yaml = ruamel_YAML(typ='rt')
         default = list(yaml.compose_all(preprocess_text(prefab_init_text)))[0]
@@ -186,12 +266,12 @@ class YAML:
                         mod["value"] = quaternion[3]
                       
                       
-                -7635826562936255635  
+
                     
         wrapped["PrefabInstance"]["m_SourcePrefab"]["guid"] = guid
         sceneroots = self.get_doc("SceneRoots")
         sceneroots["m_Roots"].append({"fileID": id_out})
-        print("Init YAML succcessfully updated.")
+        print("\rInit YAML succcessfully updated.")
         self.wrapped.append(wrapped)
         print("Asset added to YAML.")
         
@@ -216,10 +296,14 @@ class YAML:
         print("Attempting to write to", file_name)
         out = ["%YAML 1.1", "%TAG !u! tag:unity3d.com,2011:"]
         for entry in self.wrapped:
-            tag = entry.pop("tag")
-            anchor = entry.pop("anchor")
-            # remaining single top-level key is the object name
-            [(objname, objdata)] = entry.items()
+            #tag = entry.pop("tag")
+            #anchor = entry.pop("anchor")
+            tag = entry["tag"]
+            anchor = entry["anchor"]
+
+
+            objname = list(entry.keys())[2]
+            objdata = entry[objname]
             out.append(f"--- !u!{tag} &{anchor}")
             out.append(f"{objname}:")
             out.extend(dict_to_yaml(objdata, 2))
@@ -256,6 +340,10 @@ class YAML:
             if "&" in self.level0[doc_i]:
                 if self.level0[doc_i].split("&")[1] == id_:
                     return self.level0[doc_i + 1]
+
+def get_texture_meta(meta_path):
+    with open(meta_path, "r") as f:
+        data = pyyaml.safe_load(f)
 
 def euler_to_xyzw_quaternion(rotation):
     print("Rotation:", rotation)
@@ -418,9 +506,203 @@ def write_obj_meta(obj_path, guid):
     with open(obj_path + ".meta", "w") as f:
         f.write(yaml_str)
         
-    
-
     print("Meta file with updated GUID written")
+    
+sun_init_text = """
+--- !u!1 &786546698
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 786546699}
+  - component: {fileID: 786546700}
+  m_Layer: 0
+  m_Name: Directional Light
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &786546699
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 786546698}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0.668346, y: -0.12872267, z: -0.119008936, w: 0.7228977}
+  m_LocalPosition: {x: 15.31607, y: 9.356531, z: 8.9202175}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1629422138}
+  m_LocalEulerAnglesHint: {x: 90, y: 0, z: 0}
+--- !u!108 &786546700
+Light:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 786546698}
+  m_Enabled: 1
+  serializedVersion: 11
+  m_Type: 1
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_Intensity: 1
+  m_Range: 10
+  m_SpotAngle: 30
+  m_InnerSpotAngle: 21.80208
+  m_CookieSize: 10
+  m_Shadows:
+    m_Type: 0
+    m_Resolution: -1
+    m_CustomResolution: -1
+    m_Strength: 1
+    m_Bias: 0.05
+    m_NormalBias: 0.4
+    m_NearPlane: 0.2
+    m_CullingMatrixOverride:
+      e00: 1
+      e01: 0
+      e02: 0
+      e03: 0
+      e10: 0
+      e11: 1
+      e12: 0
+      e13: 0
+      e20: 0
+      e21: 0
+      e22: 1
+      e23: 0
+      e30: 0
+      e31: 0
+      e32: 0
+      e33: 1
+    m_UseCullingMatrixOverride: 0
+  m_Cookie: {fileID: 0}
+  m_DrawHalo: 0
+  m_Flare: {fileID: 0}
+  m_RenderMode: 0
+  m_CullingMask:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_RenderingLayerMask: 1
+  m_Lightmapping: 4
+  m_LightShadowCasterMode: 0
+  m_AreaSize: {x: 1, y: 1}
+  m_BounceIntensity: 1
+  m_ColorTemperature: 6570
+  m_UseColorTemperature: 0
+  m_BoundingSphereOverride: {x: 0, y: 0, z: 0, w: 0}
+  m_UseBoundingSphereOverride: 0
+  m_UseViewFrustumForShadowCasterCull: 1
+  m_ForceVisible: 0
+  m_ShadowRadius: 0
+  m_ShadowAngle: 0
+  m_LightUnit: 1
+  m_LuxAtDistance: 1
+  m_EnableSpotReflector: 1
+--- !u!1 &1629422137
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1629422138}
+  m_Layer: 0
+  m_Name: GameObject
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1629422138
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1629422137}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 786546699}
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+"""
+
+vr_setup_init_text = """
+--- !u!1001 &1214490813
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 0}
+    m_Modifications:
+    - target: {fileID: 175660, guid: cb3370c18187bb444b240cfb08dcc02f, type: 3}
+      propertyPath: m_Name
+      value: ViveCameraRig
+      objectReference: {fileID: 0}
+    - target: {fileID: 463184, guid: cb3370c18187bb444b240cfb08dcc02f, type: 3}
+      propertyPath: m_RootOrder
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 463184, guid: cb3370c18187bb444b240cfb08dcc02f, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 463184, guid: cb3370c18187bb444b240cfb08dcc02f, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 463184, guid: cb3370c18187bb444b240cfb08dcc02f, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 463184, guid: cb3370c18187bb444b240cfb08dcc02f, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 463184, guid: cb3370c18187bb444b240cfb08dcc02f, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 463184, guid: cb3370c18187bb444b240cfb08dcc02f, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 463184, guid: cb3370c18187bb444b240cfb08dcc02f, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 463184, guid: cb3370c18187bb444b240cfb08dcc02f, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 463184, guid: cb3370c18187bb444b240cfb08dcc02f, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 463184, guid: cb3370c18187bb444b240cfb08dcc02f, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: cb3370c18187bb444b240cfb08dcc02f, type: 3}
+ """
 
 obj_meta_init_text = """
 fileFormatVersion: 2
@@ -716,11 +998,23 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: -7635826562936255635, guid: 2c2afc1a4f0c4d298e6b04d7c4babd1a, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value: 
+      objectReference: {fileID: 2100000, guid: 94ea32e4f0f6cab4e98928aadb7d9992, type: 2}
+
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 1f9036ec905b920479091aca9ba81305, type: 3}
+"""
+
+"""
+    - target: {fileID: -7635826562936255635, guid: a973d619bfe74a0ea69f55314cf2a8f9, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value: 
+      objectReference: {fileID: 2100000, guid: 45eb7efec0c8f504285b382733758e52, type: 2}
 """
 
 game_object_init_text = """

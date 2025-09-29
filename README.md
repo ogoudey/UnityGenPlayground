@@ -18,7 +18,10 @@
 
 **Available assets**: a small deck of prefabs from /Prefabs in [Nature stuff](https://assetstore.unity.com/packages/3d/environments/unl-ultimate-nature-lite-176906)
 
-**Settings**: One main agent plans the scene with help of others, and then places the objects in XYZ space. The ground is a generated heightmap.
+**Settings**:
+1. One main agent plans with the help of subagents, and then places the objects its planned. The ground is a generated heightmap. Then
+2. The positions of the objects are checked against the ground, these checks go into a list of feedbacks.
+3. The feedback is considered by a third agent who reforms the objects given the feedback.
 
 **Notes**: 
 * Either LLM's "short term memory" issue, or a miscommunication issue - each asset is locally different from the others, affecting correct __visual__ placement.
@@ -38,9 +41,16 @@ python3 Test.py
 Used assets:
 [Nature stuff](https://assetstore.unity.com/packages/3d/environments/unl-ultimate-nature-lite-176906)
 [Bridge](https://assetstore.unity.com/packages/3d/environments/rope-bridge-3d-222563)
+[Ground textures](https://assetstore.unity.com/packages/2d/textures-materials/nature/yughues-free-ground-materials-13001)	
 
+## VR Setup
+(Assuming a VIVE headset and a wireless adapter, a Windows computer, etc.)
+1. Plug the headset into the power brick (make sure the power brick is ON)
+2. Open up the Unity project (through the Unity Hub, takes a minute)
+3. Open up SteamVR (takes a minute)
+4. Open up VIVE Wireless (takes a minute)
+5. Open up a Unity world with the OpenVR package imported.
+6. Hit play to send the game to the headset.
 
-
-
-Note:
+### Note:
 Change Quality / Rendering / Rendering Pipeline Asset to None
