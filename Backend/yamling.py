@@ -39,7 +39,11 @@ class YAML:
         self.used_assets = dict()
         self.placed_assets = dict()
     
-    def set_sun(self):
+    def set_sun(self, length_of_day, time_of_day, sun_brightness):
+        # turn TOD to rotation via ratio with LOD 
+        rotation = {x: 0, y: 0, z: rot}
+        # get quaternion
+        # set rotation of the gaemobject
         print("Setting sun in YAML...")
         yaml = ruamel_YAML(typ='rt')
         default = list(yaml.compose_all(preprocess_text(sun_init_text)))
@@ -48,7 +52,8 @@ class YAML:
             if "Transform" in doc.keys():
                 if doc["Transform"]["m_Father"]["fileID"] == "0":
                     father_id = doc["anchor"]
-                    
+            if "Light" in doc.keys():
+                doc["m_Intensity"] = sun_brightness        
             # Edit parameters
             
             self.wrapped.append(doc)
@@ -119,8 +124,9 @@ class YAML:
             used_assets_entry = self.used_assets[name]
             print("Found", name, "in used_assets w entry", used_assets_entry)
             texture_path = used_assets_entry["Texture"]
-            texture_metaguid = get_guid(texture_path + ".meta")
-        except KeyError(name + " not in used_assets"):
+            if not texture_path == "None":
+                texture_metaguid = get_guid(texture_path + ".meta")
+        except Exception(name + " not in used_assets, or " + texture_path):
             print("Lookup in used_assets has failed.")
         
 
@@ -130,7 +136,8 @@ class YAML:
                 
                 mod["target"]["guid"] = metaguid
                 if mod.get("propertyPath") == "m_Materials.Array.data[0]":
-                    mod["objectReference"]["guid"] = texture_metaguid
+                    if not texture_path == "None":
+                       mod["objectReference"]["guid"] = texture_metaguid
                 elif mod.get("propertyPath") == "m_Name":
                     mod["target"]["fileID"] = "-8679921383154817045"
                     mod["target"]["value"] = name

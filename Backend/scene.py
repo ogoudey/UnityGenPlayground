@@ -14,9 +14,9 @@ class UnityFile:
     def add_skybox(self, skybox_name):
         self.yaml.set_skybox(skybox_name)
         
-    def add_sun(self, length_of_day, percentage_daylight, time_of_day, sun_brightness):
+    def add_sun(self, length_of_day, time_of_day, sun_brightness):
         print({"length_of_day":length_of_day, "percentage_daylight":percentage_daylight, "time_of_day":time_of_day, "sun_brightness":sun_brightness})
-        self.yaml.set_sun()
+        self.yaml.set_sun(length_of_day, percentage_daylight, time_of_day, sun_brightness)
         
             
     def add_prefab(self, name, location, rotation):

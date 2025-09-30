@@ -2,7 +2,7 @@
     "../Assets/Proxy Games/Stylized Nature Kit Lite/Prefabs/Foliage/Trees/Spruce 1.prefab":
     {
         "Name":"Spruce 1",
-        "Importances": {"pivot": "at the very bottom of the object and the midpoint along the X and Z. If you place me at a point, that is correctly the base of my trunk. I will correctly be positioned on top of the ground if it exists at (x, y, z)."}
+        "Importances": {"pivot": "at the very bottom of the object and the midpoint along the X and Z. If you place me at a point, that is correctly the base of my trunk. Make sure my Y position = the height of the ground at my X, Z."}
     },
     "../Assets/Proxy Games/Stylized Nature Kit Lite/Prefabs/Water/Detailed Water.prefab":
     {

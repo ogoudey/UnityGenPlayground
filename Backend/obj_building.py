@@ -50,6 +50,7 @@ def obj_from_grid(grid: str = default_grid):
     matrix = []
     obj_str = ""
     lines = grid.split("\n")
+    print(grid)
     for y in range(0, len(lines)):
         line = lines[y].split(" ")
         matrix.append([])
@@ -62,7 +63,8 @@ def obj_from_grid(grid: str = default_grid):
                 
             except Exception:
                 print(line[x], "is an arifact of the grid. Ignoring...")
-                
+    print(matrix) 
+    print("Top left of matrix is -50, 50")           
 
 
     for y in range(0, len(lines)):
