@@ -25,6 +25,17 @@
 
 **Notes**: 
 * Either LLM's "short term memory" issue, or a miscommunication issue - each asset is locally different from the others, affecting correct __visual__ placement.
+
+## Part III
+<img width="858" height="587" alt="Oct 1 Unity Gen" src="https://github.com/user-attachments/assets/2124e9a7-e1c3-403e-86fe-0914c97705a2" />
+
+**Prompt**: "I'm scared of heights over 5m. I just can't do bridges." 
+
+**Available assets**: same assets as before [Nature stuff](https://assetstore.unity.com/packages/3d/environments/unl-ultimate-nature-lite-176906)
+
+**Settings**: Patient message goes through intepretation to a world-generating coordinator. This takes 5 minutes with on OpenAI's `o4-mini`.
+
+**Notes**: Still getting the orientation of bulky objects wrong.
  
 ## Installation
 Put contents of this repo in a Unity project folder.
