@@ -115,11 +115,9 @@ async def planandplaceSun(description_of_sun_behavior: str) -> str:
     
     # No PlaceableObject. Consider it placed.
     return f"Successfully placed the Sun in the scene"
-    
-
 
 @function_tool
-async def planGround(steps_to_ground_construction: str):
+async def planandplaceGround(steps_to_ground_construction: str):
     """ 
         steps_to_ground_construction: a plan of how the ground planner should construct the ground. Example (a string):
             To make a volcano:
@@ -148,13 +146,22 @@ async def planGround(steps_to_ground_construction: str):
     texture_path = result.final_output.texture_path
     
     
-    object_info = {"Name": object_asset_path.split("/")[-1], "Importances": {"grid": str(unity.ground_matrix), "open contact points": "all positions are open for further placement", "dimensions": "50m x 50m in the -X, +Z directions.", "Local origin": "origin is on the +X, -Z corner.", "Sub-agent's explanation": explanation, "Unplaced!": "Make sure to use placeGround to place this object."},}
+    ground_name = object_asset_path.split("/")[-1]
+        
+    unity.yaml.used_assets[ground_name] = {"Ground": object_asset_path, "Texture": texture_path}
+    print(ground_name, "added to used_assets w path", object_asset_path)
     
-    object_name = object_info["Name"]
+    json_location = {"x": 50, "y": 0, "z": 0}
+    unity.add_ground(ground_name, json_location)
+    # Add new contact points under ground
+    print("Back from adding ground to scene.")
+    unity.contact_points[ground_name] = []
+    for i in range(0, len(unity.ground_matrix)):
+        for j in range(0, len(unity.ground_matrix[i])):
+            contact_point = (i * 5 + float(json_location["x"]), j *5 + float(json_location["y"]), unity.ground_matrix[i][j] + float(json_location["z"]))
+            unity.contact_points[ground_name].append(contact_point)
     
-    unity.yaml.used_assets[object_name] = {"Ground": object_asset_path, "Texture": texture_path}
-    print(object_name, "added to used_assets w path", object_asset_path)
-    return PlaceableObject(object_name, json.dumps(object_info["Importances"]))
+    return f"Successfully placed a ground with heightmap {str(unity.ground_matrix)} in the +X +Z quadrant. The scale the the Xs and Zs is 5x. There is no vertical scaling."
 
 @function_tool
 async def planTexture(material_of_object_description: str) -> str:
@@ -177,44 +184,7 @@ async def planTexture(material_of_object_description: str) -> str:
     print("Found", mat_asset_path, "for", material_of_object_description)
     return mat_asset_path
 
-@function_tool
-async def placeGround(ground_name: str, placement_of_ground_origin: str, explanation: str) -> str:
-    """
-        Args:
-            ground_name: The name of the ground you just planned. That is, PlaceableObject.name
-            placement_of_ground_origin: Must be a JSON-encoded string. Example:
-                "{\"x\": 0, \"y\": 0, \"z\": 0}"
-            explanation: A brief human-readable explanation of this placement, include detail on where this object is and what space it covers.
-        Cannot be called twice. Once the ground is placed, it's placed.
-    """
-    print(f"Loading placement of ground ---> {placement_of_ground_origin}") 
-    print(f"Why this ground placement? {explanation}")
-    try:
-        json_location = json.loads(placement_of_ground_origin)
-    except ValueError:
-        print(f"Error loading given location into JSON: {placement_of_ground_origin}")
-        return f"Failed to add object '{ground_name}' to location {placement_of_ground_origin} in the scene. Make sure to pass a correct something that can be loaded with json.loads() into JSON."
-        
-    global unity
-    try:
-        unity.add_ground(ground_name, json_location)
-        # Add new contact points under ground
-        print("Back from adding ground to scene.")
-        unity.contact_points[ground_name] = []
-        for i in range(0, len(unity.ground_matrix)):
-            for j in range(0, len(unity.ground_matrix[i])):
-                contact_point = (i * 5 + float(json_location["x"]), j *5 + float(json_location["y"]), unity.ground_matrix[i][j] + float(json_location["z"]))
-                unity.contact_points[ground_name].append(contact_point)
-        return f"Successfully added ground to the scene. Recall the information of {ground_name}: {'all positions are open for further placement. the dimensions are 50m x 50m in the -X, +Z directions.'}. In other words, the ground goes from (0,0) to (-50, 50) with these heights:\n{unity.ground_matrix}. That is, the top left of the matrix is -50, 50. All objects should be atop the ground."
-    except Exception as e:
-        exc_type, exc_obj, exc_tb = sys.exc_info()
-        fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
-        line_number = exc_tb.tb_lineno
-        print(f"Error: {e}")
-        print(f"Type: {exc_type}")
-        print(f"File: {fname}")
-        print(f"Line Number: {line_number}")
-        return f"Failed to add '{ground_name}' to the scene. Make sure the arguments are right."
+
 
 @function_tool
 async def planObject(description: str) -> PlaceableObject:
@@ -264,13 +234,17 @@ async def placeObject(object_name: str, placement_of_object_origin: str, rotatio
                 "{\"x\": 75, \"y\": 2.8, \"z\": 70}", "[{\"x\": 75, \"y\": 10, \"z\": 70}, {\"x\": 70, \"y\": 1.2, \"z\": 65}, ...]"
             rotation: Must be a JSON-encoded string. OPTIONALLY, can be a list of such strings in order to place a sequence objects. Example:
                 "{\"x\": 90, \"y\": 0, \"z\": 45}", "[{\"x\": 90, \"y\": 0, \"z\": 45}, {\"x\": 0, \"y\": 0, \"z\": 270}]"
-            explanation: A human-readable explanation of the placement(s). Example: "I put the water here to be above the height y=0.5 along the riverbed", or "I put a patch of trees in this section". Be sure to explain the height with regard to the contact points and the open spaces of the heightmap."
+            explanation: A human-readable explanation of the placement(s). Include in your explanation the specific shape of the object, as contained in the PlaceableObject that you've planned."
     """
     
     
     print(f"Placing '{object_name}' ---> {placement_of_object_origin} with rotation(s) {rotation}")
     global unity
-    assert object_name in unity.yaml.used_assets
+    try:
+        assert object_name in unity.yaml.used_assets
+    except AssertionError:
+        print(f"Object {object_name} is not showing up in {unity.yaml.used_assets}")
+        return f"The object {object_name} has not been planned. Please call planObject before placeObject and refer to the planned object in the arguments of placeObject."
     print(f"Why this placement?:\n\t{explanation}")
     try:
         json_location = json.loads(placement_of_object_origin)
@@ -301,7 +275,7 @@ async def placeObject(object_name: str, placement_of_object_origin: str, rotatio
          
     failed_placements = [] 
     max_len = len(objects_to_sequence)
-    print(objects_to_sequence)
+    #print(objects_to_sequence)
     while len(objects_to_sequence) > 0:
         json_location, json_rotation = objects_to_sequence.pop(0)
         print(object_name, "-->", (json_location, json_rotation))
@@ -329,16 +303,20 @@ async def placeObject(object_name: str, placement_of_object_origin: str, rotatio
     return f"Successfully added object to the scene. Recall the information of {object_name}."
     
 @function_tool
-def place_vr_human_player(transform: str, rotation: str = "{\"x\": 75, \"y\": 10, \"z\": 70}"):
+def place_vr_human_player(transform: str, rotation: str = "{\"x\": 75, \"y\": 10, \"z\": 70}", explanation: str=""):
     """
-    This function places the human player (who's wearing VR) in the scene. The player can walk around 1m from where they are placed.
+    This function places the VR headset of the human player in the scene. It places the camera/head, so make it 2m above the ground below them. The player can walk around 1m from where they are placed.
     transform: Must be a JSON-encoded string. Example:
         "{\"x\": 75, \"y\": 10, \"z\": 70}"
     rotation: Must be a JSON-encoded string (only use \" around the variables). Example:
         "{\"x\": 90, \"y\": 0, \"z\": 45}" 
+    explanation: A human-readable explanation of the placement(s). Example: "I put the water here to be above the height y=0.5 along the riverbed", or "I put a patch of trees in this section". Be sure to explain the height with regard to the contact points and the open spaces of the heightmap."
+
     Only call this function once, if successful.
     """
     print(f"Placing human VR player ---> location {transform}, rotation {rotation}")
+    print(f"Why this placement?:\n\t{explanation}")
+
     global unity
     try:
         json_location = json.loads(transform)

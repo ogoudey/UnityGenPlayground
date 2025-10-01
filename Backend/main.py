@@ -14,16 +14,27 @@ from agents import Runner
 import coordinator as agents
 from enrichment import Therapist, Transducer
 from coordinator import Checker, Reformer, Coordinator
-from tools import get_ground_matrix, planObject, placeObject, place_vr_human_player, planSkybox, placeSkybox, placeGround, get_contact_points, planGround, planandplaceSun
+from tools import get_ground_matrix, planObject, placeObject, place_vr_human_player, planSkybox, placeSkybox, planandplaceGround, get_contact_points, planandplaceSun
 
 from scene import UnityFile
+
+async def test_ground(prompt="A 5m deep river cutting through a terrain with some foliage, and a bridge going over it connecting two banks."):
+    scene_suffix = "draft1"
+    scene_name = f"test_river_bridge{random.randint(100, 999)}{scene_suffix}"
+    agents.tools.unity = UnityFile(scene_name)
+    
+    coordinator = Coordinator(tools=[planandplaceGround])
+    prompt = {"Description of the scene": prompt}
+    print("\n__Starting Coordinator___")
+    await Runner.run(coordinator, json.dumps(prompt), max_turns=20)
+    agents.tools.unity.done_and_write()
 
 async def test_river_bridge(prompt="A 5m deep river cutting through a terrain with some foliage, and a bridge going over it connecting two banks."):
     scene_suffix = "draft1"
     scene_name = f"test_river_bridge{random.randint(100, 999)}{scene_suffix}"
     agents.tools.unity = UnityFile(scene_name)
     
-    coordinator = Coordinator(tools=[get_contact_points, planSkybox, placeSkybox, planGround, placeGround, planObject, placeObject, planandplaceSun])
+    coordinator = Coordinator(tools=[get_contact_points, planSkybox, placeSkybox, planandplaceGround, planObject, placeObject, planandplaceSun])
     prompt = {"Description of the scene": prompt}
     print("\n__Starting Coordinator___")
     await Runner.run(coordinator, json.dumps(prompt), max_turns=20)
@@ -67,8 +78,7 @@ async def test_river_bridge_vr(prompt="A 5m deep river cutting through a terrain
     scene_name = f"test_river_bridge_vr{random.randint(100, 999)}{scene_suffix}"
     agents.tools.unity = UnityFile(scene_name)
     
-    coordinator = Coordinator(tools=[get_contact_points, planSkybox, placeSkybox, planGround, placeGround, planObject, placeObject, planandplaceSun, place_vr_human_player])
-    prompt = {"Description of the scene": prompt}
+    coordinator = Coordinator(tools=[get_contact_points, planSkybox, placeSkybox, planandplaceGround, planObject, placeObject, planandplaceSun, place_vr_human_player])
     print("\n__Starting Coordinator___")
     await Runner.run(coordinator, json.dumps(prompt), max_turns=20)
     agents.tools.unity.done_and_write()
@@ -130,6 +140,7 @@ async def test_cumulative(prompt="I'm scared of heights over 5m. I just can't do
     scene_name = f"test_cumulative{random.randint(100, 999)}{scene_suffix}"
     #agents.tools.unity = UnityFile(scene_name)
     
+    print(f"\n\t\"{prompt}\"\n")
     therapist = Therapist()
     print("__Starting Therapist__")
     result = await Runner.run(therapist, prompt, max_turns=2)
@@ -156,6 +167,7 @@ test_dispatcher = {
     #"test_vr": test_river_bridge_vr,
     "test_river_bridge_vr": test_river_bridge_vr,
     "test_vr": test_vr,
+    "test_ground": test_ground,
 }
 
 if __name__ == "__main__":

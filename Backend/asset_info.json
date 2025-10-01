@@ -7,12 +7,12 @@
     "../Assets/Proxy Games/Stylized Nature Kit Lite/Prefabs/Water/Detailed Water.prefab":
     {
         "Name": "Water",
-        "Importances": {"origin/pivot point": "I go off in the -Z, -X directions if I am placed at 0,0. In other words, my centerpoint is at my +X, +Z corner. Or if I'm placed at x=0, z=50 I will cover the -X +Z quadrant", "Dimensions": "50m x 50m - a perfect square plane", "Notes": "Have me overlap the whole ground. Make sure my Y coordinate provides the right water level if the prompt refers to a body of water."}
+        "Importances": {"origin/pivot point": "I go off in the -Z, -X directions if I am placed at 0,0. In other words, my centerpoint is at my +X, +Z corner. Or if I'm placed at x=50, z=50 I will cover the +X +Z quadrant.", "Dimensions": "50m x 50m - a perfect square plane", "Notes": "Have me overlap the whole ground. Make sure my Y coordinate provides the right water level if the prompt refers to a body of water."}
     },
     "../Assets/Proxy Games/Stylized Nature Kit Lite/Prefabs/Water/Flat Water.prefab":
     {
         "Name": "Water",
-        "Importances": {"origin/pivot point": "I go off in the -Z, -X directions if I am placed at 0,0. In other words, my centerpoint is at my +X, +Z corner. Or if I'm placed at x=0, z=50 I will cover the -X +Z quadrant.", "Dimensions": "50m x 50m - a perfect square plane.", "Notes": "Have me overlap the whole ground. Make sure my Y coordinate provides the right water level if the prompt refers to a body of water."}
+        "Importances": {"origin/pivot point": "I go off in the -Z, -X directions if I am placed at 0,0. In other words, my centerpoint is at my +X, +Z corner. Or if I'm placed at x=50, z=50 I will cover the +X +Z quadrant.", "Dimensions": "50m x 50m - a perfect square plane.", "Notes": "Have me overlap the whole ground. Make sure my Y coordinate provides the right water level if the prompt refers to a body of water."}
     },
     "../Assets/Blue Polygon/Rope Bridge 3D/Prefab/rope_bridge.prefab":
     {

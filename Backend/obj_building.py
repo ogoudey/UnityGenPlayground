@@ -51,20 +51,19 @@ def obj_from_grid(grid: str = default_grid):
     obj_str = ""
     lines = grid.split("\n")
     print(grid)
-    for y in range(0, len(lines)):
+    
+    
+    for y in range(len(lines)-1, -1, -1):
         line = lines[y].split(" ")
-        matrix.append([])
-        for x in range(0, len(line)):
-
-            matrix[y].append(float(line[x]))
+        row = []
+        for x in range(len(line) - 1, -1, -1):
+            row.append(float(line[x]))
             try:
-                obj_str += f"v {float(x)*scale} {float(line[x])} {float(y)*scale}\n"
-                
-                
+                obj_str += f"v {float(x)*scale} {float(line[x])} {float(y)*scale}\n"  
             except Exception:
                 print(line[x], "is an arifact of the grid. Ignoring...")
+        matrix.append(row)
     print(matrix) 
-    print("Top left of matrix is -50, 50")           
 
 
     for y in range(0, len(lines)):
