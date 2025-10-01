@@ -12,6 +12,7 @@ import random
 import asyncio
 from agents import Runner
 import coordinator as agents
+from enrichment import Therapist, Transducer
 from coordinator import Checker, Reformer, Coordinator
 from tools import get_ground_matrix, planObject, placeObject, place_vr_human_player, planSkybox, placeSkybox, placeGround, get_contact_points, planGround, planandplaceSun
 
@@ -75,11 +76,59 @@ async def test_light_and_texture(prompt="A blue sky with a bright sun high in th
     print(coordinator.name + ":", time.time() - t, "seconds.")
     agents.tools.unity.done_and_write()
 
+async def test_therapist(prompt="I'm scared of heights over 5m. I just can't do bridges."):
+    scene_suffix = "draft1"
+    scene_name = f"test_therapist{random.randint(100, 999)}{scene_suffix}"
+    #agents.tools.unity = UnityFile(scene_name)
+    
+    therapist = Therapist()
+    print("__Starting Therapist__")
+    result = await Runner.run(therapist, prompt, max_turns=2)
+    #agents.tools.unity.done_and_write()
+    print(result.final_output)
+    
+async def test_transduction(prompt="I'm scared of heights over 5m. I just can't do bridges."):
+    scene_suffix = "draft1"
+    scene_name = f"test_transduction{random.randint(100, 999)}{scene_suffix}"
+    #agents.tools.unity = UnityFile(scene_name)
+    
+    therapist = Therapist()
+    print("__Starting Therapist__")
+    result = await Runner.run(therapist, prompt, max_turns=2)
+    transducer = Transducer()
+    print("__Starting Transducer__")
+    result = await Runner.run(transducer, result.final_output, max_turns=2)
+    #agents.tools.unity.done_and_write()
+    print(result.final_output)
+
+async def test_cumulative(prompt="I'm scared of heights over 5m. I just can't do bridges."):
+    scene_suffix = "draft1"
+    scene_name = f"test_cumulative{random.randint(100, 999)}{scene_suffix}"
+    #agents.tools.unity = UnityFile(scene_name)
+    
+    therapist = Therapist()
+    print("__Starting Therapist__")
+    result = await Runner.run(therapist, prompt, max_turns=2)
+    transducer = Transducer()
+    print("__Starting Transducer__")
+    result = await Runner.run(transducer, result.final_output, max_turns=2)
+    #agents.tools.unity.done_and_write()
+    scene_generating_plan = result.final_output
+    
+    agents.tools.unity = UnityFile(scene_name)
+    coordinator = Coordinator() # all the tools
+    prompt = {"Plan": scene_generating_plan}
+    print("__Starting Coordinator___")
+    await Runner.run(coordinator, json.dumps(prompt), max_turns=20)
+    agents.tools.unity.done_and_write()    
 
 test_dispatcher = {
     # = deprecated test
     "test_river_bridge": test_river_bridge, # outputs 2 drafts
     "test_light_and_texture": test_light_and_texture,
+    "test_therapist": test_therapist,
+    "test_transduction": test_transduction,
+    "test_cumulative": test_cumulative,
     #"test_vr": test_river_bridge_vr,
 }
 
