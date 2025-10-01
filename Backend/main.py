@@ -62,6 +62,30 @@ async def test_river_bridge(prompt="A 5m deep river cutting through a terrain wi
     print(f"{result.final_output}")
     agents.tools.unity.done_and_write()
 
+async def test_river_bridge_vr(prompt="A 5m deep river cutting through a terrain with some foliage, and a bridge going over it connecting two banks."):
+    scene_suffix = "draft1"
+    scene_name = f"test_river_bridge_vr{random.randint(100, 999)}{scene_suffix}"
+    agents.tools.unity = UnityFile(scene_name)
+    
+    coordinator = Coordinator(tools=[get_contact_points, planSkybox, placeSkybox, planGround, placeGround, planObject, placeObject, planandplaceSun, place_vr_human_player])
+    prompt = {"Description of the scene": prompt}
+    print("\n__Starting Coordinator___")
+    await Runner.run(coordinator, json.dumps(prompt), max_turns=20)
+    agents.tools.unity.done_and_write()
+
+
+async def test_vr(prompt="Just try placing the player in 3D space"):
+    scene_suffix = "draft1"
+    scene_name = f"test_vr{random.randint(100, 999)}{scene_suffix}"
+    agents.tools.unity = UnityFile(scene_name)
+    
+    coordinator = Coordinator(tools=[place_vr_human_player])
+    prompt = {"Description of the scene": prompt}
+    print("\n__Starting Coordinator___")
+    await Runner.run(coordinator, json.dumps(prompt), max_turns=20)
+    agents.tools.unity.done_and_write()
+    
+
 async def test_light_and_texture(prompt="A blue sky with a bright sun high in the skynoon over a ground with any texture."):
     scene_suffix = "draft1"
     scene_name = f"test_light_and_texture{random.randint(100, 999)}{scene_suffix}"
@@ -130,6 +154,8 @@ test_dispatcher = {
     "test_transduction": test_transduction,
     "test_cumulative": test_cumulative,
     #"test_vr": test_river_bridge_vr,
+    "test_river_bridge_vr": test_river_bridge_vr,
+    "test_vr": test_vr,
 }
 
 if __name__ == "__main__":

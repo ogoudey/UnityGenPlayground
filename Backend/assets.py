@@ -1,5 +1,6 @@
 import subprocess
 import os
+import fnmatch
 import re
 import pathlib
 from collections import defaultdict
@@ -43,22 +44,29 @@ def get_tree(file_type=".prefab", folder="../Assets"):
 
 
 def get_found(file_type=".prefab", folder="../Assets"):
-    result = subprocess.run(
-        ["find", folder, "-type", "f", "-name", f"*{file_type}"],
-        capture_output=True,
-        text=True
-    )
+    if os.name == 'nt':
+        matches = []
+        for root, _, files in os.walk(folder):
+            for name in files:
+                if fnmatch.fnmatch(name, f"*{file_type}"):
+                    matches.append(os.path.join(root, name))
+    elif os.name == 'posix':
+        result = subprocess.run(
+            ["find", folder, "-type", "f", "-name", f"*{file_type}"],
+            capture_output=True,
+            text=True
+        )
 
-    if result.returncode != 0 or not result.stdout.strip():
-        # Either the command failed or no files found
-        print(f"* !! {folder} was not found. Consider adding to the file system.")
-        return []
+        if result.returncode != 0 or not result.stdout.strip():
+            # Either the command failed or no files found
+            print(f"* !! {folder} was not found. Consider adding to the file system.")
+            return []
         
-    # Split into list of file paths, strip whitespace
-    files = [line.strip() for line in result.stdout.splitlines() if line.strip()]
+        # Split into list of file paths, strip whitespace
+        matches = [line.strip() for line in result.stdout.splitlines() if line.strip()]
 
     # Normalize paths (optional, makes everything consistent)
-    files = [str(pathlib.Path(f).as_posix()) for f in files]
+    files = [str(pathlib.Path(f).as_posix()) for f in matches]
     print(f"\n* The library at {folder} has {len(files)} {file_type} assets.")
     return files
 

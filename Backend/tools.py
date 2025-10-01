@@ -334,8 +334,9 @@ def place_vr_human_player(transform: str, rotation: str = "{\"x\": 75, \"y\": 10
     This function places the human player (who's wearing VR) in the scene. The player can walk around 1m from where they are placed.
     transform: Must be a JSON-encoded string. Example:
         "{\"x\": 75, \"y\": 10, \"z\": 70}"
-    rotation: Must be a JSON-encoded string. Example:
-        "{\"x\": 90, \"y\": 0, \"z\": 45}"
+    rotation: Must be a JSON-encoded string (only use \" around the variables). Example:
+        "{\"x\": 90, \"y\": 0, \"z\": 45}" 
+    Only call this function once, if successful.
     """
     print(f"Placing human VR player ---> location {transform}, rotation {rotation}")
     global unity
@@ -343,15 +344,15 @@ def place_vr_human_player(transform: str, rotation: str = "{\"x\": 75, \"y\": 10
         json_location = json.loads(transform)
     except ValueError:
         print("Error loading given placement_of_centerpoint into JSON")
-        return f"Failed to add player to location {location} in the scene (json.loads() error). Make sure to pass a correct something that can be loaded with json.loads() into JSON."
+        return f"Failed to add player to location {transform} in the scene (json.loads() error). Make sure to pass a correct something that can be loaded with json.loads() into JSON."
     try:
         json_rotation = json.loads(rotation)
     except ValueError:
         print("Error loading given rotation into JSON")
         return f"Failed to add object player to rotation {rotation} in the scene (json.loads() error) Make sure to pass a correct something that can be loaded with json.loads() into JSON."
     print(f"Parsed player's location and rotation into JSON")
-    unity.set_vr_player(transform, rotation)
-    return f"Successfully added player to the scene at {location}."
+    unity.set_vr_player(json_location, json_rotation)
+    return f"Successfully added player to the scene at {json_location}."
     
 @function_tool
 async def get_contact_points() -> str:

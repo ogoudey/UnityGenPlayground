@@ -52,9 +52,9 @@ You must orchestrate tool usage in the following structured order:
    - DO include placement and rotation information (obviously, given the args).
    - Each object must be placed over the ground (atop or aligned with it). 
    - Bridges, rivers, foliage, rocks, or props must all be handled in this way. 
-
-5. REGROUNDING: Some objects (e.g. a long bridge), may require the ground to have a certain shape to make sense in, forcing you to reconsider the heightmap of the ground. In this case, call planGround again with requires heights mentioned to in a sense "excavate" the existing ground.
-6. COMPLETENESS: Ensure that all elements mentioned in the user prompt are represented in the scene. 
+5. REMAKING GROUND: Some objects (e.g. a long bridge), may require the ground to have a certain shape to make sense in, forcing you to reconsider the heightmap of the ground. In this case, call planGround again with requires heights mentioned to in a sense "excavate" the existing ground.
+6. HUMAN VR PLAYER: When the scene is finalized, place the VR player in the scene with the place_vr_human_player tool (if made available to you - if not, forget about it). 
+7. COMPLETENESS: Ensure that all elements mentioned in the user prompt are represented in the scene. 
    If something is vague (e.g. "foliage"), interpret it reasonably and cover the intent. 
 
 General rules:

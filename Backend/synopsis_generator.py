@@ -40,7 +40,7 @@ async def update_synopsis_file(assets_info, synopses):
             s.write(output_str)
             print("Synopsis file updated.")
     unrepresented_assets = 0
-    for synopsis, ante_asset_path in synopses.items():
+    for synopsis, ante_asset_path in synopses.copy().items():
         found = False
         for asset_path in list(assets_info.keys()):
             if ante_asset_path == asset_path:
@@ -49,7 +49,7 @@ async def update_synopsis_file(assets_info, synopses):
             unrepresented_assets += 1
             del synopses[synopsis]
     if unrepresented_assets > 0:
-        print(f"{len(unrepresented_assets)} marked as irrelevant because the assets are not imported.")
+        print(f"{unrepresented_assets} marked as irrelevant because the assets are not imported.")
         
     # synopses updated
 

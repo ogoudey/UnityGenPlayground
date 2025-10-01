@@ -41,8 +41,9 @@ class YAML:
     
     def set_sun(self, length_of_day, time_of_day, sun_brightness):
         # turn TOD to rotation via ratio with LOD 
-        rotation = {x: 0, y: 0, z: rot}
-        # get quaternion
+        rot = (time_of_day / length_of_day) * 360
+        rotation = {"x": 0, "y": 0, "z": rot}
+        quaternion = euler_to_xyzw_quaternion(rotation)
         # set rotation of the gaemobject
         print("Setting sun in YAML...")
         yaml = ruamel_YAML(typ='rt')
@@ -52,6 +53,7 @@ class YAML:
             if "Transform" in doc.keys():
                 if doc["Transform"]["m_Father"]["fileID"] == "0":
                     father_id = doc["anchor"]
+                doc["m_LocalRotation"] = {"x": quaternion[0], "y": quaternion[1], "z": quaternion[2], "w": quaternion[3]}
             if "Light" in doc.keys():
                 doc["m_Intensity"] = sun_brightness        
             # Edit parameters
@@ -169,6 +171,7 @@ class YAML:
         
     def set_vr_player(self, transform:str, rotation: str):
         yaml = ruamel_YAML(typ='rt')
+        print("In YAMLING")
         default = list(yaml.compose_all(preprocess_text(vr_setup_init_text)))[0]
         wrapped = node_to_python(default)
         
@@ -183,11 +186,6 @@ class YAML:
                     mod["value"] = transform["y"]
                 if mod.get("propertyPath") == "m_LocalPosition.z":
                     mod["value"] = transform["z"]
-                if not scale == 1.0:
-                    if mod.get("propertyPath") == "m_LocalScale.x":
-                        mod["value"] = scale
-                    if mod.get("propertyPath") == "m_LocalScale.z":
-                        mod["value"] = scale
                 if mod.get("propertyPath") == "m_LocalRotation.x":
                     mod["value"] = quaternion[0]
                 if mod.get("propertyPath") == "m_LocalRotation.y":
