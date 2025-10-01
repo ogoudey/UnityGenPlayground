@@ -22,8 +22,8 @@ class UnityFile:
         self.yaml.set_vr_player(location, rotation)
             
     def add_prefab(self, name, location, rotation):
-        if self.yaml.remove_prefab_instance_if_exists(name):
-            print(f"Removed existing object {name} from YAML")
+        #if self.yaml.remove_prefab_instance_if_exists(name):
+        #    print(f"Removed existing object {name} from YAML")
         self.yaml.add_prefab_instance(name, location, rotation)
          
               

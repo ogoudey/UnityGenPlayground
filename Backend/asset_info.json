@@ -2,22 +2,22 @@
     "../Assets/Proxy Games/Stylized Nature Kit Lite/Prefabs/Foliage/Trees/Spruce 1.prefab":
     {
         "Name":"Spruce 1",
-        "Importances": {"pivot": "at the very bottom of the object and the midpoint along the X and Z. If you place me at a point, that is correctly the base of my trunk. Make sure my Y position = the height of the ground at my X, Z."}
+        "Importances": {"pivot": "at the very bottom of the object and the midpoint along the X and Z. If you place me at a point, that is correctly the base of my trunk. Make sure my Y position = the height of the ground at my X, Z.", "Recommendation": "You should probably place me in a sequence."}
     },
     "../Assets/Proxy Games/Stylized Nature Kit Lite/Prefabs/Water/Detailed Water.prefab":
     {
         "Name": "Water",
-        "Importances": {"origin/pivot point": "I go off in the -Z, -X directions if I am placed at 0,0. In other words, my centerpoint is at my +X, +Z corner. Or if I'm placed at x=50, z=50 I will cover the +X +Z quadrant.", "Dimensions": "50m x 50m - a perfect square plane", "Notes": "Have me overlap the whole ground. Make sure my Y coordinate provides the right water level if the prompt refers to a body of water."}
+        "Importances": {"origin/pivot point": "Top-right corner. If I am placed at 0,0, ill cover the -Z -X quadrant. So if I'm placed at x=50, z=50 I will cover the +X +Z quadrant (likely where the ground is).", "Dimensions": "50m x 50m - a perfect square plane", "Recommendation": "Have me overlap the whole ground. Make sure my Y coordinate provides the right water level if the prompt refers to a body of water."}
     },
     "../Assets/Proxy Games/Stylized Nature Kit Lite/Prefabs/Water/Flat Water.prefab":
     {
         "Name": "Water",
-        "Importances": {"origin/pivot point": "I go off in the -Z, -X directions if I am placed at 0,0. In other words, my centerpoint is at my +X, +Z corner. Or if I'm placed at x=50, z=50 I will cover the +X +Z quadrant.", "Dimensions": "50m x 50m - a perfect square plane.", "Notes": "Have me overlap the whole ground. Make sure my Y coordinate provides the right water level if the prompt refers to a body of water."}
+        "Importances": {"origin/pivot point": "Top-right corner. If I am placed at 0,0, ill cover the -Z -X quadrant. So if I'm placed at x=50, z=50 I will cover the +X +Z quadrant (likely where the ground is).", "Dimensions": "50m x 50m - a perfect square plane", "Recommendation": "Have me overlap the whole ground. Make sure my Y coordinate provides the right water level if the prompt refers to a body of water."}
     },
     "../Assets/Blue Polygon/Rope Bridge 3D/Prefab/rope_bridge.prefab":
     {
         "Name": "Bridge",
-        "Importances": {"center point/origin/pivot": "I go off in the -X direction from 0,0, my pivot point.", "Dimensions": "I am 16m long and about 2.5m wide.", "Description": "I have 2 posts on either end, each 2m tall. There is a 1m sag in the crossing, since I am a rope bridge."}
+        "Importances": {"center point/origin/pivot": "I go off in the -X direction from 0,0, my pivot point.", "Dimensions": "I am 16m long and about 2.5m wide.", "Description": "I have 2 posts on either end, each 2m tall. There is a 1m sag in the crossing, since I am a rope bridge. You might need to rethink the ground terrain once if I'm placed in the scene, so that I hang over the water."}
     },
     "../Assets/Proxy Games/Stylized Nature Kit Lite/Prefabs/Rocks/Rock Cliffs/Rock Cliff 1.prefab":
     {

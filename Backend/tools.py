@@ -29,7 +29,7 @@ global unity
 global used_assets
     
 MODEL = (os.getenv("MODEL") or "o3-mini").strip() or "o3-mini"
-print(f"\nThe model running is {MODEL}. Use \033[1m\033[36mexport MODEL='<model_name>'\033[0m to change it.")
+print(f"\nThe model running is {MODEL}. Use \033[1m\033[36mexport MODEL='<model_name>'\033[0m (Linux) or `setx MODEL '<model-name>'` (Windows) to change it.")
 
 @dataclass
 class PlaceableObject():
@@ -119,13 +119,14 @@ async def planandplaceSun(description_of_sun_behavior: str) -> str:
 @function_tool
 async def planandplaceGround(steps_to_ground_construction: str):
     """ 
+        Calls an agent to construct the ground you give a plan for. The agent can only generate a heightmap in the +X, +Z plane. Be somewhat general. It will literally generate an 11x11 grid, scaled up by 5 to be a 50m x 50m topology.  It cannot be much more precise than that, and it cannot go outside those bounds. Try to focus the scene, therefore, at (25, Y, 25)
         steps_to_ground_construction: a plan of how the ground planner should construct the ground. Example (a string):
             To make a volcano:
                 1. Form the mountain
                 2. Make the crater in the top.
         Another example:
-            Make room for a house with a flat 4mx4m base at (-5, 2.5, 5)
-                1. Since the horizonal scale is 5, turn the -5, 5 into coordinates 1,1. Make this coordinate have height 2.5
+            Make room for a house with a flat 4mx4m base at (5, 2.5, 5)
+                1. Since the horizonal scale is 5, turn the 5, 5 into coordinates 1,1. Make this coordinate have height 2.5
                 2. Make in the -X, +Z direction the base of the house. 4m / scale of 5 is .8 or 1 grid cell. So make (1, 2), (2, 2), and (2, 1) all height 2.5 too.
                 3. Make the points surrounding the indent a sort of gradient. Have them all close to 2.5, and spread that out, without affecting other landmarks. 
                 
@@ -191,6 +192,7 @@ async def planObject(description: str) -> PlaceableObject:
     """ 
         Args:
             description: Some text describing that the object should be like, refering to a singular object that's likely to be selected from a common asset library. For example, "water", "a rock", "a house", etc.
+        If you don't get an object you want, its because there's nothing like the desired asset in the library of available assets. In this case, get creative and find a new solution. You don't NEED to place the object returned, which is the object-planner's best guess.
     """
 
     agent = ObjectPlanner(tools=[get_ground_matrix])
@@ -204,12 +206,12 @@ async def planObject(description: str) -> PlaceableObject:
     
     global unity
 
-    print(f"Matched synopsis '{result.final_output}' to description '{description}'")
+    print(f"Matched synopsis '{result.final_output.synopsis}' to description '{description}'")
     try:
-        object_asset_path = synopses[result.final_output]
+        object_asset_path = synopses[result.final_output.synopsis]
     except KeyError:
         print(result.final_output, "is not in synopsis file. (Agent problem - the list of synopses were passed to it.)")
-
+        return f"This agent failed to match the description to an object, maybe because the object does not exist in the available assets."
     print(f"\t----> {object_asset_path}")
     object_info = asset_lookup(object_asset_path)
     print("\tLooking up asset path in info sheet...")
@@ -221,6 +223,8 @@ async def planObject(description: str) -> PlaceableObject:
     else:
         print(f"\tFound:\n{object_info}")
         object_name = object_info["Name"]
+        note_from_planner = result.final_output.note
+        object_info["Importances"]["Note"] = note_from_planner
     unity.yaml.used_assets[object_name] = object_asset_path
     print(f"\t{object_name} added to used_assets w path {object_asset_path}")
     return PlaceableObject(object_name, json.dumps(object_info["Importances"]))
@@ -228,15 +232,15 @@ async def planObject(description: str) -> PlaceableObject:
 @function_tool
 async def placeObject(object_name: str, placement_of_object_origin: str, rotation: str, explanation: str) -> str:
     """
+        This function permits you to place the PlannedObject in the scene. You may place a single instance of the object or multiple ones, but always refer to the object you've planned.
         Args:
             object_name: The name of the object you have planned, PlaceableObject.name. (Must match exactly that name.)
             placement_of_object_origin: Must be a JSON-encoded string. OPTIONALLY, can be a list of such strings in order to place a sequence objects. Examples:
-                "{\"x\": 75, \"y\": 2.8, \"z\": 70}", "[{\"x\": 75, \"y\": 10, \"z\": 70}, {\"x\": 70, \"y\": 1.2, \"z\": 65}, ...]"
+                "{\"x\": 75, \"y\": 2.8, \"z\": 70}", OR "[{\"x\": 75, \"y\": 10, \"z\": 70}, {\"x\": 70, \"y\": 1.2, \"z\": 65}, ...]"
             rotation: Must be a JSON-encoded string. OPTIONALLY, can be a list of such strings in order to place a sequence objects. Example:
                 "{\"x\": 90, \"y\": 0, \"z\": 45}", "[{\"x\": 90, \"y\": 0, \"z\": 45}, {\"x\": 0, \"y\": 0, \"z\": 270}]"
             explanation: A human-readable explanation of the placement(s). Include in your explanation the specific shape of the object, as contained in the PlaceableObject that you've planned."
     """
-    
     
     print(f"Placing '{object_name}' ---> {placement_of_object_origin} with rotation(s) {rotation}")
     global unity
@@ -300,7 +304,7 @@ async def placeObject(object_name: str, placement_of_object_origin: str, rotatio
             failed_placements.append((json_location, json_rotation))
     if len(failed_placements) == max_len:
         return f"Failed to place one or all of {object_name}. Failed placements:\n{failed_placements}"
-    return f"Successfully added object to the scene. Recall the information of {object_name}."
+    return f"Successfully added object(s) to the scene. Recall the information of {object_name} at each of the placed points."
     
 @function_tool
 def place_vr_human_player(transform: str, rotation: str = "{\"x\": 75, \"y\": 10, \"z\": 70}", explanation: str=""):

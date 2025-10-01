@@ -37,7 +37,7 @@ Some rules:
     - You can't get into too much detail about the objects in the scene. These objects will be chosen from a (fairly small) pool of prebuilt assets. If anything, use general terms when describing these objects.
     - The coordinator can only place objects on the ground. It also cannot build "compound" objects. For example, they cannot construct a bridge, they can only select a bridge from the assets.
     - The downstream agents cannot A. add sounds/audio (yet) or B. add animations.
-    - In fact, only plan to add water, foliage, rocks, trees, and a bridge, atop the ground. These are all the available assets.
+    - In fact, only plan to add water, foliage, rocks, trees, and a rope bridge, atop the ground. These are all the available assets.
 """
 
     def __init__(self, name=None, instructions=None):

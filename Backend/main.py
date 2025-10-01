@@ -154,7 +154,7 @@ async def test_cumulative(prompt="I'm scared of heights over 5m. I just can't do
     coordinator = Coordinator() # all the tools
     prompt = {"Plan": scene_generating_plan}
     print("__Starting Coordinator___")
-    await Runner.run(coordinator, json.dumps(prompt), max_turns=20)
+    await Runner.run(coordinator, json.dumps(prompt), max_turns=50)
     agents.tools.unity.done_and_write()    
 
 test_dispatcher = {

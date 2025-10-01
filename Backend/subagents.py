@@ -15,6 +15,10 @@ class GroundData(BaseModel):
 class AssetPath(BaseModel):
     asset_path: str
 
+class SynopsisNote(BaseModel):
+    synopsis: str
+    note: str
+
 class SunPlanner(Agent):
     instructions= "It is your job to place the sun in the sky according to the descriptive prompt by fixing certain parameters. Simply return Success, unless something has failed."
     
@@ -27,13 +31,14 @@ class SunPlanner(Agent):
         )
 
 class ObjectPlanner(Agent):
-    instructions= "Retrieve the synopsis that best matches the intended description. Return exactly the synopsis. If nothing matches, return nothing or a good substitute."
+    instructions_v1= "Retrieve the synopsis that best matches the intended description and leave a note. For the synopsis (object summary), return EXACTLY the synopsis from the choice. If nothing matches, return a good substitute. If there is an important difference in the desired asset versus what the synopsis says (a difference in measurement), add that to the note. Other than that, keep the note brief, only using it to explain discrepencies."
     
     def __init__(self, tools, name=None, instructions=None, ):
         super().__init__(
             name=name or f"ObjectPlanner{random.randint(100,999)}",
-            instructions=instructions or ObjectPlanner.instructions,
+            instructions=instructions or ObjectPlanner.instructions_v1,
             tools=tools,
+            output_type=SynopsisNote,
             model=MODEL,
         )
         
@@ -104,6 +109,20 @@ Output format must follow GroundData:
 - explanation_of_heights: the one-sentence explanation.
 """
     instructions_v3={"o3-mini":"""Return a heightmap for the ground as an 11x11 grid of floats, given the input plan. 
+Rules:
+- Write the grid directly as 11 rows of 11 numbers each, separated by spaces. Do not add code, JSON, or extra symbols.  Think of the lower-right cell as 0,0
+- Each number is the ground height in meters. Suppose that 0 is sea level. 
+- The grid covers 50m x 50m (each cell is 5m x 5m) and will be placed in the -X, +Z quadrant. So, the XYZ coordinates (2, 0, 2) fall in the first cell.
+- Keep human scale: a human is ~2m tall, so do not make cliffs or holes taller/deeper than 10m unless the prompt requires it. The height is not scaled, only the horizontal will be scaled. A value of 2 means 2m high.
+- Shape the terrain according to the prompt, and form around the placed objects (if any).
+- Use the planTexture tool to set the texture/material of the ground (include the path in what you return). 
+- After the grid, add an explanation of the landscape and its features. Reference explicitly the input description
+
+Output format must follow GroundData:
+- grid: the 11x11 float grid as plain text. 
+- texture_path: the path to the asset of the material for this ground, as returned by the planTexture tool.
+- explanation_of_heights: the one-sentence explanation.
+""", "o4-mini":"""Return a heightmap for the ground as an 11x11 grid of floats, given the input plan. 
 Rules:
 - Write the grid directly as 11 rows of 11 numbers each, separated by spaces. Do not add code, JSON, or extra symbols.  Think of the lower-right cell as 0,0
 - Each number is the ground height in meters. Suppose that 0 is sea level. 
