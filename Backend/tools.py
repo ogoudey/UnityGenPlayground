@@ -119,12 +119,12 @@ async def planandplaceSun(description_of_sun_behavior: str) -> str:
 @function_tool
 async def planandplaceGround(steps_to_ground_construction: str):
     """ 
-        Calls an agent to construct the ground you give a plan for. The agent can only generate a heightmap in the +X, +Z plane. Be somewhat general. It will literally generate an 11x11 grid, scaled up by 5 to be a 50m x 50m topology.  It cannot be much more precise than that, and it cannot go outside those bounds. Try to focus the scene, therefore, at (25, Y, 25)
+        Calls an agent to construct the ground you give a plan for. The agent can only generate a heightmap in the +X, +Z plane. Be somewhat general. It will literally generate an 11x11 grid, scaled up by 5 to be a 50m x 50m topology (you don't need to mention this to them).  It cannot be much more precise than that, and it cannot go outside those bounds. 
         steps_to_ground_construction: a plan of how the ground planner should construct the ground. Example (a string):
             To make a volcano:
                 1. Form the mountain
                 2. Make the crater in the top.
-        Another example:
+        Another example involving remaking:
             Make room for a house with a flat 4mx4m base at (5, 2.5, 5)
                 1. Since the horizonal scale is 5, turn the 5, 5 into coordinates 1,1. Make this coordinate have height 2.5
                 2. Make in the -X, +Z direction the base of the house. 4m / scale of 5 is .8 or 1 grid cell. So make (1, 2), (2, 2), and (2, 1) all height 2.5 too.
@@ -133,14 +133,18 @@ async def planandplaceGround(steps_to_ground_construction: str):
     This Tool can be called multiple times to reshape the ground, in order to fit the objects that are static or immalleable.
     """
 
-    agent = GroundPlanner(tools=[get_ground_matrix, planTexture])
+    agent = GroundPlanner(tools=[planTexture])
+    global unity
     prompt = {"Steps to plan": steps_to_ground_construction}
+    if len(unity.ground_matrix) > 0:
+        prompt["Existing ground to edit"] = unity.ground_matrix
+    
     t = time.time()
     print(agent.name, "started")
     result = await Runner.run(agent, json.dumps(prompt))
     print(agent.name + ":", time.time() - t, "seconds.")
     
-    global unity
+
     explanation = result.final_output.explanation_of_heights
     object_asset_path, unity.ground_matrix = obj_from_grid(result.final_output.grid) # writes obj
     print("Ground obj written.")
@@ -159,10 +163,25 @@ async def planandplaceGround(steps_to_ground_construction: str):
     unity.contact_points[ground_name] = []
     for i in range(0, len(unity.ground_matrix)):
         for j in range(0, len(unity.ground_matrix[i])):
-            contact_point = (i * 5 + float(json_location["x"]), j *5 + float(json_location["y"]), unity.ground_matrix[i][j] + float(json_location["z"]))
+            contact_point = (j *5, unity.ground_matrix[i][j] + float(json_location["y"]), i * 5)
             unity.contact_points[ground_name].append(contact_point)
     
-    return f"Successfully placed a ground with heightmap {str(unity.ground_matrix)} in the +X +Z quadrant. The scale the the Xs and Zs is 5x. There is no vertical scaling."
+    
+    
+    formatted_rows = []
+    for row in matrix:
+        # Format each number with fixed width and decimal precision
+        row_str = ", ".join(f"{val:6.{decimals}f}" for val in row)
+        formatted_rows.append(f"  [ {row_str} ]")
+
+    # Join all rows with brackets around the entire matrix
+    legible_result = "\n[\n" + ",\n".join(formatted_rows) + "\n]"
+    
+    
+    
+
+    
+    return f"Successfully placed a ground with heightmap {legible_result} in the +X +Z quadrant (these coordinates correspond to the vertices of the ground mesh). The scale of the Xs and Zs is x5. There is no vertical scaling.\n{explanation}"
 
 @function_tool
 async def planTexture(material_of_object_description: str) -> str:
@@ -232,14 +251,14 @@ async def planObject(description: str) -> PlaceableObject:
 @function_tool
 async def placeObject(object_name: str, placement_of_object_origin: str, rotation: str, explanation: str) -> str:
     """
-        This function permits you to place the PlannedObject in the scene. You may place a single instance of the object or multiple ones, but always refer to the object you've planned.
+        This function permits you to place the PlannedObject in the scene. You may place a single instance of the object or multiple ones, but always refer to the object you've planned. You cannot scale the object. 
         Args:
             object_name: The name of the object you have planned, PlaceableObject.name. (Must match exactly that name.)
-            placement_of_object_origin: Must be a JSON-encoded string. OPTIONALLY, can be a list of such strings in order to place a sequence objects. Examples:
-                "{\"x\": 75, \"y\": 2.8, \"z\": 70}", OR "[{\"x\": 75, \"y\": 10, \"z\": 70}, {\"x\": 70, \"y\": 1.2, \"z\": 65}, ...]"
+            placement_of_object_origin: Must be a JSON-encoded string. OPTIONALLY, can be a list of such strings in order to place a sequence objects or scatter them. Examples:
+                "{\"x\": 75, \"y\": 2.8, \"z\": 70}", OR "[{\"x\": 73, \"y\": 10, \"z\": 20}, {\"x\": 50, \"y\": 1.2, \"z\": 72}, ...]"
             rotation: Must be a JSON-encoded string. OPTIONALLY, can be a list of such strings in order to place a sequence objects. Example:
                 "{\"x\": 90, \"y\": 0, \"z\": 45}", "[{\"x\": 90, \"y\": 0, \"z\": 45}, {\"x\": 0, \"y\": 0, \"z\": 270}]"
-            explanation: A human-readable explanation of the placement(s). Include in your explanation the specific shape of the object, as contained in the PlaceableObject that you've planned."
+            explanation: A human-readable explanation of the placement(s). Include in your explanation the specific shape of the object, as contained in the PlaceableObject that you've planned. For most placements, its good practice to refer to a contact point from get_contact_points. If the object can't be placed on the ground, edit the ground with planandplaceGround."
     """
     
     print(f"Placing '{object_name}' ---> {placement_of_object_origin} with rotation(s) {rotation}")
@@ -304,7 +323,11 @@ async def placeObject(object_name: str, placement_of_object_origin: str, rotatio
             failed_placements.append((json_location, json_rotation))
     if len(failed_placements) == max_len:
         return f"Failed to place one or all of {object_name}. Failed placements:\n{failed_placements}"
-    return f"Successfully added object(s) to the scene. Recall the information of {object_name} at each of the placed points."
+    response = f"Added object(s) to the scene. Recall the information of {object_name} at the placed point(s)."
+    if "Post-placement" in assets_info[unity.yaml.used_assets[object_name]]:
+        response += assets_info[unity.yaml.used_assets[object_name]]["Post-placement"]
+
+    return response
     
 @function_tool
 def place_vr_human_player(transform: str, rotation: str = "{\"x\": 75, \"y\": 10, \"z\": 70}", explanation: str=""):
