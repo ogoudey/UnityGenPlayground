@@ -156,7 +156,7 @@ async def planandplaceGround(steps_to_ground_construction: str):
     unity.yaml.used_assets[ground_name] = {"Ground": object_asset_path, "Texture": texture_path}
     print(ground_name, "added to used_assets w path", object_asset_path)
     
-    json_location = {"x": 50, "y": 0, "z": 0}
+    json_location = {"x": 0, "y": 0, "z": 0}
     unity.add_ground(ground_name, json_location)
     # Add new contact points under ground
     print("Back from adding ground to scene.")
