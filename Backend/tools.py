@@ -307,7 +307,7 @@ async def placeObject(object_name: str, placement_of_object_origin: str, rotatio
                 # Popping contact points
                 if (json_location["x"], json_location["y"], json_location["z"]) in unity.contact_points[parent]:
                     print("POPPING contact point", (json_location["x"], json_location["y"], json_location["z"]), "from contact points")
-                    unity.contact_points[object_name].remove((json_location["x"], json_location["y"], json_location["z"]))
+                    #unity.contact_points[object_name].remove((json_location["x"], json_location["y"], json_location["z"]))
                     
                     
             unity.add_prefab(object_name, json_location, json_rotation)
