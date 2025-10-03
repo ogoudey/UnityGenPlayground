@@ -1,16 +1,17 @@
 import random
 import json
 
-default_grid = """0.2 0.3 0.5 0.7 1.0 1.0 0.7 0.5 0.3 0.2
-0.3 0.6 0.9 1.3 1.7 1.7 1.3 0.9 0.6 0.3
-0.5 0.9 1.5 2.0 2.5 2.5 2.0 1.5 0.9 0.5
-0.7 1.3 2.0 2.8 3.3 3.3 2.8 2.0 1.3 0.7
-1.0 1.7 2.5 3.3 4.0 4.0 3.3 2.5 1.7 1.0
-1.0 1.7 2.5 3.3 4.0 4.0 3.3 2.5 1.7 1.0
-0.7 1.3 2.0 2.8 3.3 3.3 2.8 2.0 1.3 0.7
-0.5 0.9 1.5 2.0 2.5 2.5 2.0 1.5 0.9 0.5
-0.3 0.6 0.9 1.3 1.7 1.7 1.3 0.9 0.6 0.3
-0.2 0.3 0.5 0.7 1.0 1.0 0.7 0.5 0.3 0.2"""
+default_grid = """-10.0 6.3 6.5 6.7 6.0 6.0 6.7 6.5 6.3 6.2 6.2
+2.3 0.6 0.9 1.3 1.7 1.7 1.3 0.9 0.6 0.3 0.2
+2.5 0.9 1.5 2.0 2.5 2.5 2.0 1.5 0.9 0.5 0.2
+2.7 1.3 2.0 2.8 3.3 3.3 2.8 2.0 1.3 0.7 0.2
+2.0 1.7 2.5 3.3 4.0 4.0 3.3 2.5 1.7 1.0 0.2
+2.0 1.7 2.5 3.3 4.0 4.0 3.3 2.5 1.7 1.0 0.2
+2.7 1.3 2.0 2.8 3.3 3.3 2.8 2.0 1.3 0.7 0.2
+2.5 0.9 1.5 2.0 2.5 2.5 2.0 1.5 0.9 0.5 0.2
+2.3 0.6 0.9 1.3 1.7 1.7 1.3 0.9 0.6 0.3 0.2
+2.3 0.6 0.9 1.3 1.7 1.7 1.3 0.9 0.6 0.3 0.2
+0.0 0.1 0.1 0.1 0.1 0.0 0.1 0.1 0.1 0.1 10.0"""
 
 def make_quads(matrix, x, y, obj_str, visited=[]):
     x_per_row = len(matrix)
@@ -52,17 +53,23 @@ def obj_from_grid(grid: str = default_grid):
     lines = grid.split("\n")
     print(grid)
     
-    
-    for y in range(len(lines)-1, -1, -1):
+    print("\nVVVVVVVVV\n")
+    for y in range(0, len(lines)):
         line = lines[y].split(" ")
         row = []
-        for x in range(len(line) - 1, -1, -1):
+        
+        for x in range(0, len(line)):
             row.append(float(line[x]))
             try:
-                obj_str += f"v {float(x)*scale} {float(line[x])} {float(y)*scale}\n"  
+                obj_str += f"v {-float(x)*scale} {float(line[x])} {50 - float(y)*scale}\n"  
             except Exception:
                 print(line[x], "is an arifact of the grid. Ignoring...")
+        print(line)
+        
+
+            
         matrix.append(row)
+    print("\nVVVVVVVVV\n")
     print(matrix) 
 
 
