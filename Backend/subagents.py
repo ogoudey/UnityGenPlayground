@@ -31,7 +31,7 @@ class SunPlanner(Agent):
         )
 
 class ObjectPlanner(Agent):
-    instructions_v1= "Retrieve the synopsis that best matches the intended description and leave a note. For the synopsis (object summary), return EXACTLY the synopsis from the choice. If nothing matches, return a good substitute. If there is an important difference in the desired asset versus what the synopsis says (a difference in measurement), add that to the note. Other than that, keep the note brief, only using it to explain discrepencies."
+    instructions_v1= "You will be provided a list of synopses (or summaries) of assets. It is your job to retrieve the synopsis that best matches the intended description to the user who doesn't know what assets are available. If the user seems misguided in their intention for an object, put that in a note and return the closest thing. Try to return one of the synopses for each request, leaving a note of the discrepency if any. Some rules: 1. You cannot change the object synopsis at all when you return it. 2. Don't mention the synopsis in your note. The note should inform placement of the object by refering to any mismatch in features of the retrieved vs desired asset. The user cannot scale or edit the asset you choose, only place it."
     
     def __init__(self, tools, name=None, instructions=None, ):
         super().__init__(
@@ -112,7 +112,7 @@ Output format must follow GroundData:
 Rules:
 - Write the grid directly as 11 rows of 11 numbers each, separated by spaces. Do not add code, JSON, or extra symbols.  Think of the lower-right cell as 0,0
 - Each number is the ground height in meters. Suppose that 0 is sea level. 
-- The grid covers 50m x 50m (each cell is 5m x 5m) and will be placed in the -X, +Z quadrant. So, the XYZ coordinates (2, 0, 2) fall in the first cell.
+- The grid covers 50m x 50m (each cell is 5m x 5m) and will be placed in the +X, +Z quadrant. So, the XYZ coordinates (2, 0, 2) fall in the first cell.
 - Keep human scale: a human is ~2m tall, so do not make cliffs or holes taller/deeper than 10m unless the prompt requires it. The height is not scaled, only the horizontal will be scaled. A value of 2 means 2m high.
 - Shape the terrain according to the prompt, and form around the placed objects (if any).
 - Use the planTexture tool to set the texture/material of the ground (include the path in what you return). 
@@ -126,17 +126,17 @@ Output format must follow GroundData:
 Rules:
 - Write the grid directly as 11 rows of 11 numbers each, separated by spaces. Do not add code, JSON, or extra symbols.  Think of the lower-right cell as 0,0
 - Each number is the ground height in meters. Suppose that 0 is sea level. 
-- The grid covers 50m x 50m (each cell is 5m x 5m) and will be placed in the -X, +Z quadrant. So, the XYZ coordinates (2, 0, 2) fall in the first cell.
+- The grid covers 50m x 50m (each cell is 5m x 5m) and will be placed in the +X, +Z quadrant. So, the XYZ coordinates (2, 0, 2) fall in the first cell.
 - Keep human scale: a human is ~2m tall, so do not make cliffs or holes taller/deeper than 10m unless the prompt requires it. The height is not scaled, only the horizontal will be scaled. A value of 2 means 2m high.
 - Shape the terrain according to the prompt, and form around the placed objects (if any).
 - Use the planTexture tool to set the texture/material of the ground (include the path in what you return). 
-- After the grid, add an explanation of the landscape and its features. Reference explicitly the input description
+- After the grid, add an explanation of the landscape and its features. Reference explicitly the input description but don't refer to indices. Put your explanation in terms of meters, not indices. Give abundant information about the ground in terms of meters.
 
 Output format must follow GroundData:
 - grid: the 11x11 float grid as plain text. 
 - texture_path: the path to the asset of the material for this ground, as returned by the planTexture tool.
 - explanation_of_heights: the one-sentence explanation.
-"""}
+""", "gpt-5-mini":""}
     
     def __init__(self, tools, name=None, instructions=None):
         super().__init__(

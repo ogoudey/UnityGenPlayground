@@ -12,15 +12,17 @@ import random
 import asyncio
 from agents import Runner
 import coordinator as agents
-from enrichment import Therapist, Transducer
+from enrichment import Therapist, Transducer, ClientFulfillment
 from coordinator import Checker, Reformer, Coordinator
 from tools import get_ground_matrix, planObject, placeObject, place_vr_human_player, planSkybox, placeSkybox, planandplaceGround, get_contact_points, planandplaceSun
 
 from scene import UnityFile
 
+MODEL = (os.getenv("MODEL") or "o3-mini").strip() or "o3-mini"
+
 async def test_ground(prompt="A 5m deep river cutting through a terrain with some foliage, and a bridge going over it connecting two banks."):
     scene_suffix = "draft1"
-    scene_name = f"test_river_bridge{random.randint(100, 999)}{scene_suffix}"
+    scene_name = f"test_river_bridge_{MODEL}_{random.randint(100, 999)}{scene_suffix}"
     agents.tools.unity = UnityFile(scene_name)
     
     coordinator = Coordinator(tools=[planandplaceGround])
@@ -31,7 +33,7 @@ async def test_ground(prompt="A 5m deep river cutting through a terrain with som
 
 async def test_river_bridge(prompt="A 5m deep river cutting through a terrain with some foliage, and a bridge going over it connecting two banks."):
     scene_suffix = "draft1"
-    scene_name = f"test_river_bridge{random.randint(100, 999)}{scene_suffix}"
+    scene_name = f"test_river_bridge_{MODEL}_{random.randint(100, 999)}{scene_suffix}"
     agents.tools.unity = UnityFile(scene_name)
     
     coordinator = Coordinator(tools=[get_contact_points, planSkybox, placeSkybox, planandplaceGround, planObject, placeObject, planandplaceSun])
@@ -42,7 +44,7 @@ async def test_river_bridge(prompt="A 5m deep river cutting through a terrain wi
     
     
     scene_suffix = "draft2"
-    scene_name = f"test_river_bridge{random.randint(100, 999)}{scene_suffix}"
+    scene_name = f"test_river_bridge_{MODEL}_{random.randint(100, 999)}{scene_suffix}"
     agents.tools.unity.name = scene_name
     print("\n\n__Checking__\nGoing through used assets:", agents.tools.unity.yaml.placed_assets)
     checker = Checker()
@@ -75,7 +77,7 @@ async def test_river_bridge(prompt="A 5m deep river cutting through a terrain wi
 
 async def test_river_bridge_vr(prompt="A 5m deep river cutting through a terrain with some foliage, and a bridge going over it connecting two banks."):
     scene_suffix = "draft1"
-    scene_name = f"test_river_bridge_vr{random.randint(100, 999)}{scene_suffix}"
+    scene_name = f"test_river_bridge_vr_{MODEL}_{random.randint(100, 999)}{scene_suffix}"
     agents.tools.unity = UnityFile(scene_name)
     
     coordinator = Coordinator(tools=[get_contact_points, planSkybox, placeSkybox, planandplaceGround, planObject, placeObject, planandplaceSun, place_vr_human_player])
@@ -86,7 +88,7 @@ async def test_river_bridge_vr(prompt="A 5m deep river cutting through a terrain
 
 async def test_vr(prompt="Just try placing the player in 3D space"):
     scene_suffix = "draft1"
-    scene_name = f"test_vr{random.randint(100, 999)}{scene_suffix}"
+    scene_name = f"test_vr_{MODEL}_{random.randint(100, 999)}{scene_suffix}"
     agents.tools.unity = UnityFile(scene_name)
     
     coordinator = Coordinator(tools=[place_vr_human_player])
@@ -98,7 +100,7 @@ async def test_vr(prompt="Just try placing the player in 3D space"):
 
 async def test_light_and_texture(prompt="A blue sky with a bright sun high in the skynoon over a ground with any texture."):
     scene_suffix = "draft1"
-    scene_name = f"test_light_and_texture{random.randint(100, 999)}{scene_suffix}"
+    scene_name = f"test_light_and_texture_{MODEL}_{random.randint(100, 999)}{scene_suffix}"
     agents.tools.unity = UnityFile(scene_name)
     
     
@@ -111,33 +113,40 @@ async def test_light_and_texture(prompt="A blue sky with a bright sun high in th
     agents.tools.unity.done_and_write()
 
 async def test_therapist(prompt="I'm scared of heights over 5m. I just can't do bridges."):
-    scene_suffix = "draft1"
-    scene_name = f"test_therapist{random.randint(100, 999)}{scene_suffix}"
-    #agents.tools.unity = UnityFile(scene_name)
-    
     therapist = Therapist()
     print("__Starting Therapist__")
     result = await Runner.run(therapist, prompt, max_turns=2)
-    #agents.tools.unity.done_and_write()
     print(result.final_output)
     
 async def test_transduction(prompt="I'm scared of heights over 5m. I just can't do bridges."):
-    scene_suffix = "draft1"
-    scene_name = f"test_transduction{random.randint(100, 999)}{scene_suffix}"
-    #agents.tools.unity = UnityFile(scene_name)
-    
     therapist = Therapist()
     print("__Starting Therapist__")
     result = await Runner.run(therapist, prompt, max_turns=2)
+    
     transducer = Transducer()
     print("__Starting Transducer__")
     result = await Runner.run(transducer, result.final_output, max_turns=2)
-    #agents.tools.unity.done_and_write()
     print(result.final_output)
 
+async def test_client(prompt="I'm scared of heights over 5m. I just can't do bridges."):
+    scene_suffix = ""
+    scene_name = f"test_cumulative_{MODEL}_{random.randint(100, 999)}{scene_suffix}"
+    
+    print(f"\n\t\"{prompt}\"\n")
+    fulfillment = ClientFulfillment()
+    print("__Starting ClientFulfillment")
+    result = await Runner.run(fulfillment, prompt, max_turns=2)
+    scene_generating_plan = result.final_output
+    agents.tools.unity = UnityFile(scene_name)
+    coordinator = Coordinator() # all the tools
+    prompt = {"Plan": scene_generating_plan}
+    print("__Starting Coordinator___")
+    await Runner.run(coordinator, json.dumps(prompt), max_turns=50)
+    agents.tools.unity.done_and_write()  
+
 async def test_cumulative(prompt="I'm scared of heights over 5m. I just can't do bridges."):
-    scene_suffix = "draft1"
-    scene_name = f"test_cumulative{random.randint(100, 999)}{scene_suffix}"
+    scene_suffix = ""
+    scene_name = f"test_cumulative_{MODEL}_{random.randint(100, 999)}{scene_suffix}"
     #agents.tools.unity = UnityFile(scene_name)
     
     print(f"\n\t\"{prompt}\"\n")
@@ -164,10 +173,10 @@ test_dispatcher = {
     "test_therapist": test_therapist,
     "test_transduction": test_transduction,
     "test_cumulative": test_cumulative,
-    #"test_vr": test_river_bridge_vr,
     "test_river_bridge_vr": test_river_bridge_vr,
     "test_vr": test_vr,
     "test_ground": test_ground,
+    "test_client": test_client,
 }
 
 if __name__ == "__main__":
