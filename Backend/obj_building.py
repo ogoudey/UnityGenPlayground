@@ -93,27 +93,11 @@ def obj_from_grid(grid: str = default_grid):
     
     
     out_file = "ground_built"
-    out_path1 = "../Assets/" + out_file + str(random.randint(100, 999)) + ".obj"
+    out_path1 = "../Resources/Manifest/" + out_file + str(random.randint(100, 999)) + ".obj"
     with open(out_path1, "w") as f:
         f.write(obj_str1)
     print("Ground obj written to", out_path1)
     out_path = out_path1
-    
-    """
-    # 2nd pass
-    face_data, visits = make_quads(matrix, 0, 0, obj_str)
-    obj_str += face_data
-    print("File contains", len(face_data.split("\n")), "faces.")
-    
-    out_file = "ground_built"
-    out_path = "../Assets/" + out_file + str(random.randint(100, 999)) + ".obj"
-    with open(out_path, "w") as f:
-        
-        f.write(obj_str)
-    print("Ground obj written to", out_path)
-    
-    """
-    
     
     return out_path, matrix
     # Generate faces

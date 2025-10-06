@@ -6,13 +6,13 @@ import asyncio
 
 MODEL = (os.getenv("MODEL") or "o3-mini").strip() or "o3-mini"
 
-def load(assets_info):
-    with open("synopsis_file.json", "r") as s:
+async def load(assets_info):
+    with open("../Resources/synopsis_file.json", "r") as s:
         v = s.read()
         synopses = json.loads(v)
     print(f"\n* Synopsis file loaded with {len(synopses)} entries")
-    asyncio.run(update_synopsis_file(assets_info, synopses))
-    return synopses
+    active_synopses = await update_synopsis_file(assets_info, synopses)
+    return active_synopses
 
 async def update_synopsis_file(assets_info, synopses):
     i = 1
@@ -35,22 +35,23 @@ async def update_synopsis_file(assets_info, synopses):
             print("------>", new_synopsis)
     print("* Synopsis file up to date.")
     if updates_needed > 0:
-        with open("synopsis_file.json", "w") as s:
+        with open("../Resources/synopsis_file.json", "w") as s:
             output_str = json.dumps(synopses, indent=2)
             s.write(output_str)
             print("Synopsis file updated.")
+    represented_assets = {}
     unrepresented_assets = 0
     for synopsis, ante_asset_path in synopses.copy().items():
         found = False
         for asset_path in list(assets_info.keys()):
             if ante_asset_path == asset_path:
                 found = True
+                represented_assets[synopsis] = ante_asset_path
         if not found:
             unrepresented_assets += 1
-            del synopses[synopsis]
     if unrepresented_assets > 0:
         print(f"{unrepresented_assets} marked as irrelevant because the assets are not imported.")
-        
+    return represented_assets
     # synopses updated
 
 

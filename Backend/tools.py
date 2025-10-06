@@ -16,12 +16,10 @@ import assets
 import synopsis_generator
 
 """ Preprocessing """
-assets_info = assets.load()
-synopses = synopsis_generator.load(assets_info)
-
-material_leaves = assets.get_found(".mat") # for planning the skybox
-
-screened_material_leaves = assets.get_found(file_type=".mat", folder="../Assets/Ground Materials") 
+assets_info = {}
+synopses = {}
+material_leaves = []
+screened_material_leaves = []
 
 """ End preprocessing """
 
@@ -169,9 +167,9 @@ async def planandplaceGround(steps_to_ground_construction: str):
     
     
     formatted_rows = []
-    for row in matrix:
+    for row in unity.ground_matrix:
         # Format each number with fixed width and decimal precision
-        row_str = ", ".join(f"{val:6.{decimals}f}" for val in row)
+        row_str = ", ".join(f"{val:6.{1}f}" for val in row)
         formatted_rows.append(f"  [ {row_str} ]")
 
     # Join all rows with brackets around the entire matrix

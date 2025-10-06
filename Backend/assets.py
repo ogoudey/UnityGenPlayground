@@ -7,8 +7,8 @@ from collections import defaultdict
 import json
 
 
-def load():
-    with open("asset_info.json", "r") as f:
+def load(asset_project_path):
+    with open(asset_project_path / "asset_info.json", "r") as f:
         j = f.read()
         assets_info = json.loads(j)
     print(f"\n* Asset info sheet loaded with {len(assets_info)} entries")
@@ -16,7 +16,8 @@ def load():
     
     removed_count = 0
     for key in list(assets_info.keys()):
-        if not os.path.exists(key):
+        if not os.path.exists(asset_project_path / key):
+            print("Removing", key, "because", asset_project_path / key, "does not exist")
             del assets_info[key]
             removed_count += 1
 

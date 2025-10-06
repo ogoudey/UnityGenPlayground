@@ -290,7 +290,7 @@ class YAML:
     def to_unity_yaml(self, file_name="minimal.unity"):
         if not file_name.endswith(".unity"):
             file_name += ".unity"
-        file_name = "../Assets/Scenes/" + file_name
+        file_name = "../Resources/Generated Scenes/" + file_name
         print("Attempting to write to", file_name)
         out = ["%YAML 1.1", "%TAG !u! tag:unity3d.com,2011:"]
         for entry in self.wrapped:
