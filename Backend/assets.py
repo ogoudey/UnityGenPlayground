@@ -7,16 +7,18 @@ from collections import defaultdict
 import json
 
 
-def load():
-    with open("asset_info.json", "r") as f:
+def load(asset_project_path):
+    with open(asset_project_path / "asset_info.json", "r") as f:
         j = f.read()
         assets_info = json.loads(j)
+    print(f"**In asset project folder {asset_project_path}**")
     print(f"\n* Asset info sheet loaded with {len(assets_info)} entries")
     
     
     removed_count = 0
     for key in list(assets_info.keys()):
-        if not os.path.exists(key):
+        if not os.path.exists(asset_project_path / key):
+            print("Removing", key, "because", asset_project_path / key, "does not exist")
             del assets_info[key]
             removed_count += 1
 
@@ -44,6 +46,7 @@ def get_tree(file_type=".prefab", folder="../Assets"):
 
 
 def get_found(file_type=".prefab", folder="../Assets"):
+    print(f"Looking in {folder} for {file_type}")
     if os.name == 'nt':
         matches = []
         for root, _, files in os.walk(folder):

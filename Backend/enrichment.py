@@ -5,7 +5,17 @@ from agents import Agent
 
 MODEL = (os.getenv("MODEL") or "o3-mini").strip() or "o3-mini"
 
-RESTRICTIONS = "We only have forest assets. The world must be 50mx50m"
+class Phobos(Agent):
+    instructions="""You are an assistant to a system that tries to develop effective treatments for patients' phobias. You do this by emulating a patient. You will be given a particular fear and you are to emulate a patient with that fear."""
+    acrophobia="""
+    Pretend you are a patient with severe acrophobia. Your role is to illustrate a situation in which your acrophobia is triggered. Please respond in a format something like "I am terrified... Try to make it a realistic condition that reflects actual people's acrophobia."
+    """
+    def __init__(self, name=None, instructions=None):
+        super().__init__(
+            name=name or f"Therapist{random.randint(100,999)}",
+            instructions=instructions or Phobos.instructions,
+            model="o3-mini",
+        )
 
 class Therapist(Agent):
     instructions= """

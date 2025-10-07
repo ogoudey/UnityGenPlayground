@@ -3,7 +3,7 @@ import uuid
 import yamling
 
 
-class UnityFile:
+class World:
     def __init__(self, name="testingtesting123"):
         self.name = name
         self.yaml = yamling.YAML()

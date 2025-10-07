@@ -63,6 +63,8 @@ Used assets:
 [Nature stuff](https://assetstore.unity.com/packages/3d/environments/unl-ultimate-nature-lite-176906)
 [Bridge](https://assetstore.unity.com/packages/3d/environments/rope-bridge-3d-222563)
 [Ground textures](https://assetstore.unity.com/packages/2d/textures-materials/nature/yughues-free-ground-materials-13001)	
+[Bridges Pack](https://assetstore.unity.com/packages/3d/props/bridges-pack-212950)
+... and more!!
 
 ## VR Setup
 (Assuming a VIVE headset and a wireless adapter, a Windows computer, etc.)
