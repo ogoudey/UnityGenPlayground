@@ -216,6 +216,7 @@ class YAML:
         except KeyError(name + " not in used_assets"):
             print("Lookup in used_assets has failed.")
         try:
+            print(prefab_path)
             father_ID = self.get_father_id_of_root_transform_of_prefab(prefab_path)
         except Exception:
             print("Could not find fatherID of root transform")
@@ -290,7 +291,7 @@ class YAML:
     def to_unity_yaml(self, file_name="minimal.unity"):
         if not file_name.endswith(".unity"):
             file_name += ".unity"
-        file_name = "../Resources/Generated Scenes/" + file_name
+        file_name = file_name
         print("Attempting to write to", file_name)
         out = ["%YAML 1.1", "%TAG !u! tag:unity3d.com,2011:"]
         for entry in self.wrapped:

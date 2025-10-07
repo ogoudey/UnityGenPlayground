@@ -11,6 +11,7 @@ def load(asset_project_path):
     with open(asset_project_path / "asset_info.json", "r") as f:
         j = f.read()
         assets_info = json.loads(j)
+    print(f"**In asset project folder {asset_project_path}**")
     print(f"\n* Asset info sheet loaded with {len(assets_info)} entries")
     
     
@@ -45,6 +46,7 @@ def get_tree(file_type=".prefab", folder="../Assets"):
 
 
 def get_found(file_type=".prefab", folder="../Assets"):
+    print(f"Looking in {folder} for {file_type}")
     if os.name == 'nt':
         matches = []
         for root, _, files in os.walk(folder):

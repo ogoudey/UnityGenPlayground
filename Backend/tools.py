@@ -15,11 +15,12 @@ from obj_building import obj_from_grid
 import assets
 import synopsis_generator
 
-""" Preprocessing """
 assets_info = {}
 synopses = {}
 material_leaves = []
 screened_material_leaves = []
+asset_project = ""
+
 
 """ End preprocessing """
 
@@ -217,7 +218,7 @@ async def planObject(description: str) -> PlaceableObject:
 
     
     t = time.time()
-    print(f"{agent.name} started on {description}")
+    print(f"{agent.name} started on request '{description}'")
     result = await Runner.run(agent, json.dumps(prompt))
     print(agent.name + ":", time.time() - t, "seconds.")
     
@@ -238,11 +239,11 @@ async def planObject(description: str) -> PlaceableObject:
         object_name = "UnknownObject" + str(random.randint(100,999))
         object_info = {"Importances": "Place this object as normal."}
     else:
-        print(f"\tFound:\n{object_info}")
+        print(f"\tGathered info:\n{object_info}")
         object_name = object_info["Name"]
         note_from_planner = result.final_output.note
         object_info["Importances"]["Note"] = note_from_planner
-    unity.yaml.used_assets[object_name] = object_asset_path
+    unity.yaml.used_assets[object_name] = str(asset_project / object_asset_path)
     print(f"\t{object_name} added to used_assets w path {object_asset_path}")
     return PlaceableObject(object_name, json.dumps(object_info["Importances"]))
 
@@ -322,8 +323,13 @@ async def placeObject(object_name: str, placement_of_object_origin: str, rotatio
     if len(failed_placements) == max_len:
         return f"Failed to place one or all of {object_name}. Failed placements:\n{failed_placements}"
     response = f"Added object(s) to the scene. Recall the information of {object_name} at the placed point(s)."
-    if "Post-placement" in assets_info[unity.yaml.used_assets[object_name]]:
+    print(unity.yaml.used_assets)
+    print(unity.yaml.used_assets[object_name])
+    if "Post-placement" in list(assets_info[unity.yaml.used_assets[object_name].replace(str(asset_project), "")].keys()):
+        print(f"Post-placement data: {assets_info[unity.yaml.used_assets[object_name]]['Post-placement']}")
         response += assets_info[unity.yaml.used_assets[object_name]]["Post-placement"]
+    else:
+        print(f"No post-placement data for {object_name}")
 
     return response
     

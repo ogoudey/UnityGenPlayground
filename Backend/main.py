@@ -20,10 +20,35 @@ from worldgen import AcrophobiaWorldGen
 MODEL = (os.getenv("MODEL") or "o3-mini").strip() or "o3-mini"  
 
 
-async def test_acrophobia_ideal():
+async def test_acrophobia_bridge():
     gen = AcrophobiaWorldGen()
     await gen.load()
-    await gen.run(AcrophobiaWorldGen.ideal_prompt)
+    await gen.run(AcrophobiaWorldGen.bridge_prompt)
+
+async def test_acrophobia_mountain():
+    gen = AcrophobiaWorldGen()
+    await gen.load()
+    await gen.run(AcrophobiaWorldGen.mountain_prompt)
+
+async def test_acrophobia_skyscraper():
+    gen = AcrophobiaWorldGen()
+    await gen.load()
+    await gen.run(AcrophobiaWorldGen.skyscraper_prompt)
+
+async def test_acrophobia_building():
+    gen = AcrophobiaWorldGen()
+    await gen.load()
+    await gen.run(AcrophobiaWorldGen.building_prompt)
+
+async def test_acrophobia_roof():
+    gen = AcrophobiaWorldGen()
+    await gen.load()
+    await gen.run(AcrophobiaWorldGen.roof_prompt)
+
+async def test_acrophobia_platform():
+    gen = AcrophobiaWorldGen()
+    await gen.load()
+    await gen.run(AcrophobiaWorldGen.platform_prompt)
   
 async def test_acrophobia_emulate():
     gen = AcrophobiaWorldGen()
@@ -32,10 +57,14 @@ async def test_acrophobia_emulate():
     print("Prompt:", prompt)
     await gen.run(prompt)
 
-
 test_dispatcher = {
     # = deprecated test
-    "test_acro_id": test_acrophobia_ideal,
+    "test_acro_bridge": test_acrophobia_bridge,
+    "test_acro_mountain": test_acrophobia_mountain,
+    "test_acro_skyscraper": test_acrophobia_skyscraper,
+    "test_acro_building": test_acrophobia_building,
+    "test_acro_roof": test_acrophobia_roof,
+    "test_acro_platform": test_acrophobia_platform,
     "test_acro_em": test_acrophobia_emulate,
 }
 
@@ -43,7 +72,7 @@ if __name__ == "__main__":
     if sys.argv[1]:
         try:
             test_function = test_dispatcher[sys.argv[1]]
-        except KeyError("Invalid test name. Choose from: " + str(list(test_dispatcher.keys()))):
+        except KeyError("Invalid test name. Choose from: " + list(test_dispatcher.keys())):
             sys.exit(1)
         asyncio.run(test_function())   
     else:
