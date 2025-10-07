@@ -8,7 +8,7 @@ import json
 
 
 def load(asset_project_path):
-    with open(asset_project_path / "asset_info.json", "r") as f:
+    with open(asset_project_path / "asset_catalog.json", "r") as f:
         j = f.read()
         assets_info = json.loads(j)
     print(f"**In asset project folder {asset_project_path}**")
