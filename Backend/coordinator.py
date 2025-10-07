@@ -6,7 +6,7 @@ from pydantic import BaseModel
 
 
 import tools
-from tools import get_ground_matrix, planObject, placeObject, place_vr_human_player, planSkybox, placeSkybox, planandplaceGround, get_contact_points, planandplaceSun
+from tools import get_ground_matrix, proposeObject, positionObject, placeVRHumanPlayer, createSkybox, createGround, getContactPoints, createSun
 
 MODEL = (os.getenv("MODEL") or "o4-mini").strip() or "o4-mini"
     
@@ -38,21 +38,32 @@ You are responsible for checking the placed assets in a Unity scene. You will be
 
 class Coordinator(Agent):
     phobia_v1={"o4-mini":"""Whatever a universal scarer might be"""}
+
+    # TODO Embellish Ground prompt
+    # TODO What is the best way to describe an origin of an object?
     acrophobia_v1={"o4-mini":"""You are the Coordinator agent responsible for generating a Unity scene that matches the user prompt. 
 You must orchestrate tool usage in the following structured order:
 
-1. SKYBOX: First, call planSkybox once to describe an appropriate skybox, then call placeSkybox to place it. 
-2. SUN: Then, call planandplaceSun to describe an appropriate Sun.
-3. GROUND: Next, call planandplaceGround to design the terrain/heightmap. This is an initial guess for the terrain of the ground. In further steps, you may call planandplaceGround again to fit the objects that need the terrain to conform to it.
-4. OBJECTS: After the ground is placed, plan each object one by one with planObject. For the planObject call:
-   - Do not plan multiple objects in a single call. Do not plan anything like a "cluster" of objects (to do this call the function multiple times). These must be single objects.
-   immediately follow it with a corresponding placeObject call. 
+1. SKYBOX: The firstr couple steps are simple. First, call createSkybox once to describe an appropriate skybox. 
+2. SUN: Call createSun to describe an appropriate Sun.
+3. GROUND: Call createGround to design the terrain/heightmap. This is an initial guess for the terrain of the ground. In further steps, you may call createGround again to fit the objects that need the terrain to conform to it. Try to make it natural.
+4. OBJECTS: After the ground is placed, you will begin setting the objects of the scene. To do this, propose each (type of) object one by one with proposeObject. For the proposeObject call:
+   - Do not plan multiple objects in a single call. Do not plan anything like a "cluster" of objects.
    - Do not include placement/location information, only stuff about the size, theme, type, etc.
-    For the placeObject call:
+   - When you propose an object you will receive this information:
+    {
+        "Name": the object's name,
+        "Info": {
+            "Local origin": the objects local origin described relative to its geometry,
+            "Dimensions": the object's dimension,
+            (Optional) "Extra": any extra local information about the object, relative to its local origin.
+        }
+    }  
+Once you have an objects information, you may instace the object in the world you are creating. To do this, call positionObject:
    - DO include placement and rotation information (obviously, given the args).
-   - Each object must be placed over the ground (atop or aligned with it). 
-   - Bridges, rivers, foliage, rocks, or props must all be handled in this way. 
-5. REMAKING GROUND: Some objects (e.g. a long bridge), may require the ground to have a certain shape to make sense in, forcing you to reconsider the heightmap of the ground. In this case, call planGround again with requires heights mentioned to in a sense "excavate" the existing ground.
+   - Object should (obviously) be placed OVER the ground (atop or aligned with it), and all other details should be as-close-to-physics-as-possible.
+   - Pay close attention to the difficult problem of fitting already-structured objects in with other objects/terrain. 
+5. REMAKING GROUND: Some objects (e.g. a long bridge), may require the ground to have a certain shape in order for them to fi. This will force you to reconsider the heightmap of the ground, in which case you should call createGround again and "excavate" the land around the uncooperative object.
 6. HUMAN VR PLAYER: When the scene is finalized, place the VR player in the scene with the place_vr_human_player tool (if made available to you - if not, forget about it). 
 7. COMPLETENESS: Ensure that all elements mentioned in the user prompt are represented in the scene. 
    If something is vague (e.g. "foliage"), interpret it reasonably and cover the intent. 
@@ -65,12 +76,20 @@ General rules:
 - Stop once the world clearly reflects the prompt.
 
 Your role is to reliably build a coherent, grounded Unity world from the description."""}
-   
+
+{
+        "Name": object_name,
+        "Info": {
+            "Local origin": object_info["Importances"]["Origin"],
+            "Dimensions": object_info["Importances"]["Dimensions"],
+        }
+    }
+
     def __init__(self, name=None, instructions=None, tools=None):
         super().__init__(
             name=name or f"Coordinator{random.randint(100,999)}",
             instructions=instructions or Coordinator.acrophobia_v1[MODEL],
-            tools=tools or [get_contact_points, planandplaceGround, planObject, placeObject],
+            tools=tools or [getContactPoints, createGround, planObject, placeObject],
             model=MODEL,
         )
         self.restriction = None
@@ -84,22 +103,6 @@ Suppose you have already built a Unity scene. Now it is your job to incorporate 
         super().__init__(
             name=name or f"Reformer{random.randint(100,999)}",
             instructions=instructions or self.instructions_v1,
-            tools=[placeObject, planGround, placeGround],
+            tools=[],
             model=MODEL,
         )
-        
-""" Tests """   
-
-test_dispatcher = {
-    # = deprecated test
-}
-
-if __name__ == "__main__":
-    if sys.argv[1]:
-        try:
-            test_function = test_dispatcher[sys.argv[1]]
-        except KeyError("Invalid test name. Choose from: " + str(list(test_dispatcher.keys()))):
-            sys.exit(1)
-        asyncio.run(test_function())   
-    else:
-        print("Please include test from:", list(test_dispatcher.keys()))

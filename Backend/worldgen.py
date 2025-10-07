@@ -8,7 +8,7 @@ import assets
 import synopsis_generator
 from enrichment import Phobos
 from coordinator import Checker, Reformer, Coordinator
-from tools import get_ground_matrix, planObject, placeObject, place_vr_human_player, planSkybox, placeSkybox, planandplaceGround, get_contact_points, planandplaceSun
+from tools import get_ground_matrix, proposeObject, positionObject, placeVRHumanPlayer, createSkybox, createGround, getContactPoints, createSun
 
 from scene import World
 

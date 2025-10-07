@@ -39,13 +39,13 @@ class Designation(BaseModel):
     asset_path: str
 
 @function_tool
-async def get_ground_matrix():
+async def getGroundMatrix():
     global unity
     print("Recalling ground matrix...")
     return {"Grid": unity.ground_matrix, "Information": "The ground goes from (0,0) to (-50, 50). That is, the top left of the matrix is -50, 50. All objects should be on over the ground."}   
 
 @function_tool
-async def placeSun(length_of_day: float, time_of_day: float, sun_brightness: float):
+async def positionSun(length_of_day: float, time_of_day: float, sun_brightness: float):
     """
         Args:
             length_of_day: It is like the planet rotation - how many hours in a day? In Earth-hours (example 18.0). 
@@ -57,7 +57,7 @@ async def placeSun(length_of_day: float, time_of_day: float, sun_brightness: flo
     return f"Successfully added the Sun"
 
 @function_tool
-async def planSkybox(skybox_description: str) -> Designation:
+async def createSkybox(skybox_description: str) -> Designation:
     agent = SkyboxPlanner()
     prompt = {"Object description": skybox_description,
                 "Available assets": material_leaves}
@@ -73,37 +73,27 @@ async def planSkybox(skybox_description: str) -> Designation:
     
     object_info = {"Name": object_asset_path.split("/")[-1], "Importances": "Nothing to mention"}
 
-    object_name = object_info["Name"]
+    skybox_name = object_info["Name"]
     
 
     
-    unity.yaml.used_assets[object_name] = object_asset_path
+    unity.yaml.used_assets[skybox_name] = object_asset_path
 
-    print(object_name, "added to used_assets w path", object_asset_path)
-
-    return PlaceableObject(object_name, json.dumps(object_info["Importances"]))
-
-@function_tool
-async def placeSkybox(skybox_name: str) -> str:
-    """
-        Args:
-            skybox_name: The name of the ground you just created
-    """
-
-    global unity
+    print(skybox_name, "added to used_assets w path", object_asset_path)
     try:
         unity.add_skybox(skybox_name)
         return f"Successfully added '{skybox_name}' to the scene."
     except Exception:
         print("Error adding skybox...")
         return f"Failed to add '{skybox_name}' to the scene. The name argument must be right."
+    return PlaceableObject(object_name, json.dumps(object_info["Importances"]))
 
 @function_tool
-async def planandplaceSun(description_of_sun_behavior: str) -> str:
+async def createSun(description_of_sun_behavior: str) -> str:
     """
         Plan and place the Sun in the scene. Call this once and only once for each scene. Just describe the Sun and its thematic context briefly. You are effectively prompting another sub-agent to actually deal with positioning the Sun.
     """
-    agent = SunPlanner(tools=[placeSun])
+    agent = SunPlanner(tools=[positionSun])
     prompt = {"Description of desired sun behavior": description_of_sun_behavior}
 
     t = time.time()
@@ -116,7 +106,7 @@ async def planandplaceSun(description_of_sun_behavior: str) -> str:
     return f"Successfully placed the Sun in the scene"
 
 @function_tool
-async def planandplaceGround(steps_to_ground_construction: str):
+async def createGround(steps_to_ground_construction: str):
     """ 
         Calls an agent to construct the ground you give a plan for. The agent can only generate a heightmap in the +X, +Z plane. Be somewhat general. It will literally generate an 11x11 grid, scaled up by 5 to be a 50m x 50m topology (you don't need to mention this to them).  It cannot be much more precise than that, and it cannot go outside those bounds. 
         steps_to_ground_construction: a plan of how the ground planner should construct the ground. Example (a string):
@@ -132,7 +122,7 @@ async def planandplaceGround(steps_to_ground_construction: str):
     This Tool can be called multiple times to reshape the ground, in order to fit the objects that are static or immalleable.
     """
 
-    agent = GroundPlanner(tools=[planTexture])
+    agent = GroundPlanner(tools=[addTexture])
     global unity
     prompt = {"Steps to plan": steps_to_ground_construction}
     if len(unity.ground_matrix) > 0:
@@ -145,7 +135,7 @@ async def planandplaceGround(steps_to_ground_construction: str):
     
 
     explanation = result.final_output.explanation_of_heights
-    object_asset_path, unity.ground_matrix = obj_from_grid(result.final_output.grid) # writes obj
+    object_asset_path, unity.ground_matrix = obj_from_grid(result.final_output.grid) # writes objget_ground
     print("Ground obj written.")
     texture_path = result.final_output.texture_path
     
@@ -184,7 +174,7 @@ async def planandplaceGround(steps_to_ground_construction: str):
     return f"Successfully placed a ground with heightmap {legible_result} in the +X +Z quadrant (these coordinates correspond to the vertices of the ground mesh). The scale of the Xs and Zs is x5. There is no vertical scaling.\n{explanation}"
 
 @function_tool
-async def planTexture(material_of_object_description: str) -> str:
+async def addTexture(material_of_object_description: str) -> str:
     """
         Returns the path to a material asset that matches the description. May return "None" if there's no match, in which case use that as the texture_path.
     """
@@ -207,14 +197,14 @@ async def planTexture(material_of_object_description: str) -> str:
 
 
 @function_tool
-async def planObject(description: str) -> PlaceableObject:
+async def proposeObject(description: str) -> PlaceableObject:
     """ 
         Args:
             description: Some text describing that the object should be like, refering to a singular object that's likely to be selected from a common asset library. For example, "water", "a rock", "a house", etc.
         If you don't get an object you want, its because there's nothing like the desired asset in the library of available assets. In this case, get creative and find a new solution. You don't NEED to place the object returned, which is the object-planner's best guess.
     """
 
-    agent = ObjectPlanner(tools=[get_ground_matrix])
+    agent = ObjectPlanner(tools=[getGroundMatrix])
     prompt = {"Description of object": description, "Synopses to choose from": list(synopses.keys())}
 
     
@@ -246,10 +236,22 @@ async def planObject(description: str) -> PlaceableObject:
         object_info["Importances"]["Note"] = note_from_planner
     unity.yaml.used_assets[object_name] = str(asset_project / object_asset_path)
     print(f"\t{object_name} added to used_assets w path {object_asset_path}")
+    json_blob = {
+        "Name": object_name,
+        "Info": {
+            "Local origin": object_info["Importances"]["Origin"],
+            "Dimensions": object_info["Importances"]["Dimensions"],
+        }
+    }
+    if "Extra" in list(object_info["Importances"].keys()):
+        json_blob["Info"]["Extra"] = object_info["Importances"]["Extra"]
+
+    return json_blob
+
     return PlaceableObject(object_name, json.dumps(object_info["Importances"]))
 
 @function_tool
-async def placeObject(object_name: str, placement_of_object_origin: str, rotation: str, explanation: str) -> str:
+async def positionObject(object_name: str, placement_of_object_origin: str, rotation: str, explanation: str) -> str:
     """
         This function permits you to place the PlannedObject in the scene. You may place a single instance of the object or multiple ones, but always refer to the object you've planned. You cannot scale the object. 
         Args:
@@ -335,7 +337,7 @@ async def placeObject(object_name: str, placement_of_object_origin: str, rotatio
     return response
     
 @function_tool
-def place_vr_human_player(transform: str, rotation: str = "{\"x\": 75, \"y\": 10, \"z\": 70}", explanation: str=""):
+def positionVRHumanPlayer(transform: str, rotation: str = "{\"x\": 75, \"y\": 10, \"z\": 70}", explanation: str=""):
     """
     This function places the VR headset of the human player in the scene. It places the camera/head, so make it 2m above the ground below them. The player can walk around 1m from where they are placed.
     transform: Must be a JSON-encoded string. Example:
@@ -365,19 +367,13 @@ def place_vr_human_player(transform: str, rotation: str = "{\"x\": 75, \"y\": 10
     return f"Successfully added player to the scene at {json_location}."
     
 @function_tool
-async def get_contact_points() -> str:
+async def getContactPoints() -> str:
     """
         Returns the points in the scene which are available to place objects on.
     """
     global unity
     return json.dumps(unity.contact_points)
 
-
-
-
-
-
-    
     
 """ Helpers """
 def asset_lookup(asset_path: str) -> dict:
