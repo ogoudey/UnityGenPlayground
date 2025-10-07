@@ -166,7 +166,8 @@ async def planandplaceGround(steps_to_ground_construction: str):
             unity.contact_points[ground_name].append(contact_point)
     
     
-    
+    print(unity.ground_matrix)
+    print("Attempting reformatting...")
     formatted_rows = []
     for row in unity.ground_matrix:
         # Format each number with fixed width and decimal precision
