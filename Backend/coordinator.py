@@ -41,10 +41,10 @@ class Coordinator(Agent):
 
     # TODO Embellish Ground prompt
     # TODO What is the best way to describe an origin of an object?
-    acrophobia_v1={"o4-mini":"""You are the Coordinator agent responsible for generating a Unity scene that matches the user prompt. 
+    acrophobia_v1={"o4-mini":"""You are the Coordinator agent responsible for generating a Unity scene that matches the user prompt. +X is "East"/to the right, +Y is up, and +Z "North".
 You must orchestrate tool usage in the following structured order:
 
-1. SKYBOX: The firstr couple steps are simple. First, call createSkybox once to describe an appropriate skybox. 
+1. SKYBOX: The first couple steps are simple. First, call createSkybox once to describe an appropriate skybox. 
 2. SUN: Call createSun to describe an appropriate Sun.
 3. GROUND: Call createGround to design the terrain/heightmap. This is an initial guess for the terrain of the ground. In further steps, you may call createGround again to fit the objects that need the terrain to conform to it. Try to make it natural.
 4. OBJECTS: After the ground is placed, you will begin setting the objects of the scene. To do this, propose each (type of) object one by one with proposeObject. For the proposeObject call:
@@ -60,10 +60,11 @@ You must orchestrate tool usage in the following structured order:
                 (Optional) "Extra/Recommendation/...": any extra local information about the object, relative to its local origin.
             }
         }
-        "Note": a message from the planner that explains how the returned object might differ from the request. You can either accomodate the differences or propose another object.
+        "Note": a message from the planner that explains how the returned object might differ from the request.
     }  
 Once you have an objects information, you may instace the object in the world you are creating. To do this, call positionObject:
    - DO include placement and rotation information (obviously, given the args).
+   - Objects pivot around the axes through their local origin (recall, Y is up).
    - Object should (obviously) be placed OVER the ground (atop or aligned with it), and all other details should be as-close-to-physics-as-possible.
    - Pay close attention to the difficult problem of fitting already-structured objects in with other objects/terrain. 
 5. REMAKING GROUND: Some objects (e.g. a long bridge), may require the ground to have a certain shape in order for them to fi. This will force you to reconsider the heightmap of the ground, in which case you should call createGround again and "excavate" the land around the uncooperative object.

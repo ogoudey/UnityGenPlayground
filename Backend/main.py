@@ -62,7 +62,7 @@ async def test_acrophobia_emulate():
 test_dispatcher = {
     # = deprecated test
     "test_acro_bridge": test_acrophobia_bridge,
-    "test_acro_mo/\ntain": test_acrophobia_mountain,
+    "test_acro_mountain": test_acrophobia_mountain,
     "test_acro_skyscraper": test_acrophobia_skyscraper,
     "test_acro_building": test_acrophobia_building,
     "test_acro_roof": test_acrophobia_roof,

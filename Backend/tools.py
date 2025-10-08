@@ -102,8 +102,8 @@ async def createSun(description_of_sun_behavior: str) -> str:
 @function_tool
 async def createGround(steps_to_ground_construction: str):
     """ 
-        Calls an agent to construct the ground you give a plan for. The agent can only generate a heightmap in the +X, +Z plane. Be somewhat general. It will literally generate an 11x11 grid, scaled up by 5 to be a 50m x 50m topology (you don't need to mention this to them).  It cannot be much more precise than that, and it cannot go outside those bounds. 
-        steps_to_ground_construction: a plan of how the ground planner should construct the ground. Example (a string):
+        Calls an agent to construct the ground you give a plan for. The agent can only generate a heightmap in the +X, +Z plane. Be somewhat general. It will literally generate an 11x11 grid (vertices), scaled up by 5 to be a 50m x 50m topology (you don't need to mention this to them).  It cannot be much more precise than that, and it cannot go outside those bounds. 
+        steps_to_ground_construction: a plan of how the ground planner should construct the ground. (0, 0, 0) is 0m, 0m, 0m. (Example (a string):
             To make a volcano:
                 1. Form the mountain
                 2. Make the crater in the top.
@@ -115,15 +115,18 @@ async def createGround(steps_to_ground_construction: str):
                 
     This Tool can be called multiple times to reshape the ground, in order to fit the objects that are static or immalleable.
     """
+    # Was that docstring too specific?
 
     agent = GroundPlanner(tools=[addTexture])
     global unity
     prompt = {"Steps to plan": steps_to_ground_construction}
+    
     if len(unity.ground_matrix) > 0:
         prompt["Existing ground to edit"] = unity.ground_matrix
     
     t = time.time()
     print(agent.name, "started")
+    print(prompt)
     result = await Runner.run(agent, json.dumps(prompt))
     print(agent.name + ":", time.time() - t, "seconds.")
     
@@ -226,7 +229,7 @@ async def proposeObject(description: str) -> PlaceableObject:
         "Object": object_data,
         "Note": result.final_output.note
     }
-
+    print("\tPlanner's note:", json_blob["Note"])
     return json_blob
 
 @function_tool
