@@ -1,5 +1,11 @@
-# Unity Scene Generation Demo
-## Part I
+# World Generator
+
+## World Generator Architecture
+<img width="930" height="494" alt="image" src="https://github.com/user-attachments/assets/16e6c626-21c1-47da-8b51-a5d3b6240690" /> 
+
+
+## Project history
+### Part I
 <img width="1050" height="554" alt="Screenshot from 2025-09-15 15-29-56" src="https://github.com/user-attachments/assets/57bc1d64-c561-40b6-b337-2398c673fb1e" />
 
 **Prompt**: A forest
@@ -11,7 +17,7 @@
 **Notes**: 
 * Groundless - generating ground meshes is hard.
 
-## Part II
+### Part II
 <img width="886" height="439" alt="image" src="https://github.com/user-attachments/assets/bed46219-9fec-473b-b71e-4f6ab472f20a" />
 
 **Prompt**: A river cutting through a terrain with some foliage, and a bridge going over it connecting two banks.
@@ -26,7 +32,7 @@
 **Notes**: 
 * Either LLM's "short term memory" issue, or a miscommunication issue - each asset is locally different from the others, affecting correct __visual__ placement.
 
-## Part III
+### Part III
 <img width="858" height="587" alt="Oct 1 Unity Gen" src="https://github.com/user-attachments/assets/2124e9a7-e1c3-403e-86fe-0914c97705a2" />
 
 **Prompt**: "I'm scared of heights over 5m. I just can't do bridges." 
@@ -64,7 +70,7 @@ Used assets:
 [Bridge](https://assetstore.unity.com/packages/3d/environments/rope-bridge-3d-222563)
 [Ground textures](https://assetstore.unity.com/packages/2d/textures-materials/nature/yughues-free-ground-materials-13001)	
 [Bridges Pack](https://assetstore.unity.com/packages/3d/props/bridges-pack-212950)
-... and more!!
+... and more.
 
 ## VR Setup
 (Assuming a VIVE headset and a wireless adapter, a Windows computer, etc.)
