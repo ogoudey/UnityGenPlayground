@@ -1,10 +1,13 @@
 # World Generator
-## Testing phase
+## Testing
+```
+python3 main.py test_acro_<skycraper, bridge, mountain, platform, etc.>
+```
 <img width="1304" height="725" alt="image" src="https://github.com/user-attachments/assets/b756c450-57a1-4101-86a1-e6da76c283be" />
 
 
 
-## World Generator Architecture
+## World generator architecture
 <img width="930" height="494" alt="image" src="https://github.com/user-attachments/assets/16e6c626-21c1-47da-8b51-a5d3b6240690" /> 
 
 
