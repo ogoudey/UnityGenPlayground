@@ -12,7 +12,7 @@ import random
 import asyncio
 
 import coordinator as agents
-from enrichment import Therapist, Transducer, ClientFulfillment
+
 
 
 from worldgen import AcrophobiaWorldGen
@@ -49,18 +49,20 @@ async def test_acrophobia_platform():
     gen = AcrophobiaWorldGen()
     await gen.load()
     await gen.run(AcrophobiaWorldGen.platform_prompt)
-  
+
+### General test
 async def test_acrophobia_emulate():
     gen = AcrophobiaWorldGen()
     gen.load()
     prompt = gen.get_prompt()
     print("Prompt:", prompt)
     await gen.run(prompt)
+###
 
 test_dispatcher = {
     # = deprecated test
     "test_acro_bridge": test_acrophobia_bridge,
-    "test_acro_mountain": test_acrophobia_mountain,
+    "test_acro_mo/\ntain": test_acrophobia_mountain,
     "test_acro_skyscraper": test_acrophobia_skyscraper,
     "test_acro_building": test_acrophobia_building,
     "test_acro_roof": test_acrophobia_roof,

@@ -11,8 +11,8 @@ def load(asset_project_path):
     with open(asset_project_path / "asset_catalog.json", "r") as f:
         j = f.read()
         assets_info = json.loads(j)
-    print(f"**In asset project folder {asset_project_path}**")
-    print(f"\n* Asset info sheet loaded with {len(assets_info)} entries")
+    print(f"In asset project folder {asset_project_path}**")
+    print(f"Asset info sheet loaded with {len(assets_info)} entries")
     
     
     removed_count = 0
@@ -23,9 +23,9 @@ def load(asset_project_path):
             removed_count += 1
 
     if removed_count > 0:
-        print(f"* Removed {removed_count} missing assets")
+        print(f"Removed {removed_count} missing assets")
     else:
-        print("* No missing assets found")
+        print("No missing assets found")
 
     return assets_info
 
@@ -45,8 +45,9 @@ def get_tree(file_type=".prefab", folder="../Assets"):
 
 
 
-def get_found(file_type=".prefab", folder="../Assets"):
-    print(f"Looking in {folder} for {file_type}")
+def get_found(file_type=".prefab", asset_projects="", asset_project_path=""):
+    rel_path = asset_project_path.replace(asset_projects + "/", "")
+    print(f"Looking in {rel_path} for {file_type}...")
     if os.name == 'nt':
         matches = []
         for root, _, files in os.walk(folder):
@@ -55,14 +56,14 @@ def get_found(file_type=".prefab", folder="../Assets"):
                     matches.append(os.path.join(root, name))
     elif os.name == 'posix':
         result = subprocess.run(
-            ["find", folder, "-type", "f", "-name", f"*{file_type}"],
+            ["find", asset_project_path, "-type", "f", "-name", f"*{file_type}"],
             capture_output=True,
             text=True
         )
 
         if result.returncode != 0 or not result.stdout.strip():
             # Either the command failed or no files found
-            print(f"* !! {folder} was not found. Consider adding to the file system.")
+            print(f"!! {asset_project_path} was not found. Consider adding to the file system.")
             return []
         
         # Split into list of file paths, strip whitespace
@@ -70,7 +71,7 @@ def get_found(file_type=".prefab", folder="../Assets"):
 
     # Normalize paths (optional, makes everything consistent)
     files = [str(pathlib.Path(f).as_posix()) for f in matches]
-    print(f"\n* The library at {folder} has {len(files)} {file_type} assets.")
+    print(f"The folder at {rel_path} has {len(files)} {file_type} assets.")
     return files
 
 

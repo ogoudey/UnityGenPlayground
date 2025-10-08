@@ -45,7 +45,7 @@ def facify(matrix):
                     lines += f"f {y*x_per_row + x + 1}/{y*x_per_row + x + 1} {(y+1)*x_per_row + x + 1}/{(y+1)*x_per_row + x + 1} {(y+1)*x_per_row + x + 2}/{(y+1)*x_per_row + x + 2} {y*x_per_row + x + 2}/{y*x_per_row + x + 2}\n"
     return lines, visited
 
-def obj_from_grid(grid: str = default_grid):
+def obj_from_grid(obj_path: str, grid: str = default_grid):
     location = {"x": 0.0, "y": 0.0, "z": 0.0}
     scale = 5
     matrix = []
@@ -92,8 +92,8 @@ def obj_from_grid(grid: str = default_grid):
     print("File contains", len(face_data.split("\n")), "faces.")
     
     
-    out_file = "ground_built"
-    out_path1 = "../Resources/Manifest/" + out_file + str(random.randint(100, 999)) + ".obj"
+    out_file = "ground"
+    out_path1 = obj_path + "/" + out_file + str(random.randint(100, 999)) + ".obj"
     with open(out_path1, "w") as f:
         f.write(obj_str1)
     print("Ground obj written to", out_path1)

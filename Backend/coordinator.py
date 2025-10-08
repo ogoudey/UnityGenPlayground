@@ -6,7 +6,7 @@ from pydantic import BaseModel
 
 
 import tools
-from tools import get_ground_matrix, proposeObject, positionObject, placeVRHumanPlayer, createSkybox, createGround, getContactPoints, createSun
+from tools import getGroundMatrix, proposeObject, positionObject, positionVRHumanPlayer, createSkybox, createGround, getContactPoints, createSun
 
 MODEL = (os.getenv("MODEL") or "o4-mini").strip() or "o4-mini"
     
@@ -52,12 +52,15 @@ You must orchestrate tool usage in the following structured order:
    - Do not include placement/location information, only stuff about the size, theme, type, etc.
    - When you propose an object you will receive this information:
     {
-        "Name": the object's name,
-        "Info": {
-            "Local origin": the objects local origin described relative to its geometry,
-            "Dimensions": the object's dimension,
-            (Optional) "Extra": any extra local information about the object, relative to its local origin.
+        "Object": {
+            "Name": the object's name,
+            "Info": {
+                "Local origin": the objects local origin described relative to its geometry,
+                "Dimensions": the object's dimension,
+                (Optional) "Extra/Recommendation/...": any extra local information about the object, relative to its local origin.
+            }
         }
+        "Note": a message from the planner that explains how the returned object might differ from the request. You can either accomodate the differences or propose another object.
     }  
 Once you have an objects information, you may instace the object in the world you are creating. To do this, call positionObject:
    - DO include placement and rotation information (obviously, given the args).
@@ -73,23 +76,15 @@ General rules:
 - Use get_contact_points to get an estimate of exact (x, y, z) coordinates available for placing objects on.
 - Use all other tools at least once when appropriate.
 - Use planGround/placeGround multiple times if need be.
-- Stop once the world clearly reflects the prompt.
+- Stop once the world clearly reflects the prompt, and don't stop until you are done.
 
 Your role is to reliably build a coherent, grounded Unity world from the description."""}
-
-{
-        "Name": object_name,
-        "Info": {
-            "Local origin": object_info["Importances"]["Origin"],
-            "Dimensions": object_info["Importances"]["Dimensions"],
-        }
-    }
 
     def __init__(self, name=None, instructions=None, tools=None):
         super().__init__(
             name=name or f"Coordinator{random.randint(100,999)}",
             instructions=instructions or Coordinator.acrophobia_v1[MODEL],
-            tools=tools or [getContactPoints, createGround, planObject, placeObject],
+            tools=tools or [getContactPoints, createGround, proposeObject, positionObject],
             model=MODEL,
         )
         self.restriction = None

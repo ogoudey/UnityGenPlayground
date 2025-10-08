@@ -10,6 +10,8 @@ class World:
         
         self.ground_matrix = []
         self.contact_points = dict()
+        self.objects = []
+        self.ground = None
 
     def add_skybox(self, skybox_name):
         self.yaml.set_skybox(skybox_name)
@@ -28,14 +30,22 @@ class World:
          
               
     def add_ground(self, ground_name, transform={"x":0.0, "y":0.0, "z":0.0}):
-        if self.yaml.remove_prefab_instance_if_exists(ground_name):
-            print(f"Removed existing ground {ground_name} from YAML")
+        if self.ground:
+            if self.yaml.remove_prefab_instance_if_exists(self.ground):
+                print(f"Removed existing ground {self.ground} from YAML")
+            else:
+                print("Ground exists in YAML - couldn't be removed.")
         guid = uuid.uuid4().hex
-        yamling.write_obj_meta(self.yaml.used_assets[ground_name]["Ground"], guid)
+        yamling.write_obj_meta(self.yaml.proposed_objects[ground_name]["Ground"], guid)
         self.yaml.add_ground_prefab_instance(ground_name, guid, transform)
-        
+        self.ground = ground_name
+
+    def add_data(self, object_data):
+        self.objects.append(object_data)
+
         
     def done_and_write(self, file_name=None):
+        print("\nObjects:\n", self.objects)
         if not file_name:
             file_name = self.name
         self.yaml.to_unity_yaml(file_name)

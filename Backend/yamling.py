@@ -36,15 +36,13 @@ class YAML:
         # self.level0 is a list of MappingNodes
         self.wrapped = [node_to_python(n) for n in self.level0]
         
-        self.used_assets = dict()
+        self.proposed_objects = dict()
         self.placed_assets = dict()
     
     def set_sun(self, length_of_day, time_of_day, sun_brightness):
-        # turn TOD to rotation via ratio with LOD 
         rot = (time_of_day / length_of_day) * 360
-        rotation = {"x": 0, "y": 0, "z": rot}
+        rotation = {"x": rot, "y": 0, "z": 0}
         quaternion = euler_to_xyzw_quaternion(rotation)
-        # set rotation of the gaemobject
         print("Setting sun in YAML...")
         yaml = ruamel_YAML(typ='rt')
         default = list(yaml.compose_all(preprocess_text(sun_init_text)))
@@ -70,7 +68,7 @@ class YAML:
     def set_skybox(self, name):
         print("Setting skybox...")
         
-        mat_path = self.used_assets[name]
+        mat_path = self.proposed_objects[name]
         guid = get_guid(mat_path + ".meta")
         try:
             render_settings = self.get_doc("RenderSettings")
@@ -123,13 +121,13 @@ class YAML:
         
         texture = None
         try:
-            used_assets_entry = self.used_assets[name]
-            print("Found", name, "in used_assets w entry", used_assets_entry)
-            texture_path = used_assets_entry["Texture"]
+            proposed_objects_entry = self.proposed_objects[name]
+            print("Found", name, "in proposed_objects w entry", proposed_objects_entry)
+            texture_path = proposed_objects_entry["Texture"]
             if not texture_path == "None":
                 texture_metaguid = get_guid(texture_path + ".meta")
-        except Exception(name + " not in used_assets, or " + texture_path):
-            print("Lookup in used_assets has failed.")
+        except Exception(name + " not in proposed_objects, or " + texture_path):
+            print("Lookup in proposed_objects has failed.")
         
 
         modifications = wrapped["PrefabInstance"]["m_Modification"]["m_Modifications"]
@@ -159,14 +157,20 @@ class YAML:
         print("Asset added to YAML.")            
     
     def remove_prefab_instance_if_exists(self, name):
-
         for doc in self.wrapped:
             if "PrefabInstance" in doc:
                 for mod in doc["PrefabInstance"]["m_Modification"]["m_Modifications"]:
                     if mod.get("propertyPath") == "m_Name":
                         if mod["target"]["value"] == name:
                             self.wrapped.remove(doc)
+                            print("Removed prefab!")
+                            sceneroots = self.get_doc("SceneRoots")
+                            prefab_id = doc["anchor"]
+                            sceneroots["m_Roots"].remove({"fileID": prefab_id})
+                            print("Removed prefabID from scene root.")
                             return True
+        sceneroots = self.get_doc("SceneRoots")
+        sceneroots["m_Roots"].remove({"fileID": prefab_id})
         return False
         
     def set_vr_player(self, transform:str, rotation: str):
@@ -211,10 +215,10 @@ class YAML:
         wrapped, id_out = set_ID(wrapped) # to random ID
         
         try:
-            prefab_path = self.used_assets[name]
-            print("Found", name, "in used_assets w path", prefab_path)
-        except KeyError(name + " not in used_assets"):
-            print("Lookup in used_assets has failed.")
+            prefab_path = self.proposed_objects[name]
+            print("Found", name, "in proposed_objects w path", prefab_path)
+        except KeyError(name + " not in proposed_objects"):
+            print("Lookup in proposed_objects has failed.")
         try:
             print(prefab_path)
             father_ID = self.get_father_id_of_root_transform_of_prefab(prefab_path)

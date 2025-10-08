@@ -2,107 +2,166 @@
     "Assets/Proxy Games/Stylized Nature Kit Lite/Prefabs/Foliage/Trees/Spruce 1.prefab":
     {
         "Name":"Spruce 1",
-        "Importances": {"pivot": "at the very bottom of the object and the midpoint along the X and Z. If you place me at a point, that is correctly the base of my trunk. Make sure my Y position = the height of the ground at my X, Z.", "Recommendation": "You should probably scatter me across the ground to promote a natural looking forest."}
+        "Info": {
+            "Local origin": "at the very bottom of the object and the midpoint along the X and Z. If you place me at a point, that is correctly the base of my trunk. Make sure my Y position = the height of the ground at my X, Z.",
+            "Recommendation": "You should probably scatter me across the ground to promote a natural looking forest."
+        }
     },
     "Assets/Proxy Games/Stylized Nature Kit Lite/Prefabs/Water/Detailed Water.prefab":
     {
         "Name": "Water",
-        "Importances": {"object local origin/pivot point": "Top-right corner. If I am placed at 0,0, ill cover the -Z -X quadrant. So if I'm placed at x=50, z=50 I will cover the +X +Z quadrant (likely where the ground is).", "Dimensions": "50m x 50m - a perfect square plane", "Recommendation": "Have me overlap the whole ground. Make sure my Y coordinate provides the right water depth. Also keep in mind the area of the intended body of water."}
+        "Info": {
+            "Local origin": "Top-right corner. If I am placed at 0,0, ill cover the -Z -X quadrant. So if I'm placed at x=50, z=50 I will cover the +X +Z quadrant (likely where the ground is).",
+            "Dimensions": "50m x 50m - a perfect square plane",
+            "Recommendation": "Have me overlap the whole ground. Make sure my Y coordinate provides the right water depth. Also keep in mind the area of the intended body of water."
+        }
     },
     "Assets/Proxy Games/Stylized Nature Kit Lite/Prefabs/Water/Flat Water.prefab":
     {
         "Name": "Water",
-        "Importances": {"origin/pivot point": "Top-right corner. If I am placed at 0,0, ill cover the -Z -X quadrant. So if I'm placed at x=50, z=50 I will cover the +X +Z quadrant (likely where the ground is).", "Dimensions": "50m x 50m - a perfect square plane", "Recommendation": "Have me overlap the whole ground. Make sure my Y coordinate provides the right water level if the prompt refers to a body of water."}
+        "Info": {
+            "Local origin": "Top-right corner. If I am placed at 0,0, ill cover the -Z -X quadrant. So if I'm placed at x=50, z=50 I will cover the +X +Z quadrant (likely where the ground is).",
+            "Dimensions": "50m x 50m - a perfect square plane",
+            "Recommendation": "Have me overlap the whole ground. Make sure my Y coordinate provides the right water level if the prompt refers to a body of water."
+        }
     },
     "Assets/Blue Polygon/Rope Bridge 3D/Prefab/rope_bridge.prefab":
     {
-        "Name": "Bridge",
-        "Importances": {"center point/object local origin/pivot": "I go off in the -X direction from 0,0, my pivot point.", "Dimensions": "I am 16m long and about 2.5m wide.", "Description": "I have 2 posts on either end, each 2m tall. There is a 1m sag in the crossing, since I am a rope bridge. You might need to rethink the ground terrain once if I'm placed in the scene, so that I hang over the water. When you place me, refer to how my two posts contact the ground at the right places: 16m apart on the ground."},
-        "Post-placement": "Remake the ground around my posts so that I contact ground on both ends."
+        "Name": "Rope Bridge",
+        "Info": {
+            "Local origin": "Origin at my +X side, and in the middle of my Z dimension (about 1.25m on both sides). My origin is 1m from the sag in the middle of the bridge, but flush with the base of my posts.",
+            "Dimensions": "I am 16m long (in the -X direction) and about 2.5m wide.",
+            "Description": "I have 2 posts on either end, each 2m tall. There is a 1m sag in the crossing, since I am a rope bridge. You might need to rethink the ground terrain once if I'm placed in the scene, so that I hang over the water. When you place me, refer to how my two posts contact the ground at the right places: 16m apart on the ground."
+        }
     },
     "Assets/Proxy Games/Stylized Nature Kit Lite/Prefabs/Rocks/Rock Cliffs/Rock Cliff 1.prefab":
     {
         "Name": "Mossy Rock Cliff Big",
-        "Importances": {"center point/object local origin/pivot": "object center horizontally. my base is flat along the Y (up/down) plane.", "Description": "I am 3m wide and 6m tall from my flat base. So put me under the ground a little."}
+        "Info": {
+            "Local origin": "object center horizontally. my base is flat along the Y (up/down) plane.",
+            "Description": "I am 3m wide and 6m tall from my flat base. So put me under the ground a little."
+        }
     },
     "Assets/Proxy Games/Stylized Nature Kit Lite/Prefabs/Rocks/Rock Cliffs/Rock Cliff 4.prefab":
     {
         "Name": "Mossy Rock Cliff Huge",
-        "Importances": {"center point/object local origin/pivot": "object center horizontally. my base is flat along the Y (up/down) plane.", "Description": "This is a huge object. I am 5m tall, wide and 6m tall, 8 m wide (4 in +/- Z), and 14 meters long (7 in the +/- X direction). My base is flat."}
+        "Info": {
+            "Local origin": "object center horizontally. my base is flat along the Y (up/down) plane.",
+            "Description": "This is a huge object. I am 5m tall, wide and 6m tall, 8 m wide (4 in +/- Z), and 14 meters long (7 in the +/- X direction). My base is flat."
+        }
     },
     "Assets/Proxy Games/Stylized Nature Kit Lite/Prefabs/Foliage/Branch/Branch.prefab":
     {
         "Name": "Branch",
-        "Importances": {"center point/origin/pivot": "center/pivot point at center of object", "Description": "Just a straight stick that's about 2m long in the Z direction and 1 m wide in the X direction. Negligibly tall - i rest on the Y plane."}
+        "Info": {
+            "Local origin": "center/pivot point at center of object",
+            "Description": "Just a straight stick that's about 2m long in the Z direction and 1 m wide in the X direction. Negligibly tall - i rest on the Y plane."
+        }
     },
     "Assets/Proxy Games/Stylized Nature Kit Lite/Prefabs/Foliage/Bush/Bush.prefab":
     {
         "Name": "Bush",
-        "Importances": {"center point/object local origin/pivot": "center/pivot point at center of object but at the lowest point of the object in on the Y axis.", "Description": "A 1m radius bush. (relatively big) I lie on top of the Y plane so perhaps move me down a little bit."}
+        "Info": {
+            "Local origin": "center/pivot point at center of object but at the lowest point of the object in on the Y axis.",
+            "Description": "A 1m radius bush. (relatively big) I lie on top of the Y plane so perhaps move me down a little bit."
+        }
     },
     "Assets/Proxy Games/Stylized Nature Kit Lite/Prefabs/Foliage/Flower/Flower.prefab":
     {
         "Name": "Flower",
-        "Importances": {"origin": "at the base of the flower on its Y axis, otherwise centered.", "Description": "1m high flower, neglibibly wide."}
+        "Info": {
+            "Local origin": "at the base of the flower on its Y axis, otherwise centered.",
+            "Description": "1m high flower, neglibibly wide."
+        }
     },
     "Assets/Proxy Games/Stylized Nature Kit Lite/Prefabs/Foliage/Grass/Grass.prefab":
     {
         "Name": "Grass",
-        "Importances": {"object local origin": "at the center of the object - the geometric middle.", "Description": "2m square patch of grass. Flat at its base."}
+        "Info": {
+            "Local origin": "at the center of the object - the geometric middle.",
+            "Description": "2m square patch of grass. Flat at its base."
+        }
     },
     "Assets/Proxy Games/Stylized Nature Kit Lite/Prefabs/Foliage/Log/Log.prefab":
     {
         "Name": "Log",
-        "Importances": {"origin": "in the middle of the log.", "Description": "2m wide along the x axis. Negligibly wide, and rests on the Y plane."}
+        "Info": {
+            "Local origin": "in the middle of the log.",
+            "Description": "2m wide along the x axis. Negligibly wide, and rests on the Y plane."
+        }
     },
     "Assets/Proxy Games/Stylized Nature Kit Lite/Prefabs/Foliage/Mushroom/Mushrooms Patch.prefab":
     {
         "Name": "Mushroom",
-        "Importances": {"object local origin": "at the mushroom's base in its center", "Description": "A small object. <.5m in the X and Z directions. About .3m tall."}
+        "Info": {
+            "Local origin": "at the mushroom's base in its center",
+            "Description": "A small object. <.5m in the X and Z directions. About .3m tall."
+        }
     },
     "Assets/Proxy Games/Stylized Nature Kit Lite/Prefabs/Rocks/Standard Rocks/Standard Rock 1.prefab":
     {
         "Name": "Rock1",
-        "Importances": {"origin": "at the object 3D center midpoint", "Description": "About 1m cubed."}
+        "Info": {
+            "Local origin": "at the object 3D center midpoint",
+            "Description": "About 1m cubed."
+        }
     },
     "Assets/Proxy Games/Stylized Nature Kit Lite/Prefabs/Rocks/Standard Rocks/Standard Rock 2.prefab":
     {
         "Name": "Rock2",
-        "Importances": {"origin": "at the object 3D center midpoint", "Description": "4m along the X axis and 2m along the Z axis. About .5m above and below the Yplane."}
+        "Info": {
+            "Local origin": "at the object 3D center midpoint",
+            "Description": "4m along the X axis and 2m along the Z axis. About .5m above and below the Yplane."
+        }
     },
     "Assets/Proxy Games/Stylized Nature Kit Lite/Prefabs/Rocks/Standard Rocks/Standard Rock 3.prefab":
     {
         "Name": "Rock3",
-        "Importances": {"origin": "at the object 3D center midpoint", "Description": "4m along the X axis and 3m along the Z axis. About 1m above the Y plane."}
+        "Info": {
+            "Local origin": "at the object 3D center midpoint",
+            "Description": "4m along the X axis and 3m along the Z axis. About 1m above the Y plane."
+        }
     },
     "Assets/Proxy Games/Stylized Nature Kit Lite/Prefabs/Rocks/Standard Rocks/Standard Rock 4.prefab":
     {
         "Name": "Rock4",
-        "Importances": {"object local origin": "at the object's XZ center, but the lowest point on the Y axis. the base is flat on the Y plane.", "Description": "2m over the X and Z axes. About 3m tall."}
+        "Info": {
+            "Local origin": "at the object's XZ center, but the lowest point on the Y axis. the base is flat on the Y plane.",
+            "Description": "2m over the X and Z axes. About 3m tall."
+        }
     },
     "Assets/POLYGON city pack/Prefabs/Buildings/Building_A_prefab.prefab":
     {
         "Name": "GrayBuilding36m",
-        "Importances": {"object local origin": "at building's -X side, and 4m -Z", "Dimensions": "31m x 12m x 36m high", "Important points": "There is a set of balconies at at x=0, z=-6, and z=7, 9, 12, 15, 18, 21. And there is a roof at 21m in the z."
+        "Info": {
+            "Local origin": "at building's -X side, and 4m -Z",
+            "Dimensions": "31m x 12m x 36m high",
+            "Important points": "There is a set of balconies at at x=0, z=-6, and z=7, 9, 12, 15, 18, 21. And there is a roof at 21m in the z."
         }
     },
     "Assets/POLYGON city pack/Prefabs/Buildings/Building_C1_prefab.prefab":
     {
         "Name": "BrownBuilding28m",
-        "Importances": {"object local origin": "at building's -X side and -8m -Z, or, the building's side is 8m +Z from the local origin", "Important points":"At 28m there is a roof."}
+        "Info": {
+            "Local origin": "at building's -X side and -8m -Z, or, the building's side is 8m +Z from the local origin",
+            "Important points":"At 28m there is a roof."
+        }
     },
     "Assets/POLYGON city pack/Prefabs/Buildings/Building_H_prefab.prefab":
     {
         "Name": "GreenBuilding18m",
-        "Importances": {"object local origin": "at buildings -X side, -2.5m from the -Z side.", "Dimensions": "12m x 21.5m x 18m", "Important points": "roof at 18m from base."
-        
+        "Info": {
+            "Local origin": "at buildings -X side, -2.5m from the -Z side.",
+            "Dimensions": "12m x 21.5m x 18m",
+            "Important points": "roof at 18m from base."
         }
     },
     "Assets/POLYGON city pack/Prefabs/Buildings/Building_A1_prefab.prefab":
     {
         "Name": "ShortGrayBuilding",
-        "Importances": {"object local origin": "at 3m from the -Z side, on the -X side", "Dimensions": "10m x 10m"
-        
+        "Info": {
+            "Local origin": "at 3m from the -Z side, on the -X side",
+            "Dimensions": "10m x 10m"
         }
     }
 

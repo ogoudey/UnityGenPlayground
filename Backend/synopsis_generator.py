@@ -10,7 +10,7 @@ async def load(assets_info):
     with open("../Resources/synopsis_file.json", "r") as s:
         v = s.read()
         synopses = json.loads(v)
-    print(f"\n* Synopsis file loaded with {len(synopses)} entries")
+    print(f"Synopsis file loaded with {len(synopses)} entries")
     active_synopses = await update_synopsis_file(assets_info, synopses)
     return active_synopses
 
@@ -33,7 +33,7 @@ async def update_synopsis_file(assets_info, synopses):
             synopses[new_synopsis] = asset_path
             print(asset_info)
             print("------>", new_synopsis)
-    print("* Synopsis file up to date.")
+    print("Synopsis file up to date.")
     if updates_needed > 0:
         with open("../Resources/synopsis_file.json", "w") as s:
             output_str = json.dumps(synopses, indent=2)

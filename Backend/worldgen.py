@@ -8,7 +8,7 @@ import assets
 import synopsis_generator
 from enrichment import Phobos
 from coordinator import Checker, Reformer, Coordinator
-from tools import get_ground_matrix, proposeObject, positionObject, placeVRHumanPlayer, createSkybox, createGround, getContactPoints, createSun
+from tools import getGroundMatrix, proposeObject, positionObject, positionVRHumanPlayer, createSkybox, createGround, getContactPoints, createSun
 
 from scene import World
 
@@ -35,22 +35,29 @@ class WorldGen:
             self.coordinator.restriction = restriction
 
     async def load(self):
-        agents.tools.assets_info = assets.load(self.asset_project_path)
-        agents.tools.synopses = await synopsis_generator.load(agents.tools.assets_info)
-        agents.tools.material_leaves =  assets.get_found(".mat", folder=self.asset_project_path)
-        agents.tools.screened_material_leaves = assets.get_found(file_type=".mat", folder=self.asset_project_path / "Assets/Ground Materials")
+        print("\n  ___Asset Catalog___")
+        print("Catalog maps `path => object data`")
+        agents.tools.asset_catalog = assets.load(self.asset_project_path)
+        print("\n  ___Synopsis File___")
+        print("Maps `synopsis of object data => asset path`")
+        agents.tools.synopses = await synopsis_generator.load(agents.tools.asset_catalog)
+        print("\n  ___Special Materials___")
+        print("Curated collections of materials for special objects")
+        agents.tools.skybox_material_leaves =  assets.get_found(".mat", asset_projects=ASSET_LIB_PATH, asset_project_path=str(self.asset_project_path / "Assets/Skybox Materials"))
+        agents.tools.ground_material_leaves = assets.get_found(".mat", asset_projects=ASSET_LIB_PATH, asset_project_path=str(self.asset_project_path / "Assets/Ground Materials"))
         
     
     async def run(self, prompt):
-        print("\n>>>>>> ", prompt)
-        await Runner.run(self.coordinator, prompt, max_turns=20)
+        print("\n>>>>>> ", prompt, "\n")
+        result = await Runner.run(self.coordinator, prompt, max_turns=20)
         agents.tools.unity.done_and_write(str(self.asset_project_path / "Assets" / self.scene_name))
+        print(f"Coordinator response: \n{result.final_output}")
 
 class PhobiaWorldGen(WorldGen):
     
     def __init__(self, asset_project_path: Path = None, scene_name: str = None, restriction: str = None):
         super().__init__(asset_project_path, scene_name, None, restriction)
-        self.coordinator.tools.extend([place_vr_human_player, planSkybox, placeSkybox, planandplaceSun])
+        self.coordinator.tools.extend([positionVRHumanPlayer, createSkybox, createSun])
         self.coordinator.instructions = Coordinator.phobia_v1[MODEL]
         self.patient = Phobos() 
 
@@ -67,7 +74,7 @@ class AcrophobiaWorldGen(PhobiaWorldGen):
     def __init__(self, restricted: bool = False):
         asset_project_path = Path(ASSET_LIB_PATH) / "Acrophobia"
         agents.tools.asset_project = asset_project_path
-        restriction = f"These are the assets the system is restricted to:\n{[key.split('/')[-1] for key in list(agents.tools.assets_info.keys())]}"
+        restriction = f"These are the assets the system is restricted to:\n{[key.split('/')[-1] for key in list(agents.tools.asset_catalog.keys())]}"
         super().__init__(asset_project_path, f"acro_{MODEL}_{random.randint(100, 999)}", restriction)
         self.coordinator.instructions = Coordinator.acrophobia_v1[MODEL]
 

@@ -15,17 +15,18 @@ from obj_building import obj_from_grid
 import assets
 import synopsis_generator
 
-assets_info = {}
+""" Preprocessing depends on type of worldgen. These global variables are set from worldgen.TypeofWorldGen """
+
+asset_catalog = {}
 synopses = {}
-material_leaves = []
-screened_material_leaves = []
+skybox_material_leaves = []
+ground_material_leaves = []
 asset_project = ""
 
 
-""" End preprocessing """
 
 global unity
-global used_assets
+global proposed_objects
     
 MODEL = (os.getenv("MODEL") or "o3-mini").strip() or "o3-mini"
 print(f"\nThe model running is {MODEL}. Use \033[1m\033[36mexport MODEL='<model_name>'\033[0m (Linux) or `setx MODEL '<model-name>'` (Windows) to change it.")
@@ -60,7 +61,7 @@ async def positionSun(length_of_day: float, time_of_day: float, sun_brightness: 
 async def createSkybox(skybox_description: str) -> Designation:
     agent = SkyboxPlanner()
     prompt = {"Object description": skybox_description,
-                "Available assets": material_leaves}
+                "Available assets": skybox_material_leaves}
 
     t = time.time()
     print(agent.name, "started")
@@ -68,25 +69,18 @@ async def createSkybox(skybox_description: str) -> Designation:
     print(agent.name + ":", time.time() - t, "seconds.")
     
     global unity
-    
     object_asset_path = result.final_output.asset_path
-    
-    object_info = {"Name": object_asset_path.split("/")[-1], "Importances": "Nothing to mention"}
+    skybox_name = object_asset_path.split("/")[-1]
+    unity.yaml.proposed_objects[skybox_name] = object_asset_path
 
-    skybox_name = object_info["Name"]
-    
-
-    
-    unity.yaml.used_assets[skybox_name] = object_asset_path
-
-    print(skybox_name, "added to used_assets w path", object_asset_path)
+    print(skybox_name, "added to proposed_objects w path", object_asset_path)
     try:
         unity.add_skybox(skybox_name)
         return f"Successfully added '{skybox_name}' to the scene."
     except Exception:
         print("Error adding skybox...")
         return f"Failed to add '{skybox_name}' to the scene. The name argument must be right."
-    return PlaceableObject(object_name, json.dumps(object_info["Importances"]))
+    return f"Successfully added '{skybox_name}' to the scene."
 
 @function_tool
 async def createSun(description_of_sun_behavior: str) -> str:
@@ -135,42 +129,36 @@ async def createGround(steps_to_ground_construction: str):
     
 
     explanation = result.final_output.explanation_of_heights
-    object_asset_path, unity.ground_matrix = obj_from_grid(result.final_output.grid) # writes objget_ground
+    object_asset_path, unity.ground_matrix = obj_from_grid(str(asset_project / "Assets" / "Manifest"), result.final_output.grid) # writes objget_ground
     print("Ground obj written.")
     texture_path = result.final_output.texture_path
     
     
     ground_name = object_asset_path.split("/")[-1]
         
-    unity.yaml.used_assets[ground_name] = {"Ground": object_asset_path, "Texture": texture_path}
-    print(ground_name, "added to used_assets w path", object_asset_path)
+    unity.yaml.proposed_objects[ground_name] = {"Ground": object_asset_path, "Texture": texture_path}
+    print(ground_name, "added to proposed_objects w path", object_asset_path)
     
     json_location = {"x": 0, "y": 0, "z": 0}
     unity.add_ground(ground_name, json_location)
     # Add new contact points under ground
     print("Back from adding ground to scene.")
-    unity.contact_points[ground_name] = []
-    for i in range(0, len(unity.ground_matrix)):
+    unity.contact_points["Ground"] = []
+    for i in range(len(unity.ground_matrix) -1, -1, -1):
         for j in range(0, len(unity.ground_matrix[i])):
-            contact_point = (j *5, unity.ground_matrix[i][j] + float(json_location["y"]), i * 5)
-            unity.contact_points[ground_name].append(contact_point)
+            contact_point = (j * 5, unity.ground_matrix[i][j] + float(json_location["y"]), 50 - i * 5)
+            unity.contact_points["Ground"].append(contact_point)    
     
-    
-    print(unity.ground_matrix)
-    print("Attempting reformatting...")
-    formatted_rows = []
+    print(unity.ground_matrix, "\n...end ground_matrix.")
+
+    formatted_rows, decimal = [], 1
     for row in unity.ground_matrix:
         # Format each number with fixed width and decimal precision
-        row_str = ", ".join(f"{val:6.{1}f}" for val in row)
+        row_str = ", ".join(f"{val:6.{decimal}f}" for val in row)
         formatted_rows.append(f"  [ {row_str} ]")
 
     # Join all rows with brackets around the entire matrix
-    legible_result = "\n[\n" + ",\n".join(formatted_rows) + "\n]"
-    
-    
-    
-
-    
+    legible_result = "\n[\n" + ",\n".join(formatted_rows) + "\n]" 
     return f"Successfully placed a ground with heightmap {legible_result} in the +X +Z quadrant (these coordinates correspond to the vertices of the ground mesh). The scale of the Xs and Zs is x5. There is no vertical scaling.\n{explanation}"
 
 @function_tool
@@ -178,12 +166,12 @@ async def addTexture(material_of_object_description: str) -> str:
     """
         Returns the path to a material asset that matches the description. May return "None" if there's no match, in which case use that as the texture_path.
     """
-    if len(screened_material_leaves) == 0:
+    if len(ground_material_leaves) == 0:
         print("No textures for ground available! Skipping TexturePlanner.")
         return "None"
     agent = TexturePlanner()
     prompt = {"Material description": material_of_object_description,
-                "Available assets": screened_material_leaves}
+                "Available assets": ground_material_leaves}
     t = time.time()
     print(agent.name, "started")
     result = await Runner.run(agent, json.dumps(prompt))
@@ -222,33 +210,24 @@ async def proposeObject(description: str) -> PlaceableObject:
         print(result.final_output, "is not in synopsis file. (Agent problem - the list of synopses were passed to it.)")
         return f"This agent failed to match the description to an object, maybe because the object does not exist in the available assets."
     print(f"\t----> {object_asset_path}")
-    object_info = asset_lookup(object_asset_path)
-    print("\tLooking up asset path in info sheet...")
-    if object_info == None:
+    print("\tLooking up asset path in catalog...")
+    object_data = asset_lookup(object_asset_path)
+    
+    if object_data == None:
         raise Exception("We're sorry, no assets could be found to fit that description. Please try again with another slightly different object in mind, or leave the desired object out altogether if it is not crucial to the scene.")
-        print(f"\t!!! Cannot find {object_asset_path} in assets_info. Returning None and useless information.")
-        object_name = "UnknownObject" + str(random.randint(100,999))
-        object_info = {"Importances": "Place this object as normal."}
     else:
-        print(f"\tGathered info:\n{object_info}")
-        object_name = object_info["Name"]
-        note_from_planner = result.final_output.note
-        object_info["Importances"]["Note"] = note_from_planner
-    unity.yaml.used_assets[object_name] = str(asset_project / object_asset_path)
-    print(f"\t{object_name} added to used_assets w path {object_asset_path}")
+        print(f"\tGathered info:\n{object_data}")
+        object_name = object_data["Name"]
+
+    unity.yaml.proposed_objects[object_name] = str(asset_project / object_asset_path)
+    #print(f"\t{object_name} added to proposed_objects w path {object_asset_path}")
+
     json_blob = {
-        "Name": object_name,
-        "Info": {
-            "Local origin": object_info["Importances"]["Origin"],
-            "Dimensions": object_info["Importances"]["Dimensions"],
-        }
+        "Object": object_data,
+        "Note": result.final_output.note
     }
-    if "Extra" in list(object_info["Importances"].keys()):
-        json_blob["Info"]["Extra"] = object_info["Importances"]["Extra"]
 
     return json_blob
-
-    return PlaceableObject(object_name, json.dumps(object_info["Importances"]))
 
 @function_tool
 async def positionObject(object_name: str, placement_of_object_origin: str, rotation: str, explanation: str) -> str:
@@ -263,19 +242,19 @@ async def positionObject(object_name: str, placement_of_object_origin: str, rota
             explanation: A human-readable explanation of the placement(s). Include in your explanation the specific shape of the object, as contained in the PlaceableObject that you've planned. For most placements, its good practice to refer to a contact point from get_contact_points. If the object can't be placed on the ground, edit the ground with planandplaceGround."
     """
     
-    print(f"Placing '{object_name}' ---> {placement_of_object_origin} with rotation(s) {rotation}")
+    print(f"Positioning '{object_name}' ---> {placement_of_object_origin} with rotation(s) {rotation}")
     global unity
     try:
-        assert object_name in unity.yaml.used_assets
+        assert object_name in unity.yaml.proposed_objects
     except AssertionError:
-        print(f"Object {object_name} is not showing up in {unity.yaml.used_assets}")
+        print(f"Object {object_name} is not showing up in {unity.yaml.proposed_objects}")
         return f"The object {object_name} has not been planned. Please call planObject before placeObject and refer to the planned object in the arguments of placeObject."
-    print(f"Why this placement?:\n\t{explanation}")
+    print(f"Why this position?:\n\t{explanation}")
     try:
         json_location = json.loads(placement_of_object_origin)
 
     except ValueError:
-        print("Error loading given placement_of_centerpoint into JSON")
+        print("Error loading given position into JSON")
         return f"Failed to add object '{object_name}' to location {placement_of_object_origin} in the scene (json.loads() error). Make sure to pass a correct something that can be loaded with json.loads() into JSON."
     try:
         json_rotation = json.loads(rotation)
@@ -301,6 +280,8 @@ async def positionObject(object_name: str, placement_of_object_origin: str, rota
     failed_placements = [] 
     max_len = len(objects_to_sequence)
     #print(objects_to_sequence)
+    object_data = asset_catalog[unity.yaml.proposed_objects[object_name].replace(str(asset_project) + "/", "")]
+
     while len(objects_to_sequence) > 0:
         json_location, json_rotation = objects_to_sequence.pop(0)
         print(object_name, "-->", (json_location, json_rotation))
@@ -313,6 +294,7 @@ async def positionObject(object_name: str, placement_of_object_origin: str, rota
                     
                     
             unity.add_prefab(object_name, json_location, json_rotation)
+            unity.add_data(object_data)
 
         except Exception as e:
             exc_type, exc_obj, exc_tb = sys.exc_info()
@@ -326,13 +308,8 @@ async def positionObject(object_name: str, placement_of_object_origin: str, rota
     if len(failed_placements) == max_len:
         return f"Failed to place one or all of {object_name}. Failed placements:\n{failed_placements}"
     response = f"Added object(s) to the scene. Recall the information of {object_name} at the placed point(s)."
-    print(unity.yaml.used_assets)
-    print(unity.yaml.used_assets[object_name])
-    if "Post-placement" in list(assets_info[unity.yaml.used_assets[object_name].replace(str(asset_project), "")].keys()):
-        print(f"Post-placement data: {assets_info[unity.yaml.used_assets[object_name]]['Post-placement']}")
-        response += assets_info[unity.yaml.used_assets[object_name]]["Post-placement"]
-    else:
-        print(f"No post-placement data for {object_name}")
+    print("Proposed objects:", unity.yaml.proposed_objects)
+    print("Proposed objects[positioned object]:", unity.yaml.proposed_objects[object_name])
 
     return response
     
@@ -342,7 +319,7 @@ def positionVRHumanPlayer(transform: str, rotation: str = "{\"x\": 75, \"y\": 10
     This function places the VR headset of the human player in the scene. It places the camera/head, so make it 2m above the ground below them. The player can walk around 1m from where they are placed.
     transform: Must be a JSON-encoded string. Example:
         "{\"x\": 75, \"y\": 10, \"z\": 70}"
-    rotation: Must be a JSON-encoded string (only use \" around the variables). Example:
+    rotation: Must be a JSON-encoded string (only use \" around the variables). All axes at 0 means the player faces dead ahead in the +X direction. Example:
         "{\"x\": 90, \"y\": 0, \"z\": 45}" 
     explanation: A human-readable explanation of the placement(s). Example: "I put the water here to be above the height y=0.5 along the riverbed", or "I put a patch of trees in this section". Be sure to explain the height with regard to the contact points and the open spaces of the heightmap."
 
@@ -369,18 +346,20 @@ def positionVRHumanPlayer(transform: str, rotation: str = "{\"x\": 75, \"y\": 10
 @function_tool
 async def getContactPoints() -> str:
     """
-        Returns the points in the scene which are available to place objects on.
+        Returns the points in the scene which are available to place objects on. These points are the vertices of the ground.
     """
     global unity
+    print(unity.contact_points)
+    print("...end contact points")
     return json.dumps(unity.contact_points)
 
     
 """ Helpers """
 def asset_lookup(asset_path: str) -> dict:
-    if asset_path in list(assets_info.keys()):
-        return assets_info[asset_path]
+    if asset_path in list(asset_catalog.keys()):
+        return asset_catalog[asset_path]
     else:
         #return {"Name": "unknown_object"+str(random.randint(100, 999)), "Importances": None}
-        print(asset_path, "not in", list(assets_info.keys()))
+        print(asset_path, "not in", list(asset_catalog.keys()))
         return None
         raise Exception("Asset is unavailable. Please choose an another asset.")
