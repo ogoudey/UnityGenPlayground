@@ -31,7 +31,7 @@ You are responsible for checking the placed assets in a Unity scene. You will be
         super().__init__(
             name=name or f"Checker{random.randint(100,999)}",
             instructions=instructions or Checker.instructions,
-            tools=[get_ground_matrix],
+            tools=[getGroundMatrix],
             output_type=Check,
             model=MODEL,
         )
@@ -46,7 +46,7 @@ You must orchestrate tool usage in the following structured order:
 
 1. SKYBOX: The first couple steps are simple. First, call createSkybox once to describe an appropriate skybox. 
 2. SUN: Call createSun to describe an appropriate Sun.
-3. GROUND: Call createGround to design the terrain/heightmap. This is an initial guess for the terrain of the ground. In further steps, you may call createGround again to fit the objects that need the terrain to conform to it. Try to make it natural.
+3. GROUND: Call createGround to design the terrain/heightmap. This is an initial guess for the terrain of the /\. In further steps, you may call createGround again to fit the objects that need the terrain to conform to it. Try to make it natural.
 4. OBJECTS: After the ground is placed, you will begin setting the objects of the scene. To do this, propose each (type of) object one by one with proposeObject. For the proposeObject call:
    - Do not plan multiple objects in a single call. Do not plan anything like a "cluster" of objects.
    - Do not include placement/location information, only stuff about the size, theme, type, etc.

@@ -77,71 +77,27 @@ class TexturePlanner(Agent):
 #                2. Make in the -X, +Z direction the base of the house. 4m / scale of 5 is .8 or 1 grid cell. So make (1, 2), (2, 2), and (2, 1) all height 2.5 too.
 #                3. Make the points surrounding the indent a sort of gradient. Have them all close to 2.5, and spread that out, without affecting other landmarks. 
   
-class GroundPlanner(Agent):
-    instructions="""Return a heightmap for the ground as an 11x11 grid of floats. 
+class GroundCreator(Agent):
+    instructions_v3={"o4-mini":"""Return a heightmap for the ground as an grid of floats, given the input plan, resolution, and scale. 
 Rules:
-- Write the grid directly as 11 rows of 11 numbers each, separated by spaces. Do not add code, JSON, or extra symbols.
-- Each number is the ground height in meters. A height of 0 means flat ground at sea level. 
-- The grid covers 50m x 50m (each cell is 5m x 5m). 
-- Keep human scale: a human is ~2m tall, so do not make cliffs or holes taller/deeper than 10m unless the prompt requires it. 
-- Shape the terrain according to the prompt, and form around the placed objects (if any).
-- Use the planTexture tool to set the texture/material of the ground (include the path in what you return). 
-- After the grid, add one concise sentence explaining the main heightmap features to guide object placement. 
-
-Output format must follow GroundData:
-- grid: the 11x11 float grid as plain text. 
-- texture_path: the path to the asset of the material for this ground, as returned by the planTexture tool.
-- explanation_of_heights: the one-sentence explanation.
-"""
-    instructions_v2="""Return a heightmap for the ground as an 11x11 grid of floats, given the input plan. 
-Rules:
-- Write the grid directly as 11 rows of 11 numbers each, separated by spaces. Do not add code, JSON, or extra symbols.  Think of the lower-right cell as 0,0
+- Write the grid directly as <resolution> rows of <resolution> numbers each, separated by spaces. Do not add code, JSON, or extra symbols.  Think of the lower-left cell as 0,0
 - Each number is the ground height in meters. Suppose that 0 is sea level. 
-- The grid covers 50m x 50m (each cell is 5m x 5m) and will be placed in the -X, +Z quadrant. So, the XYZ coordinates (-2, 0, 2) fall in the first cell.
-- Keep human scale: a human is ~2m tall, so do not make cliffs or holes taller/deeper than 10m unless the prompt requires it. The height is not scaled, only the horizontal will be scaled. A value of 2 means 2m high.
-- Shape the terrain according to the prompt, and form around the placed objects (if any).
-- Use the planTexture tool to set the texture/material of the ground (include the path in what you return). 
-- After the grid, add an explanation of the landscape and its features. Reference explicitly the input description
-
-Output format must follow GroundData:
-- grid: the 11x11 float grid as plain text. 
-- texture_path: the path to the asset of the material for this ground, as returned by the planTexture tool.
-- explanation_of_heights: the one-sentence explanation.
-"""
-    instructions_v3={"o3-mini":"""Return a heightmap for the ground as an 11x11 grid of floats, given the input plan. 
-Rules:
-- Write the grid directly as 11 rows of 11 numbers each, separated by spaces. Do not add code, JSON, or extra symbols.  Think of the lower-right cell as 0,0
-- Each number is the ground height in meters. Suppose that 0 is sea level. 
-- The grid covers 50m x 50m (each cell is 5m x 5m) and will be placed in the +X, +Z quadrant. So, the XYZ coordinates (2, 0, 2) fall in the first cell.
-- Keep human scale: a human is ~2m tall, so do not make cliffs or holes taller/deeper than 10m unless the prompt requires it. The height is not scaled, only the horizontal will be scaled. A value of 2 means 2m high.
-- Shape the terrain according to the prompt, and form around the placed objects (if any).
-- Use the planTexture tool to set the texture/material of the ground (include the path in what you return). 
-- After the grid, add an explanation of the landscape and its features. Reference explicitly the input description
-
-Output format must follow GroundData:
-- grid: the 11x11 float grid as plain text. 
-- texture_path: the path to the asset of the material for this ground, as returned by the planTexture tool.
-- explanation_of_heights: the one-sentence explanation.
-""", "o4-mini":"""Return a heightmap for the ground as an 11x11 grid of floats, given the input plan. 
-Rules:
-- Write the grid directly as 11 rows of 11 numbers each, separated by spaces. Do not add code, JSON, or extra symbols.  Think of the lower-right cell as 0,0
-- Each number is the ground height in meters. Suppose that 0 is sea level. 
-- The grid covers 50m x 50m (each cell is 5m x 5m) and will be placed in the +X, +Z quadrant. So, the XYZ coordinates (2, 0, 2) fall in the first cell.
-- Keep human scale: a human is ~2m tall, so do not make cliffs or holes taller/deeper than 10m unless the prompt requires it. The height is not scaled, only the horizontal will be scaled. A value of 2 means 2m high.
+- The grid covers (<resolution> * <scale> - <scale>) meters by (<resolution> * <scale> - <scale>) meters (each cell is <scale> x <scale>) and will be placed in the +X, +Z quadrant. So, the XYZ coordinates (2, 0, 2) fall in the first cell.
+- Keep human scale: a human is ~2m tall, so do not make cliffs or holes taller/deeper than 10m unless the prompt requires it. The height is not scaled, only the horizontal will be scaled. A height value of 2 means 2m high.
 - Shape the terrain according to the prompt, and form around the placed objects (if any).
 - Use the planTexture tool to set the texture/material of the ground (include the path in what you return). 
 - After the grid, add an explanation of the landscape and its features. Reference explicitly the input description but don't refer to indices. Put your explanation in terms of meters, not indices. Give abundant information about the ground in terms of meters.
 
 Output format must follow GroundData:
-- grid: the 11x11 float grid as plain text. 
+- grid: the float grid as plain text sized according to the resolution. 
 - texture_path: the path to the asset of the material for this ground, as returned by the planTexture tool.
-- explanation_of_heights: the one-sentence explanation.
-""", "gpt-5-mini":""}
+- explanation_of_heights: an explanation in around one sentence.
+"""}
     
     def __init__(self, tools, name=None, instructions=None):
         super().__init__(
             name=name or f"GroundPlanner{random.randint(100,999)}",
-            instructions=instructions or GroundPlanner.instructions_v3[MODEL],
+            instructions=instructions or GroundCreator.instructions_v3[MODEL],
             tools=tools,
             model=MODEL,
             output_type=GroundData

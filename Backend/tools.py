@@ -1,19 +1,15 @@
 import os
 import sys
-import random
 import time
 import json
-from dataclasses import dataclass, asdict
+from dataclasses import dataclass
 
 from agents import function_tool, Runner
 from pydantic import BaseModel
 
-from subagents import ObjectPlanner, GroundPlanner, SkyboxPlanner, TexturePlanner, SunPlanner
+from subagents import ObjectPlanner, GroundCreator, SkyboxPlanner, TexturePlanner, SunPlanner
 
 from obj_building import obj_from_grid
-
-import assets
-import synopsis_generator
 
 """ Preprocessing depends on type of worldgen. These global variables are set from worldgen.TypeofWorldGen """
 
@@ -100,26 +96,27 @@ async def createSun(description_of_sun_behavior: str) -> str:
     return f"Successfully placed the Sun in the scene"
 
 @function_tool
-async def createGround(steps_to_ground_construction: str):
+async def createGround(steps_to_ground_construction: str, resolution: int, scale: float):
     """ 
-        Calls an agent to construct the ground you give a plan for. The agent can only generate a heightmap in the +X, +Z plane. Be somewhat general. It will literally generate an 11x11 grid (vertices), scaled up by 5 to be a 50m x 50m topology (you don't need to mention this to them).  It cannot be much more precise than that, and it cannot go outside those bounds. 
-        steps_to_ground_construction: a plan of how the ground planner should construct the ground. (0, 0, 0) is 0m, 0m, 0m. (Example (a string):
+        Calls an agent to construct the ground you give a plan for. The agent can only generate a heightmap in the +X, +Z plane. Be somewhat general. It will literally generate a <resolution> by <resolution> grid (the vertices), scaled up by <scale> to be a (<resolution> * <scale> - <scale>) meters by (<resolution> * <scale> - <scale>) meters topology.
+        steps_to_ground_construction: a plan of how the ground creator should construct the ground. (0, 0, 0) is 0m, 0m, 0m. (Example (a string):
             To make a volcano:
                 1. Form the mountain
                 2. Make the crater in the top.
-        Another example involving remaking:
+            Another example involving remaking:
             Make room for a house with a flat 4mx4m base at (5, 2.5, 5)
                 1. Since the horizonal scale is 5, turn the 5, 5 into coordinates 1,1. Make this coordinate have height 2.5
                 2. Make in the -X, +Z direction the base of the house. 4m / scale of 5 is .8 or 1 grid cell. So make (1, 2), (2, 2), and (2, 1) all height 2.5 too.
-                3. Make the points surrounding the indent a sort of gradient. Have them all close to 2.5, and spread that out, without affecting other landmarks. 
+                3. Make the points surrounding the indent a sort of gradient. Have them all close to 2.5, and spread that out, without affecting other landmarks.
+        resolution: an integer that is the number of vertices along one edge of the ground mesh. The ground will be a square. (Example: 11)
+        scale: a float that is the number of meters between each vertex. (Example: 5)
                 
     This Tool can be called multiple times to reshape the ground, in order to fit the objects that are static or immalleable.
     """
-    # Was that docstring too specific?
 
-    agent = GroundPlanner(tools=[addTexture])
+    agent = GroundCreator(tools=[addTexture])
     global unity
-    prompt = {"Steps to plan": steps_to_ground_construction}
+    prompt = {"Steps to plan": steps_to_ground_construction, "Resolution": resolution, "Scale": scale}
     
     if len(unity.ground_matrix) > 0:
         prompt["Existing ground to edit"] = unity.ground_matrix
@@ -188,7 +185,7 @@ async def addTexture(material_of_object_description: str) -> str:
 
 
 @function_tool
-async def proposeObject(description: str) -> PlaceableObject:
+async def proposeObject(description: str):
     """ 
         Args:
             description: Some text describing that the object should be like, refering to a singular object that's likely to be selected from a common asset library. For example, "water", "a rock", "a house", etc.
@@ -233,32 +230,32 @@ async def proposeObject(description: str) -> PlaceableObject:
     return json_blob
 
 @function_tool
-async def positionObject(object_name: str, placement_of_object_origin: str, rotation: str, explanation: str) -> str:
+async def positionObject(object_name: str, position_of_object_origin: str, rotation: str, explanation: str) -> str:
     """
-        This function permits you to place the PlannedObject in the scene. You may place a single instance of the object or multiple ones, but always refer to the object you've planned. You cannot scale the object. 
+        This function permits you to place a proposed object in the scene. You may place a single instance of the object or multiple ones, but always refer to the object you've planned. You cannot scale the object. 
         Args:
-            object_name: The name of the object you have planned, PlaceableObject.name. (Must match exactly that name.)
-            placement_of_object_origin: Must be a JSON-encoded string. OPTIONALLY, can be a list of such strings in order to place a sequence objects or scatter them. Examples:
+            object_name: The name of the object you have proposed. (Must match exactly that name.)
+            position_of_object_origin: Must be a JSON-encoded string. OPTIONALLY, can be a list of such strings in order to place a sequence objects or scatter them. Examples:
                 "{\"x\": 75, \"y\": 2.8, \"z\": 70}", OR "[{\"x\": 73, \"y\": 10, \"z\": 20}, {\"x\": 50, \"y\": 1.2, \"z\": 72}, ...]"
             rotation: Must be a JSON-encoded string. OPTIONALLY, can be a list of such strings in order to place a sequence objects. Example:
                 "{\"x\": 90, \"y\": 0, \"z\": 45}", "[{\"x\": 90, \"y\": 0, \"z\": 45}, {\"x\": 0, \"y\": 0, \"z\": 270}]"
             explanation: A human-readable explanation of the placement(s). Include in your explanation the specific shape of the object, as contained in the PlaceableObject that you've planned. For most placements, its good practice to refer to a contact point from get_contact_points. If the object can't be placed on the ground, edit the ground with planandplaceGround."
     """
     
-    print(f"Positioning '{object_name}' ---> {placement_of_object_origin} with rotation(s) {rotation}")
+    print(f"Positioning '{object_name}' ---> {position_of_object_origin} with rotation(s) {rotation}")
     global unity
     try:
         assert object_name in unity.yaml.proposed_objects
     except AssertionError:
         print(f"Object {object_name} is not showing up in {unity.yaml.proposed_objects}")
-        return f"The object {object_name} has not been planned. Please call planObject before placeObject and refer to the planned object in the arguments of placeObject."
+        return f"The object {object_name} has not been planned. Please call proposeObject before placeObject and refer to the planned object in the arguments of placeObject."
     print(f"Why this position?:\n\t{explanation}")
     try:
-        json_location = json.loads(placement_of_object_origin)
+        json_location = json.loads(position_of_object_origin)
 
     except ValueError:
         print("Error loading given position into JSON")
-        return f"Failed to add object '{object_name}' to location {placement_of_object_origin} in the scene (json.loads() error). Make sure to pass a correct something that can be loaded with json.loads() into JSON."
+        return f"Failed to add object '{object_name}' to location {position_of_object_origin} in the scene (json.loads() error). Make sure to pass a correct something that can be loaded with json.loads() into JSON."
     try:
         json_rotation = json.loads(rotation)
     except ValueError:
