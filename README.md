@@ -51,7 +51,7 @@ python3 main.py test_acro_<skycraper, bridge, mountain, platform, etc.>
 **Notes**: Still getting the orientation of bulky objects wrong.
  
 ## Installation
-Put contents of this repo in a Unity project folder.
+First clone this repo to a new folder. Then, in Unity Hub, make a new project in the `AcroGen/Resources/Asset Projects/` folder called `Acrophobia`. Then move `asset catalog.json` into that project folder. 
 
 Then do (Linux):
 ```
@@ -90,3 +90,4 @@ Used assets:
 
 ### Note:
 Change Quality / Rendering / Rendering Pipeline Asset to None
+

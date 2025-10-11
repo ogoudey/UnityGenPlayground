@@ -129,7 +129,14 @@ async def createGround(steps_to_ground_construction: str, resolution: int, scale
     
 
     explanation = result.final_output.explanation_of_heights
-    object_asset_path, unity.ground_matrix = obj_from_grid(str(asset_project / "Assets" / "Manifest"), result.final_output.grid) # writes objget_ground
+    if backdrop:
+        # get perimeter
+        # get imprint heightmap
+        # set horizon
+        # obj_from_grid( grid + perimeter, horizon = True)
+
+    else:
+        object_asset_path, unity.ground_matrix = obj_from_grid(str(asset_project / "Assets" / "Manifest"), result.final_output.grid) # writes objget_ground
     print("Ground obj written.")
     texture_path = result.final_output.texture_path
     
@@ -160,6 +167,14 @@ async def createGround(steps_to_ground_construction: str, resolution: int, scale
     # Join all rows with brackets around the entire matrix
     legible_result = "\n[\n" + ",\n".join(formatted_rows) + "\n]" 
     return f"Successfully placed a ground with heightmap {legible_result} in the +X +Z quadrant (these coordinates correspond to the vertices of the ground mesh). The scale of the Xs and Zs is x5. There is no vertical scaling.\n{explanation}"
+
+@function_tool
+async def createBackdrop(asset_name_list: list) -> str:
+    """
+        If the world extends to infinity past the grid, this function fills in that (infinite) plain with the assets listed
+    """
+    # Start with all one type of noise...
+    procedural(asset_name_list) # adds proposed objects to world randomly up to a limit (camera fov)
 
 @function_tool
 async def addTexture(material_of_object_description: str) -> str:
@@ -327,6 +342,9 @@ def positionVRHumanPlayer(transform: str, rotation: str = "{\"x\": 75, \"y\": 10
     """
     print(f"Placing human VR player ---> location {transform}, rotation {rotation}")
     print(f"Why this placement?:\n\t{explanation}")
+
+    if os.environ('NO_VR'):
+        
 
     global unity
     try:
