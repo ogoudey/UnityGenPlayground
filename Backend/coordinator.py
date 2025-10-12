@@ -39,8 +39,6 @@ You are responsible for checking the placed assets in a Unity scene. You will be
 class Coordinator(Agent):
     phobia_v1={"o4-mini":"""Whatever a universal scarer might be"""}
 
-    # TODO Embellish Ground prompt
-    # TODO What is the best way to describe an origin of an object?
     acrophobia_v1={"o4-mini":"""You are the Coordinator agent responsible for generating a Unity scene that matches the user prompt. +X is "East"/to the right, +Y is up, and +Z "North".
 You must orchestrate tool usage in the following structured order:
 

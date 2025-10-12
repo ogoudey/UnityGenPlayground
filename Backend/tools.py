@@ -7,9 +7,9 @@ from dataclasses import dataclass
 from agents import function_tool, Runner
 from pydantic import BaseModel
 
-from subagents import ObjectPlanner, GroundCreator, SkyboxPlanner, TexturePlanner, SunPlanner
+from subagents import ObjectPlanner, GroundCreator, SkyboxPlanner, TexturePlanner, SunPlanner, GroundImprinter
 
-from obj_building import obj_from_grid
+import obj_building
 
 """ Preprocessing depends on type of worldgen. These global variables are set from worldgen.TypeofWorldGen """
 
@@ -113,8 +113,10 @@ async def createGround(steps_to_ground_construction: str, resolution: int, scale
                 
     This Tool can be called multiple times to reshape the ground, in order to fit the objects that are static or immalleable.
     """
+    set_perimeter_to_0=True
+    horizon_plain = True
 
-    agent = GroundCreator(tools=[addTexture])
+    agent = GroundCreator(tools=[addTexture], set_perimeter_to_0=set_perimeter_to_0)
     global unity
     prompt = {"Steps to plan": steps_to_ground_construction, "Resolution": resolution, "Scale": scale}
     
@@ -127,16 +129,13 @@ async def createGround(steps_to_ground_construction: str, resolution: int, scale
     result = await Runner.run(agent, json.dumps(prompt))
     print(agent.name + ":", time.time() - t, "seconds.")
     
-
+    grid = result.final_output.grid
     explanation = result.final_output.explanation_of_heights
-    if backdrop:
-        # get perimeter
-        # get imprint heightmap
-        # set horizon
-        # obj_from_grid( grid + perimeter, horizon = True)
+    if horizon_plain and set_perimeter_to_0:
+        object_asset_path, unity.ground_matrix = obj_building.obj_from_grid(str(asset_project / "Assets" / "Manifest"), grid, scale, extend_to_big=True)
 
     else:
-        object_asset_path, unity.ground_matrix = obj_from_grid(str(asset_project / "Assets" / "Manifest"), result.final_output.grid) # writes objget_ground
+        object_asset_path, unity.ground_matrix = obj_building.obj_from_grid(str(asset_project / "Assets" / "Manifest"), scale, grid) # writes objget_ground
     print("Ground obj written.")
     texture_path = result.final_output.texture_path
     
