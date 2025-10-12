@@ -98,18 +98,18 @@ async def createSun(description_of_sun_behavior: str) -> str:
 @function_tool
 async def createGround(steps_to_ground_construction: str, resolution: int, scale: float):
     """ 
-        Calls an agent to construct the ground you give a plan for. The agent can only generate a heightmap in the +X, +Z plane. Be somewhat general. It will literally generate a <resolution> by <resolution> grid (the vertices), scaled up by <scale> to be a (<resolution> * <scale> - <scale>) meters by (<resolution> * <scale> - <scale>) meters topology.
+        Calls an agent to construct the ground you give a plan for. The agent can only generate a heightmap in the +X, +Z plane. Be somewhat general. It will literally generate a <resolution> by <resolution> grid (the vertices), scaled up by <scale> to be a (<resolution> * <scale> - <scale>) meters by (<resolution> * <scale> - <scale>) meters topology. The perimeter of the grid must be at height 0. Finer resolution compromises performance, while scale compromises realism - keep this in mind.
         steps_to_ground_construction: a plan of how the ground creator should construct the ground. (0, 0, 0) is 0m, 0m, 0m. (Example (a string):
             To make a volcano:
                 1. Form the mountain
                 2. Make the crater in the top.
             Another example involving remaking:
             Make room for a house with a flat 4mx4m base at (5, 2.5, 5)
-                1. Since the horizonal scale is 5, turn the 5, 5 into coordinates 1,1. Make this coordinate have height 2.5
-                2. Make in the -X, +Z direction the base of the house. 4m / scale of 5 is .8 or 1 grid cell. So make (1, 2), (2, 2), and (2, 1) all height 2.5 too.
+                1. Since the horizonal scale is 5.0, turn the 5, 5 into coordinates 1,1. Make this coordinate have height 2.5
+                2. Make in the -X, +Z direction the base of the house. 4m / scale of 5.0 is .8 or 1 grid cell. So make (1, 2), (2, 2), and (2, 1) all height 2.5 too.
                 3. Make the points surrounding the indent a sort of gradient. Have them all close to 2.5, and spread that out, without affecting other landmarks.
         resolution: an integer that is the number of vertices along one edge of the ground mesh. The ground will be a square. (Example: 11)
-        scale: a float that is the number of meters between each vertex. (Example: 5)
+        scale: a float that is the number of meters between each vertex. (Example: 5.0)
                 
     This Tool can be called multiple times to reshape the ground, in order to fit the objects that are static or immalleable.
     """
@@ -122,6 +122,7 @@ async def createGround(steps_to_ground_construction: str, resolution: int, scale
     
     if len(unity.ground_matrix) > 0:
         prompt["Existing ground to edit"] = unity.ground_matrix
+        prompt["Existing ground scale"] = unity.ground_scale
     
     t = time.time()
     print(agent.name, "started")
@@ -135,7 +136,9 @@ async def createGround(steps_to_ground_construction: str, resolution: int, scale
         object_asset_path, unity.ground_matrix = obj_building.obj_from_grid(str(asset_project / "Assets" / "Manifest"), grid, scale, extend_to_big=True)
 
     else:
-        object_asset_path, unity.ground_matrix = obj_building.obj_from_grid(str(asset_project / "Assets" / "Manifest"), scale, grid) # writes objget_ground
+        object_asset_path, unity.ground_matrix = obj_building.obj_from_grid(str(asset_project / "Assets" / "Manifest"), grid, scale) # writes objget_ground
+
+    unity.ground_scale = scale
     print("Ground obj written.")
     texture_path = result.final_output.texture_path
     
@@ -168,10 +171,12 @@ async def createGround(steps_to_ground_construction: str, resolution: int, scale
     return f"Successfully placed a ground with heightmap {legible_result} in the +X +Z quadrant (these coordinates correspond to the vertices of the ground mesh). The scale of the Xs and Zs is x5. There is no vertical scaling.\n{explanation}"
 
 @function_tool
-async def createBackdrop(asset_name_list: list) -> str:
+async def populateHorizon(asset_name_list: list) -> str:
     """
-        If the world extends to infinity past the grid, this function fills in that (infinite) plain with the assets listed
+        Beyond the heightmap and region that you've added objects to, there is a background world that extends to the horizon. You are not required to position objects in this zone. Rather, pass a list of objects that you've already proposed to this tool, and some procedure will automatically populate this zone outside of the important region you've designed. Therefore, pass objects that would realistically be 'randomly' generated.
     """
+    # I'd like to have a random 2D coordinate generator that excludes numbers that fall within the indices of unity.ground_matrix * 
+    print("Assets to populate horizon with:", asset_name_list)
     # Start with all one type of noise...
     procedural(asset_name_list) # adds proposed objects to world randomly up to a limit (camera fov)
 

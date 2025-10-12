@@ -9,6 +9,7 @@ class World:
         self.yaml = yamling.YAML()
         
         self.ground_matrix = []
+        self.ground_scale = 5.0
         self.contact_points = dict()
         self.objects = []
         self.ground = None

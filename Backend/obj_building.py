@@ -72,7 +72,7 @@ def facify(matrix, extended_to_big=False):
     
     return lines, visited
 
-def obj_from_grid(obj_path: str, grid: str = default_grid, scale=5, extend_to_big=True):
+def obj_from_grid(obj_path: str, grid: str = default_grid, scale=5.0, extend_to_big=True):
     location = {"x": 0.0, "y": 0.0, "z": 0.0}
     matrix = []
     obj_str = ""
@@ -160,7 +160,9 @@ def obj_from_grid(obj_path: str, grid: str = default_grid, scale=5, extend_to_bi
                 obj_str += f"vt {u:.6f} {v:.6f}\n"
                 
             except Exception:
-                print("Could not add vt")         
+                print("Could not add vt")    
+
+    ## UVs not done - TODO     
     obj_str += f"vt {u:.6f} {v:.6f}\n"
     obj_str += f"vt {u:.6f} {v:.6f}\n"
     obj_str += f"vt {u:.6f} {v:.6f}\n"
