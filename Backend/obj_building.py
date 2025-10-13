@@ -13,6 +13,7 @@ default_grid = """0 0 0 0 0 0 0 0 0 0 0
 0 0 0 0 0 0 0 0 0 0 0
 0 0 0 0 0 0 0 0 0 0 0"""
 
+pad = 1000
 
 def make_quads(matrix, x, y, obj_str, visited=[]):
     x_per_row = len(matrix)
@@ -80,7 +81,7 @@ def obj_from_grid(obj_path: str, grid: str = default_grid, scale=5.0, extend_to_
     dimension = scale*len(lines) - scale
     print(grid)
     
-    pad = 1000
+    
 
     # regions 1-3
     obj_str += f"v {pad} {0.0} {pad + dimension}\n" 

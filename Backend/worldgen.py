@@ -8,7 +8,7 @@ import assets
 import synopsis_generator
 from enrichment import Phobos
 from coordinator import Checker, Reformer, Coordinator
-from tools import getGroundMatrix, proposeObject, positionObject, positionVRHumanPlayer, createSkybox, createGround, getContactPoints, createSun
+from tools import getGroundMatrix, proposeObject, positionObject, positionVRHumanPlayer, createSkybox, createGround, getContactPoints, createSun, populateHorizon
 
 from scene import World
 
@@ -57,7 +57,7 @@ class PhobiaWorldGen(WorldGen):
     
     def __init__(self, asset_project_path: Path = None, scene_name: str = None, restriction: str = None):
         super().__init__(asset_project_path, scene_name, None, restriction)
-        self.coordinator.tools.extend([positionVRHumanPlayer, createSkybox, createSun])
+        self.coordinator.tools.extend([positionVRHumanPlayer, createGround, createSkybox, createSun, populateHorizon])
         self.coordinator.instructions = Coordinator.phobia_v1[MODEL]
         self.patient = Phobos() 
 
@@ -82,5 +82,10 @@ class AcrophobiaWorldGen(PhobiaWorldGen):
         print("Getting prompt from patient...")
         result = await Runner.run(self.patient, self.patient.acrophobia)
         return result.final_output       
+    
+    def regiment(self):
+        # NOT IMPLEMENTED YET
+        # starts agent that calls run().as_tool calls multiple self
+        pass
         
 

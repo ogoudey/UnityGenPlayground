@@ -6,7 +6,7 @@ from pydantic import BaseModel
 
 
 import tools
-from tools import getGroundMatrix, proposeObject, positionObject, positionVRHumanPlayer, createSkybox, createGround, getContactPoints, createSun
+from tools import getGroundMatrix, proposeObject, positionObject, positionVRHumanPlayer, createSkybox, createGround, getContactPoints, createSun, populateHorizon
 
 MODEL = (os.getenv("MODEL") or "o4-mini").strip() or "o4-mini"
     
@@ -83,7 +83,7 @@ Your role is to reliably build a coherent, grounded Unity world from the descrip
         super().__init__(
             name=name or f"Coordinator{random.randint(100,999)}",
             instructions=instructions or Coordinator.acrophobia_v1[MODEL],
-            tools=tools or [getContactPoints, createGround, proposeObject, positionObject],
+            tools=tools or [getContactPoints, proposeObject, positionObject],
             model=MODEL,
         )
         self.restriction = None

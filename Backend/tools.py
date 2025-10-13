@@ -10,7 +10,7 @@ from pydantic import BaseModel
 from subagents import ObjectPlanner, GroundCreator, SkyboxPlanner, TexturePlanner, SunPlanner, GroundImprinter
 
 import obj_building
-
+import procedural
 """ Preprocessing depends on type of worldgen. These global variables are set from worldgen.TypeofWorldGen """
 
 asset_catalog = {}
@@ -170,15 +170,25 @@ async def createGround(steps_to_ground_construction: str, resolution: int, scale
     legible_result = "\n[\n" + ",\n".join(formatted_rows) + "\n]" 
     return f"Successfully placed a ground with heightmap {legible_result} in the +X +Z quadrant (these coordinates correspond to the vertices of the ground mesh). The scale of the Xs and Zs is x5. There is no vertical scaling.\n{explanation}"
 
-@function_tool
-async def populateHorizon(asset_name_list: list) -> str:
+#@function_tool
+def populateHorizon(asset_name_list: list) -> str:
     """
         Beyond the heightmap and region that you've added objects to, there is a background world that extends to the horizon. You are not required to position objects in this zone. Rather, pass a list of objects that you've already proposed to this tool, and some procedure will automatically populate this zone outside of the important region you've designed. Therefore, pass objects that would realistically be 'randomly' generated.
     """
     # I'd like to have a random 2D coordinate generator that excludes numbers that fall within the indices of unity.ground_matrix * 
     print("Assets to populate horizon with:", asset_name_list)
-    # Start with all one type of noise...
-    procedural(asset_name_list) # adds proposed objects to world randomly up to a limit (camera fov)
+    
+    global unity
+    """
+    asset_path_list = []
+
+    for asset_name in asset_name_list:
+        if asset_name in list(unity.yaml.proposed_objects.keys()):
+            asset_path_list.append(unity.yaml.proposed_objects[asset_name])
+        else:
+            print(f"Cannot procedurally generate {asset_name} because it's not in {list(unity.yaml.proposed_objects.keys())}")
+    """
+    procedural.populate(asset_name_list, unity) # adds proposed objects to world randomly up to a limit (camera fov)
 
 @function_tool
 async def addTexture(material_of_object_description: str) -> str:
