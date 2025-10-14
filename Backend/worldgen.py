@@ -48,22 +48,24 @@ class WorldGen:
         
     
     async def run(self, prompt):
+        
         print("\n>>>>>> ", prompt, "\n")
         result = await Runner.run(self.coordinator, prompt, max_turns=20)
         agents.tools.unity.done_and_write(str(self.asset_project_path / "Assets" / self.scene_name))
         print(f"Coordinator response: \n{result.final_output}")
 
-class PhobiaWorldGen(WorldGen):
+class VRWorldGen(WorldGen):
     
     def __init__(self, asset_project_path: Path = None, scene_name: str = None, restriction: str = None):
         super().__init__(asset_project_path, scene_name, None, restriction)
+        agents.tools.asset_project = asset_project_path
         self.coordinator.tools.extend([positionVRHumanPlayer, createGround, createSkybox, createSun, populateHorizon])
         self.coordinator.instructions = Coordinator.phobia_v1[MODEL]
         self.patient = Phobos() 
 
     
         
-class AcrophobiaWorldGen(PhobiaWorldGen):
+class AcrophobiaWorldGen(VRWorldGen):
     bridge_prompt="Generate a world that triggers acrophobia while crossing a bridge."
     mountain_prompt="Generate a world that triggers acrophobia on the summit of a mountain."
     skyscraper_prompt="Generate a world that triggers acrophobia on a tall skyscraper."

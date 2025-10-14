@@ -2,6 +2,7 @@ import sys
 import os
 import time
 from threading import Thread
+from pathlib import Path
 
 #from flask import Flask, send_from_directory, jsonify, request
 #from flask_cors import CORS
@@ -15,7 +16,7 @@ import coordinator as agents
 
 
 
-from worldgen import AcrophobiaWorldGen
+from worldgen import AcrophobiaWorldGen, VRWorldGen
 
 MODEL = (os.getenv("MODEL") or "o3-mini").strip() or "o3-mini"  
 
@@ -53,11 +54,18 @@ async def test_acrophobia_platform():
 ### General test
 async def test_acrophobia_emulate():
     gen = AcrophobiaWorldGen()
-    gen.load()
+    await gen.load()
     prompt = gen.get_prompt()
     print("Prompt:", prompt)
     await gen.run(prompt)
 ###
+
+### Shap-E Test
+async def test_shap_e():
+    gen = VRWorldGen(asset_project_path=Path("../Resources/Asset Projects/Shap-E"), scene_name=f"acro_{MODEL}_{random.randint(100, 999)}", )
+    await gen.run(input("\n\tPrompt: "))
+###
+
 
 test_dispatcher = {
     # = deprecated test
@@ -68,13 +76,14 @@ test_dispatcher = {
     "test_acro_roof": test_acrophobia_roof,
     "test_acro_platform": test_acrophobia_platform,
     "test_acro_em": test_acrophobia_emulate,
+    "test_shap_e": test_shap_e,
 }
 
 if __name__ == "__main__":
     if sys.argv[1]:
         try:
             test_function = test_dispatcher[sys.argv[1]]
-        except KeyError("Invalid test name. Choose from: " + list(test_dispatcher.keys())):
+        except Exception("Invalid test name. Choose from: " + list(test_dispatcher.keys())):
             sys.exit(1)
         asyncio.run(test_function())   
     else:

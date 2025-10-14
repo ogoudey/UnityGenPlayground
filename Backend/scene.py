@@ -28,9 +28,13 @@ class World:
         #if self.yaml.remove_prefab_instance_if_exists(name):
         #    print(f"Removed existing object {name} from YAML")
         self.yaml.add_prefab_instance(name, location, rotation)
-         
-              
-    def add_ground(self, ground_name, transform={"x":0.0, "y":0.0, "z":0.0}):
+
+    def add_orphan_prefab(self, name, location, rotation):
+        guid = uuid.uuid4().hex
+        yamling.write_obj_meta(self.yaml.proposed_objects[name], guid)     
+        self.yaml.add_orphan_prefab_instance(name, guid, location, rotation)
+
+    def add_ground(self, ground_name, transform={"x":0.0, "y":0.0, "z":0.0}, rotation={"x":0.0, "y":0.0, "z":0.0}):
         if self.ground:
             if self.yaml.remove_prefab_instance_if_exists(self.ground):
                 print(f"Removed existing ground {self.ground} from YAML")

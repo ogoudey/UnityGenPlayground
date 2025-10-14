@@ -7,7 +7,7 @@ from dataclasses import dataclass
 from agents import function_tool, Runner
 from pydantic import BaseModel
 
-from subagents import ObjectPlanner, GroundCreator, SkyboxPlanner, TexturePlanner, SunPlanner, GroundImprinter
+from subagents import ObjectPlanner, GroundCreator, SkyboxPlanner, TexturePlanner, SunPlanner
 
 import obj_building
 import procedural
@@ -26,6 +26,14 @@ global proposed_objects
     
 MODEL = (os.getenv("MODEL") or "o3-mini").strip() or "o3-mini"
 print(f"\nThe model running is {MODEL}. Use \033[1m\033[36mexport MODEL='<model_name>'\033[0m (Linux) or `setx MODEL '<model-name>'` (Windows) to change it.")
+
+USE_SHAP_E = bool((os.getenv("SHAP_E") or "").strip() or "")
+if USE_SHAP_E:
+    print("Importing Shap-E")
+    from shap_e import shap_e_test
+else:
+    print("Not using shap-e. (Normal)")
+
 
 @dataclass
 class PlaceableObject():
@@ -133,10 +141,10 @@ async def createGround(steps_to_ground_construction: str, resolution: int, scale
     grid = result.final_output.grid
     explanation = result.final_output.explanation_of_heights
     if horizon_plain and set_perimeter_to_0:
-        object_asset_path, unity.ground_matrix = obj_building.obj_from_grid(str(asset_project / "Assets" / "Manifest"), grid, scale, extend_to_big=True)
+        object_asset_path, unity.ground_matrix = obj_building.obj_from_grid(str(asset_project / "Assets/Manifest"), grid, scale, extend_to_big=True)
 
     else:
-        object_asset_path, unity.ground_matrix = obj_building.obj_from_grid(str(asset_project / "Assets" / "Manifest"), grid, scale) # writes objget_ground
+        object_asset_path, unity.ground_matrix = obj_building.obj_from_grid(str(asset_project / "Assets/Manifest"), grid, scale) # writes objget_ground
 
     unity.ground_scale = scale
     print("Ground obj written.")
@@ -170,10 +178,12 @@ async def createGround(steps_to_ground_construction: str, resolution: int, scale
     legible_result = "\n[\n" + ",\n".join(formatted_rows) + "\n]" 
     return f"Successfully placed a ground with heightmap {legible_result} in the +X +Z quadrant (these coordinates correspond to the vertices of the ground mesh). The scale of the Xs and Zs is x5. There is no vertical scaling.\n{explanation}"
 
-#@function_tool
-def populateHorizon(asset_name_list: list) -> str:
+@function_tool
+def populateHorizon(asset_name_list: str) -> str:
     """
         Beyond the heightmap and region that you've added objects to, there is a background world that extends to the horizon. You are not required to position objects in this zone. Rather, pass a list of objects that you've already proposed to this tool, and some procedure will automatically populate this zone outside of the important region you've designed. Therefore, pass objects that would realistically be 'randomly' generated.
+        asset_name_list: A stringified list of proposed object names. Make sure the names match exactly the Name field of a proposed object returned from proposeObject(). Example: "[\"a house\", \"Bridge 1\", \"Candle 2\"]".
+
     """
     # I'd like to have a random 2D coordinate generator that excludes numbers that fall within the indices of unity.ground_matrix * 
     print("Assets to populate horizon with:", asset_name_list)
@@ -220,7 +230,12 @@ async def proposeObject(description: str):
             description: Some text describing that the object should be like, refering to a singular object that's likely to be selected from a common asset library. For example, "water", "a rock", "a house", etc.
         If you don't get an object you want, its because there's nothing like the desired asset in the library of available assets. In this case, get creative and find a new solution. You don't NEED to place the object returned, which is the object-planner's best guess.
     """
+    global unity
 
+    if USE_SHAP_E:
+        object_path = shap_e_test.generate(asset_project, prompt=description)
+        unity.yaml.proposed_objects[description] = str(object_path)
+        return {"Object":{"Name":description, "Info": "Assume the origin is at the object's center."}}
     agent = ObjectPlanner(tools=[getGroundMatrix])
     prompt = {"Description of object": description, "Synopses to choose from": list(synopses.keys())}
 
@@ -230,7 +245,6 @@ async def proposeObject(description: str):
     result = await Runner.run(agent, json.dumps(prompt))
     print(agent.name + ":", time.time() - t, "seconds.")
     
-    global unity
 
     print(f"Matched synopsis '{result.final_output.synopsis}' to description '{description}'")
     try:
@@ -309,7 +323,13 @@ async def positionObject(object_name: str, position_of_object_origin: str, rotat
     failed_placements = [] 
     max_len = len(objects_to_sequence)
     #print(objects_to_sequence)
-    object_data = asset_catalog[unity.yaml.proposed_objects[object_name].replace(str(asset_project) + "/", "")]
+    object_short_path = unity.yaml.proposed_objects[object_name].replace(str(asset_project) + "/", "")
+    if object_short_path in list(asset_catalog.keys()):
+        object_data = asset_catalog[object_short_path]
+    else:
+        object_data = {"Name": object_name}
+    object_data["Position"] = json_location
+    object_data["Rotation"] = json_rotation
 
     while len(objects_to_sequence) > 0:
         json_location, json_rotation = objects_to_sequence.pop(0)
@@ -321,8 +341,10 @@ async def positionObject(object_name: str, position_of_object_origin: str, rotat
                     print("POPPING contact point", (json_location["x"], json_location["y"], json_location["z"]), "from contact points")
                     #unity.contact_points[object_name].remove((json_location["x"], json_location["y"], json_location["z"]))
                     
-                    
-            unity.add_prefab(object_name, json_location, json_rotation)
+            if object_short_path in list(asset_catalog.keys()):        
+                unity.add_prefab(object_name, json_location, json_rotation)
+            else:
+                unity.add_orphan_prefab(object_name, json_location, json_rotation)
             unity.add_data(object_data)
 
         except Exception as e:
@@ -357,8 +379,6 @@ def positionVRHumanPlayer(transform: str, rotation: str = "{\"x\": 75, \"y\": 10
     print(f"Placing human VR player ---> location {transform}, rotation {rotation}")
     print(f"Why this placement?:\n\t{explanation}")
 
-    if os.environ('NO_VR'):
-        
 
     global unity
     try:

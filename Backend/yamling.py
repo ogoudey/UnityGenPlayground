@@ -172,42 +172,58 @@ class YAML:
         sceneroots = self.get_doc("SceneRoots")
         sceneroots["m_Roots"].remove({"fileID": prefab_id})
         return False
-        
-    def set_vr_player(self, transform:str, rotation: str):
+
+    def add_orphan_prefab_instance(self, name, metaguid, transform, rotation):
+        print("Adding orphan prefab...")
         yaml = ruamel_YAML(typ='rt')
-        print("In YAMLING")
-        default = list(yaml.compose_all(preprocess_text(vr_setup_init_text)))[0]
+        default = list(yaml.compose_all(preprocess_text(prefab_init_text)))[0]
         wrapped = node_to_python(default)
+        wrapped, id_out = set_ID(wrapped) # to random ID
         
+        try:
+            prefab_path = self.proposed_objects[name]
+            print("Found", name, "in proposed_objects w path", prefab_path)
+        except KeyError(name + " not in proposed_objects"):
+            print("Lookup in proposed_objects has failed.")
+
+        self.placed_assets[name] = {"transform": transform, "rotation": rotation}
+
         quaternion = euler_to_xyzw_quaternion(rotation)
+
         print("Parsing init YAML...")
         modifications = wrapped["PrefabInstance"]["m_Modification"]["m_Modifications"]
         for mod in modifications:
             if "target" in mod and "guid" in mod["target"]:
-                if mod.get("propertyPath") == "m_LocalPosition.x":
-                    mod["value"] = transform["x"]
-                if mod.get("propertyPath") == "m_LocalPosition.y":
-                    mod["value"] = transform["y"]
-                if mod.get("propertyPath") == "m_LocalPosition.z":
-                    mod["value"] = transform["z"]
-                if mod.get("propertyPath") == "m_LocalRotation.x":
-                    mod["value"] = quaternion[0]
-                if mod.get("propertyPath") == "m_LocalRotation.y":
-                    mod["value"] = quaternion[1]
-                if mod.get("propertyPath") == "m_LocalRotation.z":
-                    mod["value"] = quaternion[2]
-                if mod.get("propertyPath") == "m_LocalRotation.w":
-                    mod["value"] = quaternion[3]
-        
-        prefab_id = wrapped["anchor"] # constant 1214490813
-        
+                
+                mod["target"]["guid"] = metaguid
+                if mod.get("propertyPath") == "m_Name":
+                    mod["target"]["value"] = name # Anything?
+                elif mod.get("propertyPath") == "m_Materials.Array.data[0]":
+                    mod["target"]["fileID"] = -7635826562936255635
+                else:
+                    mod["target"]["fileID"] = "-8679921383154817045"
+                    if mod.get("propertyPath") == "m_LocalPosition.x":
+                        mod["value"] = transform["x"]
+                    if mod.get("propertyPath") == "m_LocalPosition.y":
+                        mod["value"] = transform["y"]
+                    if mod.get("propertyPath") == "m_LocalPosition.z":
+                        mod["value"] = transform["z"]
+                    if mod.get("propertyPath") == "m_LocalRotation.x":
+                        mod["value"] = quaternion[0]
+                    if mod.get("propertyPath") == "m_LocalRotation.y":
+                        mod["value"] = quaternion[1]
+                    if mod.get("propertyPath") == "m_LocalRotation.z":
+                        mod["value"] = quaternion[2]
+                    if mod.get("propertyPath") == "m_LocalRotation.w":
+                        mod["value"] = quaternion[3]  
+        wrapped["PrefabInstance"]["m_SourcePrefab"]["guid"] = metaguid
         sceneroots = self.get_doc("SceneRoots")
-        sceneroots["m_Roots"].append({"fileID": prefab_id})
-        print("Init YAML succcessfully updated.")
+        sceneroots["m_Roots"].append({"fileID": id_out})
+        print("\rInit YAML succcessfully updated.")
         self.wrapped.append(wrapped)
-        print("VR Player successfully added to YAML.")
-        
-        
+        print("Asset added to YAML.")
+
+
     def add_prefab_instance(self, name, transform, rotation):
         yaml = ruamel_YAML(typ='rt')
         default = list(yaml.compose_all(preprocess_text(prefab_init_text)))[0]
@@ -229,7 +245,6 @@ class YAML:
         except Exception:
             print("Could not get guid from .meta file:", prefab_path + ".meta")
         
-        # find prefabs local filenames
         self.placed_assets[name] = {"transform": transform, "rotation": rotation}
         
         scale = 1.0
@@ -266,18 +281,56 @@ class YAML:
                     if mod.get("propertyPath") == "m_LocalRotation.z":
                         mod["value"] = quaternion[2]
                     if mod.get("propertyPath") == "m_LocalRotation.w":
-                        mod["value"] = quaternion[3]
-                      
-                      
-
-                    
+                        mod["value"] = quaternion[3]  
         wrapped["PrefabInstance"]["m_SourcePrefab"]["guid"] = guid
         sceneroots = self.get_doc("SceneRoots")
         sceneroots["m_Roots"].append({"fileID": id_out})
         print("\rInit YAML succcessfully updated.")
         self.wrapped.append(wrapped)
         print("Asset added to YAML.")
+
+    def set_camera(self, transform, rotation):
+        # load init text
+
+        # set pose
+
+        # append transform to scene roots
+        pass
+
+    def set_vr_player(self, transform:str, rotation: str):
+        yaml = ruamel_YAML(typ='rt')
+        print("In YAMLING")
+        default = list(yaml.compose_all(preprocess_text(vr_setup_init_text)))[0]
+        wrapped = node_to_python(default)
         
+        quaternion = euler_to_xyzw_quaternion(rotation)
+        print("Parsing init YAML...")
+        modifications = wrapped["PrefabInstance"]["m_Modification"]["m_Modifications"]
+        for mod in modifications:
+            if "target" in mod and "guid" in mod["target"]:
+                if mod.get("propertyPath") == "m_LocalPosition.x":
+                    mod["value"] = transform["x"]
+                if mod.get("propertyPath") == "m_LocalPosition.y":
+                    mod["value"] = transform["y"]
+                if mod.get("propertyPath") == "m_LocalPosition.z":
+                    mod["value"] = transform["z"]
+                if mod.get("propertyPath") == "m_LocalRotation.x":
+                    mod["value"] = quaternion[0]
+                if mod.get("propertyPath") == "m_LocalRotation.y":
+                    mod["value"] = quaternion[1]
+                if mod.get("propertyPath") == "m_LocalRotation.z":
+                    mod["value"] = quaternion[2]
+                if mod.get("propertyPath") == "m_LocalRotation.w":
+                    mod["value"] = quaternion[3]
+        
+        prefab_id = wrapped["anchor"] # constant 1214490813
+        
+        sceneroots = self.get_doc("SceneRoots")
+        sceneroots["m_Roots"].append({"fileID": prefab_id})
+        print("Init YAML succcessfully updated.")
+        self.wrapped.append(wrapped)
+        print("VR Player successfully added to YAML.")
+
     def get_father_id_of_root_transform_of_prefab(self, prefab_path):
         with open(prefab_path, "r") as f:
             prefab_file = f.read()
@@ -649,6 +702,7 @@ Transform:
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 """
+
 sun_init_text = """
 --- !u!1 &786546698
 GameObject:
