@@ -10,6 +10,8 @@ from enrichment import Phobos
 from coordinator import Checker, Reformer, Coordinator
 from tools import getGroundMatrix, proposeObject, positionObject, positionVRHumanPlayer, createSkybox, createGround, getContactPoints, createSun, populateHorizon
 
+from supertools import CoordinatorManager
+
 from scene import World
 
 MODEL = (os.getenv("MODEL") or "o3-mini").strip() or "o3-mini"
@@ -34,6 +36,8 @@ class WorldGen:
         if restriction:
             self.coordinator.restriction = restriction
 
+        self.coordinator_manager = CoordinatorManager(run_coordinator_function=self.run) # default
+
     async def load(self):
         print("\n  ___Asset Catalog___")
         print("Catalog maps `path => object data`")
@@ -48,11 +52,20 @@ class WorldGen:
         
     
     async def run(self, prompt):
-        
+        """
+            prompt: prompt for Coordinator agent to generate world. Example: Generate a fish tank.
+        """
         print("\n>>>>>> ", prompt, "\n")
         result = await Runner.run(self.coordinator, prompt, max_turns=20)
-        agents.tools.unity.done_and_write(str(self.asset_project_path / "Assets" / self.scene_name))
+        scene_path = agents.tools.unity.done_and_write(str(self.asset_project_path / "Assets" / self.scene_name))
+        print(f"Scene @ {scene_path}")
         print(f"Coordinator response: \n{result.final_output}")
+
+    async def regime(self, regime_prompt):
+        print("\n>>>>>> ", regime_prompt, "\n")
+        result = await Runner.run(self.coordinator_manager, regime_prompt)
+        print(f"Coordinator manager response: \n{result.final_output}")
+        
 
 class VRWorldGen(WorldGen):
     
@@ -73,10 +86,12 @@ class AcrophobiaWorldGen(VRWorldGen):
     roof_prompt="Generate a world that triggers a very sensitive acrophobia by placing a player on the roof of a low house/building."
     platform_prompt="Generate a world that triggers a very sensitive acrophobia by placing a player on a platform."
     
+    bridge_regime_prompt="Generate multiple stages of worlds that trigger acrophobia while crossing a bridge. Have the stages get progressively harder. Let there be three stages and let the heights of the bridges in each stage progress as 2m, 5m, 10m above ground or sea level."
+
     def __init__(self, restricted: bool = False):
         asset_project_path = Path(ASSET_LIB_PATH) / "Acrophobia"
         agents.tools.asset_project = asset_project_path
-        restriction = f"These are the assets the system is restricted to:\n{[key.split('/')[-1] for key in list(agents.tools.asset_catalog.keys())]}"
+        restriction = f"These are the assets the system is restricted to:\n{[key.split('/')[-1] for key in list(agents.tools.asset_catalog.keys())]}" if restricted else ""
         super().__init__(asset_project_path, f"acro_{MODEL}_{random.randint(100, 999)}", restriction)
         self.coordinator.instructions = Coordinator.acrophobia_v1[MODEL]
 
@@ -85,9 +100,6 @@ class AcrophobiaWorldGen(VRWorldGen):
         result = await Runner.run(self.patient, self.patient.acrophobia)
         return result.final_output       
     
-    def regiment(self):
-        # NOT IMPLEMENTED YET
-        # starts agent that calls run().as_tool calls multiple self
-        pass
+    
         
 

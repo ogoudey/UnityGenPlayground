@@ -366,7 +366,8 @@ class YAML:
         out = "\n".join(out) + "\n"
         with open(file_name, "w") as f:
             f.write(out)   
-        print("YAML written to", file_name) 
+        print("YAML written to", file_name)
+        return file_name
 
     def dump(self, file_name="minimal.unity"):
         

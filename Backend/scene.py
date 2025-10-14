@@ -53,4 +53,4 @@ class World:
         print("\nObjects:\n", self.objects)
         if not file_name:
             file_name = self.name
-        self.yaml.to_unity_yaml(file_name)
+        return self.yaml.to_unity_yaml(file_name)
