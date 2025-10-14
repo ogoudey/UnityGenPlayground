@@ -10,7 +10,7 @@ from enrichment import Phobos
 from coordinator import Checker, Reformer, Coordinator
 from tools import getGroundMatrix, proposeObject, positionObject, positionVRHumanPlayer, createSkybox, createGround, getContactPoints, createSun, populateHorizon
 
-from supertools import CoordinatorManager
+from supertools import CoordinatorRunner
 
 from scene import World
 
@@ -36,7 +36,7 @@ class WorldGen:
         if restriction:
             self.coordinator.restriction = restriction
 
-        self.coordinator_manager = CoordinatorManager(run_coordinator_function=self.run) # default
+        self.coordinator_runner = CoordinatorManager(run_coordinator_function=self.run) # default
 
     async def load(self):
         print("\n  ___Asset Catalog___")
@@ -63,7 +63,7 @@ class WorldGen:
 
     async def regime(self, regime_prompt):
         print("\n>>>>>> ", regime_prompt, "\n")
-        result = await Runner.run(self.coordinator_manager, regime_prompt)
+        result = await Runner.run(self.coordinator_runner, regime_prompt)
         print(f"Coordinator manager response: \n{result.final_output}")
         
 
