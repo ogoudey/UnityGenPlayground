@@ -9,3 +9,5 @@ mcp = FastMCP(name="Example")
 
 
 # Register tools with @mcp.tool
+
+# Add state to application-embedded resources

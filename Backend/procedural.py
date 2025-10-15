@@ -5,7 +5,7 @@ import obj_building
 
 def populate(asset_path_list, unity):
     ground_matrix, ground_scale = unity.ground_matrix, unity.ground_scale
-    dimension = ground_matrix*ground_scale - ground_scale
+    dimension = len(ground_matrix)*ground_scale - ground_scale
 
     def in_no_pose_zone(point):
         if point[0] < ground_scale * (len(ground_matrix[0]) - 1) and point[0] > 0:
@@ -14,14 +14,15 @@ def populate(asset_path_list, unity):
             
     for asset in asset_path_list:
         world_pad = obj_building.pad
-        x_range = (-world_pad, world_pad + dimension)
-        y_range = (-world_pad, world_pad + dimension)
+        x_range = (-world_pad, int(world_pad + dimension))
+        y_range = (-world_pad, int(world_pad + dimension))
         # noise
 
         p_noise_list = perlin_points_2d(x_range, y_range, n_points=100, scale=0.1, threshold=0.0)
         for point in p_noise_list:
             if not in_no_pose_zone(point):
-                unity.add_prefab()
+                print("Adding prefab")
+                unity.add_prefab(asset, {"x": point[0], "y": 0, "z": point[1]}, {"x": 0, "y": 0, "z": 0})
     
 
 def perlin_points_2d(x_range, y_range, n_points, scale=0.1, threshold=0.0, seed=None):

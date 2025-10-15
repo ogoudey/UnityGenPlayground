@@ -102,8 +102,8 @@ def obj_from_grid(obj_path: str, grid: str = default_grid, scale=5.0, extend_to_
     row = []
     
     for x in range(0, len(line)):
-        row.append(float(line[x]))
         try:
+            row.append(float(line[x]))
             obj_str += f"v {-float(x)*scale} {float(line[x])} {dimension}\n"  
         except Exception:
             print(line[x], "is an arifact of the grid. Ignoring...")
@@ -114,8 +114,8 @@ def obj_from_grid(obj_path: str, grid: str = default_grid, scale=5.0, extend_to_
         row = []
         
         for x in range(0, len(line)):
-            row.append(float(line[x]))
             try:
+                row.append(float(line[x]))
                 obj_str += f"v {-float(x)*scale} {float(line[x])} {dimension - float(y)*scale}\n"  
             except Exception:
                 print(line[x], "is an arifact of the grid. Ignoring...")
@@ -128,8 +128,8 @@ def obj_from_grid(obj_path: str, grid: str = default_grid, scale=5.0, extend_to_
     line = lines[-1].split(" ")
     row = []
     for x in range(0, len(line)):
-        row.append(float(line[x]))
         try:
+            row.append(float(line[x]))
             obj_str += f"v {-float(x)*scale} {float(line[x])} {0.0}\n"  
         except Exception:
             print(line[x], "is an arifact of the grid. Ignoring...")

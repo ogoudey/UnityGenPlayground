@@ -22,6 +22,12 @@ async def run(mcp_server: MCPServer):
 
     #                           #
 
+    #
+    # have embedded-HTML resource runtime
+    #
+
+
+
     result = Runner.run_streamed(starting_agent=agent, input="Run endpoint1. If it fails, give me the error.")
     async for event in result.stream_events():
         # Each 'event' corresponds to one 'yield' from the server
