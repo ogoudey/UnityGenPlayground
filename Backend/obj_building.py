@@ -36,7 +36,7 @@ def make_quads(matrix, x, y, obj_str, visited=[]):
 
     return new_line, visited
 
-def facify(matrix, extended_to_big=False):
+def facify(matrix, extended_to_big=True):
     lines = ""
     x_per_row = len(matrix)
     print(x_per_row)
@@ -107,6 +107,7 @@ def obj_from_grid(obj_path: str, grid: str = default_grid, scale=5.0, extend_to_
             obj_str += f"v {-float(x)*scale} {float(line[x])} {dimension}\n"  
         except Exception:
             print(line[x], "is an arifact of the grid. Ignoring...")
+    print(line)
     obj_str += f"v {-(pad + dimension)} {0.0} {dimension}\n"
     matrix.append(row)
     for y in range(1, len(lines) -1):
@@ -133,6 +134,7 @@ def obj_from_grid(obj_path: str, grid: str = default_grid, scale=5.0, extend_to_
             obj_str += f"v {-float(x)*scale} {float(line[x])} {0.0}\n"  
         except Exception:
             print(line[x], "is an arifact of the grid. Ignoring...")
+    print(line)
     matrix.append(row)
     
     #obj_str += f"v {0.0} {0.0} {0.0}\n"

@@ -110,7 +110,7 @@ Rules:
 - The values on the perimeter of the world must be 0. This is important because this smallish grid you're making slots in a plain.
                                  
 Output format must follow GroundData:
-- grid: the float grid as plain text sized according to the resolution (perimeter 0). 
+- grid: the float grid as plain text sized according to the resolution (perimeter 0) Must be N x N. 
 - texture_path: the path to the asset of the material for this ground, as returned by the planTexture tool.
 - explanation_of_heights: an explanation in around one sentence.
 """}

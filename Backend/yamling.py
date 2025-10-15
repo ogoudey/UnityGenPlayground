@@ -229,7 +229,7 @@ class YAML:
         default = list(yaml.compose_all(preprocess_text(prefab_init_text)))[0]
         wrapped = node_to_python(default)
         wrapped, id_out = set_ID(wrapped) # to random ID
-        
+        print(name, "in", self.proposed_objects, "?")
         try:
             prefab_path = self.proposed_objects[name]
             print("Found", name, "in proposed_objects w path", prefab_path)
