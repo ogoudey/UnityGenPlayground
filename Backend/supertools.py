@@ -17,7 +17,7 @@ class CoordinatorRunner(Agent):
         coordinator_function  = run_coordinator_function
         super().__init__(
             name=name or f"CoordinatorManager{random.randint(100,999)}",
-            instructions=instructions or CoordinatorManager.instructions,
+            instructions=instructions or CoordinatorRunner.instructions,
             tools=[run_coordinator],
             model=MODEL,
         )

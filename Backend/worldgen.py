@@ -36,7 +36,7 @@ class WorldGen:
         if restriction:
             self.coordinator.restriction = restriction
 
-        self.coordinator_runner = CoordinatorManager(run_coordinator_function=self.run) # default
+        self.coordinator_runner = CoordinatorRunner(run_coordinator_function=self.run) # default
 
     async def load(self):
         print("\n  ___Asset Catalog___")
