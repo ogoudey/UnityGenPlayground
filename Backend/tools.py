@@ -9,6 +9,9 @@ from pydantic import BaseModel
 
 from subagents import ObjectPlanner, GroundCreator, SkyboxPlanner, TexturePlanner, SunPlanner
 
+from logger import log
+
+
 import obj_building
 import procedural
 """ Preprocessing depends on type of worldgen. These global variables are set from worldgen.TypeofWorldGen """
@@ -63,6 +66,7 @@ async def positionSun(length_of_day: float, time_of_day: float, sun_brightness: 
 
 @function_tool
 async def createSkybox(skybox_description: str) -> Designation:
+    log("Creating skybox...", type='italics')
     agent = SkyboxPlanner()
     prompt = {"Object description": skybox_description,
                 "Available assets": skybox_material_leaves}
@@ -121,6 +125,7 @@ async def createGround(steps_to_ground_construction: str, resolution: int, scale
                 
     This Tool can be called multiple times to reshape the ground, in order to fit the objects that are static or immalleable.
     """
+    log("Creating ground...", type='italics')
     set_perimeter_to_0=True
     horizon_plain = True
 
@@ -185,6 +190,7 @@ def populateHorizon(asset_name_list: str) -> str:
         asset_name_list: A stringified list of proposed object names. Make sure the names match exactly the Name field of a proposed object returned from proposeObject(). Example: "[\"a house\", \"Bridge 1\", \"Candle 2\"]".
 
     """
+    log("Populating horizon", type='italics')
     # I'd like to have a random 2D coordinate generator that excludes numbers that fall within the indices of unity.ground_matrix * 
     print("Assets to populate horizon with:", asset_name_list)
     
@@ -230,6 +236,7 @@ async def proposeObject(description: str):
             description: Some text describing that the object should be like, refering to a singular object that's likely to be selected from a common asset library. For example, "water", "a rock", "a house", etc.
         If you don't get an object you want, its because there's nothing like the desired asset in the library of available assets. In this case, get creative and find a new solution. You don't NEED to place the object returned, which is the object-planner's best guess.
     """
+    log("Proposing object", type='italics')
     global unity
 
     if USE_SHAP_E:

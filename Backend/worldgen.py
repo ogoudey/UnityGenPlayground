@@ -10,6 +10,8 @@ from enrichment import Phobos
 from coordinator import Checker, Reformer, Coordinator
 from tools import getGroundMatrix, proposeObject, positionObject, positionVRHumanPlayer, createSkybox, createGround, getContactPoints, createSun, populateHorizon
 
+from logger import log
+
 from supertools import CoordinatorRunner
 
 from scene import World
@@ -60,11 +62,13 @@ class WorldGen:
         scene_path = agents.tools.unity.done_and_write(str(self.asset_project_path / "Assets" / self.scene_name))
         print(f"Scene @ {scene_path}")
         print(f"Coordinator response: \n{result.final_output}")
+        log(result.final_output)
 
     async def regime(self, regime_prompt):
         print("\n>>>>>> ", regime_prompt, "\n")
         result = await Runner.run(self.coordinator_runner, regime_prompt)
         print(f"Coordinator manager response: \n{result.final_output}")
+        log(result.final_output)
         
 
 class VRWorldGen(WorldGen):
