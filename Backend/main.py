@@ -11,6 +11,8 @@ from agents.model_settings import ModelSettings
 
 
 async def run(mcp_server: MCPServer):
+    # Generic agent in runtime  #
+
     agent = Agent(
         name="Assistant",
         instructions="Use the tools assist the user.",
@@ -18,20 +20,15 @@ async def run(mcp_server: MCPServer):
         model_settings=ModelSettings(tool_choice="required"),
     )
 
+    #                           #
+
     result = Runner.run_streamed(starting_agent=agent, input="Run endpoint1. If it fails, give me the error.")
     async for event in result.stream_events():
         # Each 'event' corresponds to one 'yield' from the server
         if event.type == 'run_item_stream_event':
-                if event.name == "tool_called":
-                    print("-- Tool was called")
-                elif event.name == "tool_output":
-                    print(f"-- Tool output: {event.item.output}")
-                elif event.name == "message_output_created":
-                    print(ItemHelpers.text_message_output(event.item))
-        else:
-            continue
-    print(result.final_output)
-        
+                # Streaming yet to be provided. Check Apps SDK and MCP
+                pass        
+
 
 
 async def main():
@@ -54,12 +51,14 @@ if __name__ == "__main__":
 
         print("Starting Streamable HTTP server at http://localhost:8000/mcp ...")
 
-        # Use the same Python interpreter instead of uv
+
         process = subprocess.Popen([sys.executable, server_file])
-        # Give it a few seconds to start up
+
         time.sleep(3)
 
         print("MCPServerStreamableHttp server started. Running example...\n\n")
+
+        # Now run generic agent runtime.
         asyncio.run(main())
 
     except KeyboardInterrupt:
