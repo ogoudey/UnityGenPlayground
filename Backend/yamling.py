@@ -1,7 +1,7 @@
 import yaml as pyyaml
 import math
 import random
-
+import os
 import re
 
 from ruamel.yaml import YAML as ruamel_YAML
@@ -544,6 +544,10 @@ def convert_numbers(obj):
         return obj
 
 def write_obj_meta(obj_path, guid):
+    if os.path.exists(obj_path + ".meta"):
+        print("Obj meta already exists, using existing one.")
+        return
+
     yaml = ruamel_YAML(typ='rt')
     default = list(yaml.compose_all(obj_meta_init_text))[0]
 

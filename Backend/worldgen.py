@@ -24,7 +24,7 @@ class WorldGen:
     
     def __init__(self, asset_project_path: Path = None, scene_name: str = None, preexisting_world: str = None, restriction: str = None):
         self.asset_project_path = asset_project_path
-
+        agents.tools.asset_project = asset_project_path
         
         if preexisting_world:
             # load preexising world or something - not really used in Phobia subclass

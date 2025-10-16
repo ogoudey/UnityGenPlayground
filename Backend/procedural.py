@@ -14,8 +14,13 @@ def populate(asset_path_list, unity):
             
     for asset in asset_path_list:
         world_pad = obj_building.pad
+<<<<<<< Updated upstream
         x_range = (-world_pad, int(world_pad + dimension))
         y_range = (-world_pad, int(world_pad + dimension))
+=======
+        x_range = (int(-world_pad), int(world_pad + dimension))
+        y_range = (int(-world_pad), int(world_pad + dimension))
+>>>>>>> Stashed changes
         # noise
 
         p_noise_list = perlin_points_2d(x_range, y_range, n_points=100, scale=0.1, threshold=0.0)

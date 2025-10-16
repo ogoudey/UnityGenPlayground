@@ -227,8 +227,6 @@ async def addTexture(material_of_object_description: str) -> str:
     print("Found", mat_asset_path, "for", material_of_object_description)
     return mat_asset_path
 
-
-
 @function_tool
 async def proposeObject(description: str):
     """ 
@@ -236,7 +234,13 @@ async def proposeObject(description: str):
             description: Some text describing that the object should be like, refering to a singular object that's likely to be selected from a common asset library. For example, "water", "a rock", "a house", etc.
         If you don't get an object you want, its because there's nothing like the desired asset in the library of available assets. In this case, get creative and find a new solution. You don't NEED to place the object returned, which is the object-planner's best guess.
     """
+<<<<<<< Updated upstream
     log("Proposing object", type='italics')
+=======
+    if asset_project == "":
+        print("Asset project not set. Needed for linking objects.")
+        return f"Somethings wrong. Report to user: 'Asset project not set (is {asset_project}) Needed for linking objects.'"
+>>>>>>> Stashed changes
     global unity
 
     if USE_SHAP_E:
@@ -246,12 +250,10 @@ async def proposeObject(description: str):
     agent = ObjectPlanner(tools=[getGroundMatrix])
     prompt = {"Description of object": description, "Synopses to choose from": list(synopses.keys())}
 
-    
     t = time.time()
     print(f"{agent.name} started on request '{description}'")
     result = await Runner.run(agent, json.dumps(prompt))
     print(agent.name + ":", time.time() - t, "seconds.")
-    
 
     print(f"Matched synopsis '{result.final_output.synopsis}' to description '{description}'")
     try:
@@ -298,7 +300,7 @@ async def positionObject(object_name: str, position_of_object_origin: str, rotat
         assert object_name in unity.yaml.proposed_objects
     except AssertionError:
         print(f"Object {object_name} is not showing up in {unity.yaml.proposed_objects}")
-        return f"The object {object_name} has not been planned. Please call proposeObject before placeObject and refer to the planned object in the arguments of placeObject."
+        return f"The object {object_name} has not been proposed. Please call proposeObject before positionObject and refer to the proposed object in the arguments of positionObject."
     print(f"Why this position?:\n\t{explanation}")
     try:
         json_location = json.loads(position_of_object_origin)
