@@ -8,7 +8,7 @@
   <h1>Enter Prompt</h1>
   <form id="promptForm" method="POST">
     <input type="text" name="prompt" required>
-    <button>Submit</button>
+    <button id="button">Submit</button>
   </form>
 
   <h1 id = "statusHeader">Status Updates</h1>
@@ -21,29 +21,45 @@
     let running_state = false;
 
     function showProcessing(){
-      h = document.createElement("h2");
-      h.textContent = "Processing:" + document.getElementById("promptForm").textContent;
-      document.getElementById("statusHeader").appendChild(h);
+      console.log(running_state);
+      console.log(statusHeader);
+      statusHeader = document.getElementById("statusHeader");
+      if (running_state === true){
+        console.log("Adding processing element.");
+        h = document.createElement("h2");
+        h.textContent = "Processing:" + document.getElementById("promptForm").textContent;
+        statusHeader.appendChild(h);
+      } else {
+        if (statusHeader.children.length > 0){
+          statusHeader.removeChild(statusHeader.children[0]);
+        }
+      }
+      
     }
 
     evtSource.onmessage = function(event) {
-      console.log("Receiving event...")
+      console.log("<Receiving event>");
+      showProcessing();
       try {
         const logEntry = JSON.parse(event.data);
         const message = logEntry.message;
         const type = logEntry.type;
+        if (message === "Done"){
+          running_state = false;
+          showProcessing()
+          return
+        }
         console.log(message)
         const li = document.createElement("li");
         li.textContent = message;
 
         if (type === "italic") {
+          console.log("Making italics...")
           li.style.fontStyle = "italic";
         }
         ul.appendChild(li);
 
-        if (message === "Done"){
-          running_state = false;
-        }
+        
       } catch(e) {
         console.error("Failed to parse SSE data:", event.data, e);
       }
@@ -60,7 +76,8 @@
     form.addEventListener("submit", () => {
       ul.innerHTML = "";  // Clear the list
       running_state = true;
-      //document.getElementById("promptForm").textContent = "Stop";
+      document.getElementById("button").textContent = "Stop";
+      showProcessing()
     });
   </script>
 </body>

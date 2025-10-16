@@ -50,6 +50,7 @@ class Designation(BaseModel):
 async def getGroundMatrix():
     global unity
     print("Recalling ground matrix...")
+    log("Recalling ground heightmap...")
     return {"Grid": unity.ground_matrix, "Information": "The ground goes from (0,0) to (-50, 50). That is, the top left of the matrix is -50, 50. All objects should be on over the ground."}   
 
 @function_tool
@@ -60,13 +61,14 @@ async def positionSun(length_of_day: float, time_of_day: float, sun_brightness: 
             time_of_day: It is like the scene's position on the planet's latitude. Falls between 0.0 and `length_of_day`.
             sun_brightness: It is like the planet's distance from the sun, or like sun's luminosity, etc. Keep it from 0.0 to 1000.0. (0.01 is Earthlike)
     """
+    log("Positioning the sun in the sky...", type='italic')
     global unity
     unity.add_sun(length_of_day, time_of_day, sun_brightness)
     return f"Successfully added the Sun"
 
 @function_tool
 async def createSkybox(skybox_description: str) -> Designation:
-    log("Creating skybox...", type='italics')
+    log("Creating skybox...", type='italic')
     agent = SkyboxPlanner()
     prompt = {"Object description": skybox_description,
                 "Available assets": skybox_material_leaves}
@@ -95,6 +97,7 @@ async def createSun(description_of_sun_behavior: str) -> str:
     """
         Plan and place the Sun in the scene. Call this once and only once for each scene. Just describe the Sun and its thematic context briefly. You are effectively prompting another sub-agent to actually deal with positioning the Sun.
     """
+    log("Creating sun...", type="italic")
     agent = SunPlanner(tools=[positionSun])
     prompt = {"Description of desired sun behavior": description_of_sun_behavior}
 
@@ -125,7 +128,7 @@ async def createGround(steps_to_ground_construction: str, resolution: int, scale
                 
     This Tool can be called multiple times to reshape the ground, in order to fit the objects that are static or immalleable.
     """
-    log("Creating ground...", type='italics')
+    log("Creating ground...", type='italic')
     set_perimeter_to_0=True
     horizon_plain = True
 
@@ -180,7 +183,8 @@ async def createGround(steps_to_ground_construction: str, resolution: int, scale
         formatted_rows.append(f"  [ {row_str} ]")
 
     # Join all rows with brackets around the entire matrix
-    legible_result = "\n[\n" + ",\n".join(formatted_rows) + "\n]" 
+    legible_result = "\n[\n" + ",\n".join(formatted_rows) + "\n]"
+    log(explanation)
     return f"Successfully placed a ground with heightmap {legible_result} in the +X +Z quadrant (these coordinates correspond to the vertices of the ground mesh). The scale of the Xs and Zs is x5. There is no vertical scaling.\n{explanation}"
 
 @function_tool
@@ -190,7 +194,7 @@ def populateHorizon(asset_name_list: str) -> str:
         asset_name_list: A stringified list of proposed object names. Make sure the names match exactly the Name field of a proposed object returned from proposeObject(). Example: "[\"a house\", \"Bridge 1\", \"Candle 2\"]".
 
     """
-    log("Populating horizon", type='italics')
+    log("Populating horizon", type='italic')
     # I'd like to have a random 2D coordinate generator that excludes numbers that fall within the indices of unity.ground_matrix * 
     print("Assets to populate horizon with:", asset_name_list)
     
@@ -211,6 +215,7 @@ async def addTexture(material_of_object_description: str) -> str:
     """
         Returns the path to a material asset that matches the description. May return "None" if there's no match, in which case use that as the texture_path.
     """
+    log("Adding texture for ground...", type="italic")
     if len(ground_material_leaves) == 0:
         print("No textures for ground available! Skipping TexturePlanner.")
         return "None"
@@ -234,7 +239,7 @@ async def proposeObject(description: str):
             description: Some text describing that the object should be like, refering to a singular object that's likely to be selected from a common asset library. For example, "water", "a rock", "a house", etc.
         If you don't get an object you want, its because there's nothing like the desired asset in the library of available assets. In this case, get creative and find a new solution. You don't NEED to place the object returned, which is the object-planner's best guess.
     """
-    log("Proposing object", type='italics')
+    log("Proposing object", type='italic')
     if asset_project == "":
         print("Asset project not set. Needed for linking objects.")
         return f"Somethings wrong. Report to user: 'Asset project not set (is {asset_project}) Needed for linking objects.'"
@@ -270,7 +275,7 @@ async def proposeObject(description: str):
 
     unity.yaml.proposed_objects[object_name] = str(asset_project / object_asset_path)
     #print(f"\t{object_name} added to proposed_objects w path {object_asset_path}")
-
+    log(f"Proposed {object_name}.", type='italic')
     json_blob = {
         "Object": object_data,
         "Note": result.final_output.note
@@ -290,7 +295,7 @@ async def positionObject(object_name: str, position_of_object_origin: str, rotat
                 "{\"x\": 90, \"y\": 0, \"z\": 45}", "[{\"x\": 90, \"y\": 0, \"z\": 45}, {\"x\": 0, \"y\": 0, \"z\": 270}]"
             explanation: A human-readable explanation of the placement(s). Include in your explanation the specific shape of the object, as contained in the PlaceableObject that you've planned. For most placements, its good practice to refer to a contact point from get_contact_points. If the object can't be placed on the ground, edit the ground with planandplaceGround."
     """
-    
+    log(f"Positioning {object_name}...")
     print(f"Positioning '{object_name}' ---> {position_of_object_origin} with rotation(s) {rotation}")
     global unity
     try:
@@ -299,6 +304,7 @@ async def positionObject(object_name: str, position_of_object_origin: str, rotat
         print(f"Object {object_name} is not showing up in {unity.yaml.proposed_objects}")
         return f"The object {object_name} has not been proposed. Please call proposeObject before positionObject and refer to the proposed object in the arguments of positionObject."
     print(f"Why this position?:\n\t{explanation}")
+    log(explanation)
     try:
         json_location = json.loads(position_of_object_origin)
 
@@ -384,7 +390,8 @@ def positionVRHumanPlayer(transform: str, rotation: str = "{\"x\": 75, \"y\": 10
     """
     print(f"Placing human VR player ---> location {transform}, rotation {rotation}")
     print(f"Why this placement?:\n\t{explanation}")
-
+    log("Positioning VR experience...")
+    log(explanation)
 
     global unity
     try:

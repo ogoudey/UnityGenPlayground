@@ -58,11 +58,7 @@ class WorldGen:
         """
             prompt: prompt for Coordinator agent to generate world. Example: Generate a fish tank.
         """
-        time.sleep(1)
-        log(f"Thinking about {prompt}", type='italic')
-        time.sleep(3)
-        log(f"Hello", type='normal')
-        return
+        log("World generator started...", type='italic')
         print("\n>>>>>> ", prompt, "\n")
         result = await Runner.run(self.coordinator, prompt, max_turns=20)
         scene_path = agents.tools.unity.done_and_write(str(self.asset_project_path / "Assets" / self.scene_name))
@@ -75,6 +71,7 @@ class WorldGen:
         result = await Runner.run(self.coordinator_runner, regime_prompt)
         print(f"Coordinator manager response: \n{result.final_output}")
         log(result.final_output)
+        log("Done")
         
 
 class VRWorldGen(WorldGen):

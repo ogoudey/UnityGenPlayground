@@ -32,7 +32,7 @@ def index():
             process = Process(target=run, args=(prompt, queue))
             process.daemon = True
             process.start()
-            #return render_template('index.html', prompt=prompt)
+            #return render_template('index.html', status="Running")
         except Exception:
             print("Bad post method.")
             render_template('index.html')
@@ -68,12 +68,17 @@ def status_stream():
         }
     )
 
+async def async_run(prompt):
+    gen = AcrophobiaWorldGen(prompt)
+    await gen.load()
+    final_output = await gen.regime(prompt)
 
+"""
 async def async_run(prompt):
     gen = AcrophobiaWorldGen(prompt)
     await gen.load()
     final_output = await gen.run(prompt)
-
+"""
 def run(prompt, queue):
     asyncio.run(async_run(prompt))
     
