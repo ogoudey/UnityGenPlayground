@@ -16,11 +16,7 @@ class CoordinatorRunner(Agent):
         global coordinator_function
         coordinator_function  = run_coordinator_function
         super().__init__(
-<<<<<<< Updated upstream
-            name=name or f"CoordinatorManager{random.randint(100,999)}",
-=======
             name=name or f"CoordinatorRunner{random.randint(100,999)}",
->>>>>>> Stashed changes
             instructions=instructions or CoordinatorRunner.instructions,
             tools=[run_coordinator],
             model=MODEL,

@@ -1,3 +1,10 @@
+#
+#   Option 3 for a GUI
+#   A desktop app with a nice GUI
+#
+#   kind of unclear what the pros are
+#
+
 import PySimpleGUI as sg
 import random
 import time

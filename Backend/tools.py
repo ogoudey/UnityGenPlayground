@@ -234,13 +234,10 @@ async def proposeObject(description: str):
             description: Some text describing that the object should be like, refering to a singular object that's likely to be selected from a common asset library. For example, "water", "a rock", "a house", etc.
         If you don't get an object you want, its because there's nothing like the desired asset in the library of available assets. In this case, get creative and find a new solution. You don't NEED to place the object returned, which is the object-planner's best guess.
     """
-<<<<<<< Updated upstream
     log("Proposing object", type='italics')
-=======
     if asset_project == "":
         print("Asset project not set. Needed for linking objects.")
         return f"Somethings wrong. Report to user: 'Asset project not set (is {asset_project}) Needed for linking objects.'"
->>>>>>> Stashed changes
     global unity
 
     if USE_SHAP_E:
