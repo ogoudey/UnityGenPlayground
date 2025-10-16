@@ -1,0 +1,67 @@
+<!-- templates/index.html -->
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Status Stream</title>
+</head>
+<body>
+  <h1>Enter Prompt</h1>
+  <form id="promptForm" method="POST">
+    <input type="text" name="prompt" required>
+    <button>Submit</button>
+  </form>
+
+  {% if running_state %}
+    Processing: {{prompt}}
+  {% endif %}
+
+  <h1>Status Updates</h1>
+  <ul id="logContainer"></ul>
+
+  <script>
+    const ul = document.getElementById("logContainer");
+    const evtSource = new EventSource("/status_stream");
+
+    const running_state = false;
+
+    function showProcessing(){
+      h = document.createElement("h2");
+      h.textContent = "Processing:" + document.getElementById("promptForm").textContent;
+    }
+
+    evtSource.onmessage = function(event) {
+      try {
+        const logEntry = JSON.parse(event.data);
+        const message = logEntry.message;
+        const type = logEntry.type;
+        console.log(message)
+        const li = document.createElement("li");
+        li.textContent = message;
+
+        if (type === "italic") {
+          li.style.fontStyle = "italic";
+        }
+        ul.appendChild(li);
+
+        if (message === "Done"){
+          running_state = false;
+        }
+      } catch(e) {
+        console.error("Failed to parse SSE data:", event.data, e);
+      }
+    };
+
+    evtSource.onerror = function(event) {
+      console.error("EventSource failed:", event);
+    };
+
+    // Clear logs on new prompt submit
+    const form = document.getElementById("promptForm");
+    form.addEventListener("submit", () => {
+      ul.innerHTML = "";  // Clear the list
+      running_state = true
+    });
+  </script>
+</body>
+
+</html>

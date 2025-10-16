@@ -3,6 +3,7 @@ import os
 import random
 from agents import Runner
 import coordinator as agents
+import time
 
 import assets
 import synopsis_generator
@@ -57,6 +58,11 @@ class WorldGen:
         """
             prompt: prompt for Coordinator agent to generate world. Example: Generate a fish tank.
         """
+        time.sleep(1)
+        log(f"Thinking about {prompt}", type='italic')
+        time.sleep(3)
+        log(f"Hello", type='normal')
+        return
         print("\n>>>>>> ", prompt, "\n")
         result = await Runner.run(self.coordinator, prompt, max_turns=20)
         scene_path = agents.tools.unity.done_and_write(str(self.asset_project_path / "Assets" / self.scene_name))
