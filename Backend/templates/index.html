@@ -11,25 +11,23 @@
     <button>Submit</button>
   </form>
 
-  {% if running_state %}
-    Processing: {{prompt}}
-  {% endif %}
-
-  <h1>Status Updates</h1>
+  <h1 id = "statusHeader">Status Updates</h1>
   <ul id="logContainer"></ul>
 
   <script>
     const ul = document.getElementById("logContainer");
     const evtSource = new EventSource("/status_stream");
 
-    const running_state = false;
+    let running_state = false;
 
     function showProcessing(){
       h = document.createElement("h2");
       h.textContent = "Processing:" + document.getElementById("promptForm").textContent;
+      document.getElementById("statusHeader").appendChild(h);
     }
 
     evtSource.onmessage = function(event) {
+      console.log("Receiving event...")
       try {
         const logEntry = JSON.parse(event.data);
         const message = logEntry.message;
@@ -51,6 +49,8 @@
       }
     };
 
+    evtSource.onopen = () => console.log("SSE connection opened");
+    
     evtSource.onerror = function(event) {
       console.error("EventSource failed:", event);
     };
@@ -59,7 +59,8 @@
     const form = document.getElementById("promptForm");
     form.addEventListener("submit", () => {
       ul.innerHTML = "";  // Clear the list
-      running_state = true
+      running_state = true;
+      //document.getElementById("promptForm").textContent = "Stop";
     });
   </script>
 </body>
