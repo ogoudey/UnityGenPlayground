@@ -72,9 +72,9 @@ else
     python3 -m venv "$VENV_DIR"
     source "$VENV_DIR/bin/activate"
     echo "[INFO] Installing requirements (if requirements.txt exists)"
-    if [ -f "$PROJECT_DIR/requirements.txt" ]; then
+    if [ -f "$BACKEND/requirements.txt" ]; then
         pip install --upgrade pip
-        pip install -r "$PROJECT_DIR/requirements.txt"
+        pip install -r "$BACKEND/requirements.txt"
     fi
 fi
 
