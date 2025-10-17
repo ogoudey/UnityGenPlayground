@@ -89,7 +89,7 @@ async def createSkybox(skybox_description: str) -> Designation:
         return f"Successfully added '{skybox_name}' to the scene."
     except Exception:
         print("Error adding skybox...")
-        return f"Failed to add '{skybox_name}' to the scene. The name argument must be right."
+        return f"Failed to add '{skybox_name}' to the scene. There are likely no available skyboxes! (Incomplete asset library)...)"
     return f"Successfully added '{skybox_name}' to the scene."
 
 @function_tool
@@ -390,7 +390,7 @@ def positionVRHumanPlayer(transform: str, rotation: str = "{\"x\": 75, \"y\": 10
     """
     print(f"Placing human VR player ---> location {transform}, rotation {rotation}")
     print(f"Why this placement?:\n\t{explanation}")
-    log("Positioning VR experience...")
+    log("Positioning VR experience...", type='italic')
     log(explanation)
 
     global unity

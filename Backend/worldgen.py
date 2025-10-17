@@ -61,10 +61,13 @@ class WorldGen:
         log("World generator started...", type='italic')
         print("\n>>>>>> ", prompt, "\n")
         result = await Runner.run(self.coordinator, prompt, max_turns=20)
-        scene_path = agents.tools.unity.done_and_write(str(self.asset_project_path / "Assets" / self.scene_name))
+        path = str(self.asset_project_path / "Assets" / self.scene_name)
+        scene_path = agents.tools.unity.done_and_write(path)
         print(f"Scene @ {scene_path}")
         print(f"Coordinator response: \n{result.final_output}")
         log(result.final_output)
+        log(f"World generated at {scene_path}", type="bold")
+
 
     async def regime(self, regime_prompt):
         print("\n>>>>>> ", regime_prompt, "\n")
@@ -96,7 +99,7 @@ class AcrophobiaWorldGen(VRWorldGen):
     bridge_regime_prompt="Generate multiple stages of worlds that trigger acrophobia while crossing a bridge. Have the stages get progressively harder. Let there be three stages and let the heights of the bridges in each stage progress as 2m, 5m, 10m above ground or sea level."
 
     def __init__(self, asset_project_path, restricted: bool = False):
-        asset_project_path = Path(asset_project_path)
+        asset_project_path = Path(ASSET_LIB_PATH) / asset_project_path
         agents.tools.asset_project = asset_project_path
         restriction = f"These are the assets the system is restricted to:\n{[key.split('/')[-1] for key in list(agents.tools.asset_catalog.keys())]}" if restricted else ""
         super().__init__(asset_project_path, f"acro_{MODEL}_{asset_project_path}_{random.randint(100, 999)}", restriction)

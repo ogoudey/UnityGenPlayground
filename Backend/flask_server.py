@@ -68,7 +68,7 @@ def index():
 
 async def async_run(prompt, asset_project_path):
     Class_Name = Class_from_Asset_Project[asset_project_path]
-    gen = Class_Name(prompt, asset_project_path)
+    gen = Class_Name(asset_project_path)
     await gen.load()
     final_output = await gen.regime(prompt)
 
