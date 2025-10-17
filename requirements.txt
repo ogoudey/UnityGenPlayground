@@ -1,0 +1,8 @@
+openai-agents
+pyyaml
+ruemel.yaml
+flask
+flask[async]
+pydantic
+numpy
+noise
