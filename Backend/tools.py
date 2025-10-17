@@ -7,7 +7,7 @@ from dataclasses import dataclass
 from agents import function_tool, Runner
 from pydantic import BaseModel
 
-from subagents import ObjectPlanner, GroundCreator, SkyboxPlanner, TexturePlanner, SunPlanner
+from subagents import ObjectPlanner, GroundCreator, SkyboxPlanner, TexturePlanner, SunPlanner, SoundDesigner
 
 from logger import log
 
@@ -20,6 +20,7 @@ asset_catalog = {}
 synopses = {}
 skybox_material_leaves = []
 ground_material_leaves = []
+sound_leaves = []
 asset_project = ""
 
 
@@ -90,7 +91,30 @@ async def createSkybox(skybox_description: str) -> Designation:
     except Exception:
         print("Error adding skybox...")
         return f"Failed to add '{skybox_name}' to the scene. There are likely no available skyboxes! (Incomplete asset library)...)"
-    return f"Successfully added '{skybox_name}' to the scene."
+
+@function_tool
+async def createSound(sound_description):
+    log("Creating sounds...", type='italic')
+    agent = SoundDesigner()
+    prompt = prompt = {"Object description": sound_leaves,
+                "Available assets": sound_leaves}
+    t = time.time()
+    print(agent.name, "started")
+    result = await Runner.run(agent, json.dumps(prompt))
+    print(agent.name + ":", time.time() - t, "seconds.")
+
+    global unity
+    object_asset_path = result.final_output.asset_path
+    sound_name = object_asset_path.split("/")[-1]
+    unity.yaml.proposed_objects[sound_name] = object_asset_path
+    print(sound_name, "added to proposed_objects w path", object_asset_path)
+
+    try:
+        unity.add_sound(sound_name)
+        return f"Successfully added '{sound_name}' to the scene."
+    except Exception:
+        print(f"Error adding sound {sound_name}...")
+        return f"Failed to add '{sound_name}' to the scene. There are likely no available sound assets! (Incomplete asset library)...)"
 
 @function_tool
 async def createSun(description_of_sun_behavior: str) -> str:

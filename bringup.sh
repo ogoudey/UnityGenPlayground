@@ -138,7 +138,7 @@ echo "[INFO] Opening Unity..."
 
 if [ -x "$UNITY_PATH" ]; then
     echo "[INFO] Opening $PROJECT_DIR..."
-    "$UNITY_PATH" -projectPath "$PROJECT_DIR" &
+    "$UNITY_PATH" -projectPath -upmNoDefaultPackages "$PROJECT_DIR" &
 else
     echo "[WARN] Unity is not an executable at $UNITY_PATH. Please edit this script."
 fi
