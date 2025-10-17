@@ -58,7 +58,6 @@ class WorldGen:
         """
             prompt: prompt for Coordinator agent to generate world. Example: Generate a fish tank.
         """
-        log("World generator started...", type='italic')
         print("\n>>>>>> ", prompt, "\n")
         result = await Runner.run(self.coordinator, prompt, max_turns=20)
         path = str(self.asset_project_path / "Assets" / self.scene_name)
@@ -102,7 +101,7 @@ class AcrophobiaWorldGen(VRWorldGen):
         asset_project_path = Path(ASSET_LIB_PATH) / asset_project_path
         agents.tools.asset_project = asset_project_path
         restriction = f"These are the assets the system is restricted to:\n{[key.split('/')[-1] for key in list(agents.tools.asset_catalog.keys())]}" if restricted else ""
-        super().__init__(asset_project_path, f"acro_{MODEL}_{asset_project_path}_{random.randint(100, 999)}", restriction)
+        super().__init__(asset_project_path, f"acro_{MODEL}_{random.randint(100, 999)}", restriction)
         self.coordinator.instructions = Coordinator.acrophobia_v1[MODEL]
 
     async def get_prompt(self):

@@ -3,6 +3,8 @@ import os
 
 from coordinator import Checker, Reformer, Coordinator
 
+from logger import log
+
 from agents import Agent, function_tool
 
 MODEL = (os.getenv("MODEL") or "o3-mini").strip() or "o3-mini"
@@ -16,7 +18,9 @@ class CoordinatorRunner(Agent):
     In all likelihood, the user will only give one world, in which case you prompt the generator only once. If the user doesn't explicitly call for more than one world, just do one. (Even if the first is generated erroneously.)
     In many cases you can pass the user prompt right on through.
     Until the user suggests world generation, you may describe how you can generate a VR world in Unity for the user.
-    If it's conversational, keep your answer to brief, one-liners - like a text message."""
+    If it's conversational, keep your answer to brief, one-liners - like a text message.
+    
+    Once generating, your FINAL OUTPUT will occur after having generated the world, so please put it in the past tense."""
 
     def __init__(self, run_coordinator_function, name=None, instructions=None, ):
         global coordinator_function
@@ -34,7 +38,10 @@ async def run_coordinator(coordinator_prompt: str, name_for_this_coordinator: st
         Prompts a Coordinator agent to generate a world according to the prompt. Keep the prompt to-the-point, minimal, and clear. Only refer to a single world, with no mention of stages.
         coordinator_prompt: the prompt that you give to the coordinator for this world. Example: Generate a small world that only contains a fish tank with a clownfish in it.
         name_for_this_coordinator: just a name for this coordinator for reference. Example: Small-building world coordinator
+
+        Only call this tool ONCE
     """
     print(f"{name_for_this_coordinator} called")
+    log(f"{name_for_this_coordinator} started", type='italic')
     await coordinator_function(coordinator_prompt)
     print(f"{name_for_this_coordinator} done")
