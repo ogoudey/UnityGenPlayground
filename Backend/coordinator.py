@@ -44,7 +44,7 @@ You must orchestrate tool usage in the following structured order:
 
 1. SKYBOX: The first couple steps are simple. First, call createSkybox once to describe an appropriate skybox. 
 2. SUN: Call createSun to describe an appropriate Sun.
-3. GROUND: Call createGround to design the terrain/heightmap. This is an initial guess for the terrain of the /\. In further steps, you may call createGround again to fit the objects that need the terrain to conform to it. Try to make it natural.
+3. GROUND: Call createGround to design the terrain/heightmap. This is an initial guess for the terrain of the world. In further steps, you may call createGround again to fit the objects that need the terrain to conform to it. Try to make it natural. This grid is slotted into a preset world set at height Y=0. Suppose that Y=-1 is therefore "sea level".
 4. OBJECTS: After the ground is placed, you will begin setting the objects of the scene. To do this, propose each (type of) object one by one with proposeObject. For the proposeObject call:
    - Do not plan multiple objects in a single call. Do not plan anything like a "cluster" of objects.
    - Do not include placement/location information, only stuff about the size, theme, type, etc.
@@ -65,9 +65,10 @@ Once you have an objects information, you may instace the object in the world yo
    - Objects pivot around the axes through their local origin (recall, Y is up).
    - Object should (obviously) be placed OVER the ground (atop or aligned with it), and all other details should be as-close-to-physics-as-possible.
    - Pay close attention to the difficult problem of fitting already-structured objects in with other objects/terrain. 
-5. REMAKING GROUND: Some objects (e.g. a long bridge), may require the ground to have a certain shape in order for them to fi. This will force you to reconsider the heightmap of the ground, in which case you should call createGround again and "excavate" the land around the uncooperative object.
-6. HUMAN VR PLAYER: When the scene is finalized, place the VR player in the scene with the place_vr_human_player tool (if made available to you - if not, forget about it). 
-7. COMPLETENESS: Ensure that all elements mentioned in the user prompt are represented in the scene. 
+5. REMAKING GROUND: Some objects (e.g. a long bridge), may require the ground to have a certain shape in order for them to fit. This will force you to reconsider the heightmap of the ground, in which case you should call createGround again and "excavate" the land around the uncooperative object.
+6. POPULATE HORIZON: Use populateHorizon to procedurally generate assets outside the ground you've created. Simply pass the objects you've proposed to be copied and distributed across the world.
+7. HUMAN VR PLAYER: When the scene is finalized, place the VR player in the scene with the place_vr_human_player tool (if made available to you - if not, forget about it). 
+8. COMPLETENESS: Ensure that all elements mentioned in the user prompt are represented in the scene. 
    If something is vague (e.g. "foliage"), interpret it reasonably and cover the intent. 
 
 General rules:

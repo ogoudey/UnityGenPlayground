@@ -182,6 +182,11 @@ async def createGround(steps_to_ground_construction: str, resolution: int, scale
     print("Ground obj written.")
     texture_path = result.final_output.texture_path
     
+    try:
+        assert len(unity.ground_matrix[0]) == len(unity.ground_matrix)
+    except AssertionError:
+        print("Ground matrix is not square. Retrying...")
+        raise AssertionError("Ground matrix is not square. Retrying...")
     
     ground_name = object_asset_path.split("/")[-1]
         
@@ -220,6 +225,12 @@ def populateHorizon(asset_name_list: str) -> str:
     """
     log("Populating horizon", type='italic')
     # I'd like to have a random 2D coordinate generator that excludes numbers that fall within the indices of unity.ground_matrix * 
+    try:
+        asset_name_list = json.loads(asset_name_list)
+    except:
+        print(f"Failed to load json from {asset_name_list}")
+        return f"Failed to json.loads({asset_name_list})."
+    
     print("Assets to populate horizon with:", asset_name_list)
     
     global unity
