@@ -12,7 +12,7 @@ git clone https://github.com/ogoudey/AcroGen.git
 ```
 ./bringup.sh <asset project repo>
 ```
-where <asset project repo> is `acrophobia_v1` - a bare Unity project with at least a `Assets/` folder.
+where `<asset project repo>` is [`acrophobia_v1`](https://github.com/ogoudey/acrophobia_v1) - a bare Unity project linked to .
 
 The browser will now display a GUI. Prompt the chatbot to generate the worlds. Then in Unity go to `File > Open Scene > <the generated scene>`
 
