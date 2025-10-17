@@ -30,6 +30,18 @@ class SunPlanner(Agent):
             model=MODEL,
         )
 
+class SoundDesigner(Agent):
+    instructions = "Given the directory structure (asset tree), return the path to the file of the asset that best fits the desired description of a sound."
+
+    def __init__(self, name=None, instructions=None, ):
+        super().__init__(
+            name=name or f"SoundDesigner{random.randint(100,999)}",
+            instructions=instructions or SoundDesigner.instructions,
+            output_type=AssetPath,
+            model=MODEL,
+        )
+
+
 class ObjectPlanner(Agent):
     instructions_v1= "You will be provided a list of synopses (or summaries) of assets. It is your job to retrieve the synopsis that best matches the intended description to the user who doesn't know what assets are available. If the user seems misguided in their intention for an object, put that in a note and return the closest thing. Try to return one of the synopses for each request, leaving a note of the discrepency if any. Some rules: 1. You cannot change the object synopsis at all when you return it. 2. Don't mention the synopsis in your note. The note should inform placement of the object by refering to any mismatch in features of the retrieved vs desired asset. The user cannot scale or edit the asset you choose, only place it."
     

@@ -52,6 +52,7 @@ class WorldGen:
         print("Curated collections of materials for special objects")
         agents.tools.skybox_material_leaves =  assets.get_found(".mat", asset_projects=ASSET_LIB_PATH, asset_project_path=str(self.asset_project_path / "Assets/Skybox Materials"))
         agents.tools.ground_material_leaves = assets.get_found(".mat", asset_projects=ASSET_LIB_PATH, asset_project_path=str(self.asset_project_path / "Assets/Ground Materials"))
+        agents.tools.sound_leaves = assets.get_found(".mp3", asset_projects=ASSET_LIB_PATH, asset_project_path=str(self.asset_project_path / "Assets/Sounds"))
         
     
     async def run(self, prompt):
