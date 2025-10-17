@@ -6,47 +6,51 @@
 </head>
 <body>
   <h1>Enter Prompt</h1>
-  <form id="promptForm" method="POST">
+  <form id="promptForm" method="POST" action="/" onsubmit="disableButton()">
     <input type="text" name="prompt" required>
-    <button id="button">Submit</button>
+    <select name="asset_project" id="folderSelect" style="padding: 6px;">
+      {% for asset_project in asset_projects %}
+        <option value="{{ asset_project }}" {% if asset_project == selected_asset_project %}selected{% endif %}>{{ asset_project }}</option>
+      {% endfor %}
+    </select>
+    <button id="button">{{prompt}}</button>
   </form>
+  
+
 
   <h1 id = "statusHeader">Status Updates</h1>
   <ul id="logContainer"></ul>
 
   <script>
+    function disableButton() {
+      document.getElementById("button").disabled = true;
+      return true;
+    }
+
+    if ("{{clear_chat}}" === "true") {
+      console.log("Clearing chat!")
+      ul.innerHTML = "";  // Clear the list
+    }
+
     const ul = document.getElementById("logContainer");
     const evtSource = new EventSource("/status_stream");
 
     let running_state = false;
 
-    function showProcessing(){
-      console.log(running_state);
-      console.log(statusHeader);
-      statusHeader = document.getElementById("statusHeader");
-      if (running_state === true){
-        console.log("Adding processing element.");
-        h = document.createElement("h2");
-        h.textContent = "Processing:" + document.getElementById("promptForm").textContent;
-        statusHeader.appendChild(h);
-      } else {
-        if (statusHeader.children.length > 0){
-          statusHeader.removeChild(statusHeader.children[0]);
-        }
-      }
-      
-    }
-
     evtSource.onmessage = function(event) {
       console.log("<Receiving event>");
-      showProcessing();
       try {
         const logEntry = JSON.parse(event.data);
         const message = logEntry.message;
         const type = logEntry.type;
+        if (running_state === true){
+          document.getElementById("button").textContent = "Stop";
+        }
+        else {
+          document.getElementById("button").textContent = "Submit";
+        }
         if (message === "Done"){
           running_state = false;
-          showProcessing()
           return
         }
         console.log(message)
@@ -57,7 +61,7 @@
           console.log("Making italics...")
           li.style.fontStyle = "italic";
         }
-        ul.appendChild(li);
+        ul.prepend(li);
 
         
       } catch(e) {
@@ -74,10 +78,8 @@
     // Clear logs on new prompt submit
     const form = document.getElementById("promptForm");
     form.addEventListener("submit", () => {
-      ul.innerHTML = "";  // Clear the list
+      
       running_state = true;
-      document.getElementById("button").textContent = "Stop";
-      showProcessing()
     });
   </script>
 </body>

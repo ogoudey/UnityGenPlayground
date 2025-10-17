@@ -19,26 +19,61 @@ from worldgen import AcrophobiaWorldGen, VRWorldGen
 
 from logger import queue
 
+current_process = None  # global process handle
+
 MODEL = (os.getenv("MODEL") or "o4-mini").strip() or "o4-mini"  
     
 
 app = Flask(__name__)
 
+def get_all_asset_projects(dir="../Resources/Asset Projects"):
+    try:
+        return [
+            name for name in os.listdir(dir)
+            if os.path.isdir(os.path.join(dir, name))
+        ]
+    except Exception as e:
+        print("Error listing folders:", e)
+        return []
+
+
 @app.route('/', methods=['GET', 'POST'])
 def index():
-    if request.method == 'POST':
+    global current_process
+    asset_projects = get_all_asset_projects()
+    if request.method == 'GET':
+        if current_process is not None and current_process.is_alive():
+            print("Killing old process due to page reload...")
+            current_process.terminate()
+            current_process.join(timeout=1)
+            current_process = None
+            print("Clearing chat!")
+            return render_template('index.html', asset_projects=asset_projects, clear_chat="true")
+    elif request.method == 'POST':
         try:
             prompt = request.form['prompt']
-            process = Process(target=run, args=(prompt, queue))
-            process.daemon = True
-            process.start()
-            #return render_template('index.html', status="Running")
+            selected_asset_project = request.form.get('asset_project')
+            print(selected_asset_project)
+            if current_process is not None and current_process.is_alive():
+                current_process.terminate()
+                current_process.join(timeout=1)
+            current_process = Process(target=run, args=(prompt, selected_asset_project))
+            current_process.daemon = True
+            current_process.start()
+            return render_template('index.html', prompt="Running", asset_projects=asset_projects, selected_asset_project=selected_asset_project)
         except Exception:
             print("Bad post method.")
-            render_template('index.html')
-    return render_template('index.html')
+            render_template('index.html', prompt="Running", asset_projects=asset_projects)
+    return render_template('index.html', prompt="Running", asset_projects=asset_projects)
 
+async def async_run(prompt, asset_project_path):
+    Class_Name = Class_from_Asset_Project[asset_project_path]
+    gen = Class_Name(prompt, asset_project_path)
+    await gen.load()
+    final_output = await gen.regime(prompt)
 
+def run(prompt, asset_project_path):
+    asyncio.run(async_run(prompt, asset_project_path))
 
 @app.route('/status_stream')
 def status_stream():
@@ -68,22 +103,12 @@ def status_stream():
         }
     )
 
-async def async_run(prompt):
-    gen = AcrophobiaWorldGen(prompt)
-    await gen.load()
-    final_output = await gen.regime(prompt)
 
-"""
-async def async_run(prompt):
-    gen = AcrophobiaWorldGen(prompt)
-    await gen.load()
-    final_output = await gen.run(prompt)
-"""
-def run(prompt, queue):
-    asyncio.run(async_run(prompt))
     
 
-
+Class_from_Asset_Project = {
+    "Acrophobia_v1": AcrophobiaWorldGen,
+}
 
 if __name__ == '__main__':
     print("Server restart...")

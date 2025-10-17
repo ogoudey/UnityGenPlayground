@@ -95,11 +95,11 @@ class AcrophobiaWorldGen(VRWorldGen):
     
     bridge_regime_prompt="Generate multiple stages of worlds that trigger acrophobia while crossing a bridge. Have the stages get progressively harder. Let there be three stages and let the heights of the bridges in each stage progress as 2m, 5m, 10m above ground or sea level."
 
-    def __init__(self, restricted: bool = False):
-        asset_project_path = Path(ASSET_LIB_PATH) / "Acrophobia"
+    def __init__(self, asset_project_path, restricted: bool = False):
+        asset_project_path = Path(asset_project_path)
         agents.tools.asset_project = asset_project_path
         restriction = f"These are the assets the system is restricted to:\n{[key.split('/')[-1] for key in list(agents.tools.asset_catalog.keys())]}" if restricted else ""
-        super().__init__(asset_project_path, f"acro_{MODEL}_{random.randint(100, 999)}", restriction)
+        super().__init__(asset_project_path, f"acro_{MODEL}_{asset_project_path}_{random.randint(100, 999)}", restriction)
         self.coordinator.instructions = Coordinator.acrophobia_v1[MODEL]
 
     async def get_prompt(self):
