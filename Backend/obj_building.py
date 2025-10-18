@@ -152,9 +152,24 @@ def obj_from_grid(obj_path: str, grid: str = default_grid, scale=5.0, extend_to_
     print(local_matrix) 
 
 
+    uniform_uv = x / (len(line) - 1) * scale*scale
+    big_square_uv = uniform_uv * pad
+    sliver_uv = uniform_uv * dimension
+    obj_str += f"vt {big_square_uv:.6f} {big_square_uv:.6f}\n"
+    obj_str += f"vt {sliver_uv:.6f} {big_square_uv:.6f}\n"
+    obj_str += f"vt {big_square_uv:.6f} {big_square_uv:.6f}\n"
+    
     
 
-    for y in range(0, len(lines)):
+    line = lines[0].split(" ")
+    for x in range(0, len(line)):
+        u = x / (len(line) - 1) * scale*scale
+        v = y / (len(lines) - 1) * scale*scale
+        obj_str += f"vt {u:.6f} {v:.6f}\n"
+    
+    obj_str += f"vt {big_square_uv:.6f} {sliver_uv:.6f}\n"
+
+    for y in range(1, len(lines) -1):
         line = lines[y].split(" ")
         for x in range(0, len(line)):
             try:
@@ -164,21 +179,18 @@ def obj_from_grid(obj_path: str, grid: str = default_grid, scale=5.0, extend_to_
                 
             except Exception:
                 print("Could not add vt")    
+    
+    obj_str += f"vt {big_square_uv:.6f} {sliver_uv:.6f}\n"
 
-    ## UVs not done - TODO     
-    obj_str += f"vt {u:.6f} {v:.6f}\n"
-    obj_str += f"vt {u:.6f} {v:.6f}\n"
-    obj_str += f"vt {u:.6f} {v:.6f}\n"
-    obj_str += f"vt {u:.6f} {v:.6f}\n"
-    obj_str += f"vt {2*u:.6f} {v:.6f}\n"
-    obj_str += f"vt {u:.6f} {v:.6f}\n"
-    obj_str += f"vt {u:.6f} {v:.6f}\n"
-    obj_str += f"vt {u:.6f} {v:.6f}\n"           
-    obj_str += f"vt {2*u:.6f} {v:.6f}\n"
-    obj_str += f"vt {2*u:.6f} {v:.6f}\n"
-    obj_str += f"vt {2*u:.6f} {v:.6f}\n"
-    obj_str += f"vt {2*u:.6f} {v:.6f}\n"
+    line = lines[-1].split(" ")
+    for x in range(0, len(line)):
+        u = x / (len(line) - 1) * scale*scale
+        v = y / (len(lines) - 1) * scale*scale
+        obj_str += f"vt {u:.6f} {v:.6f}\n"
 
+    obj_str += f"vt {big_square_uv:.6f} {big_square_uv:.6f}\n"
+    obj_str += f"vt {sliver_uv:.6f} {big_square_uv:.6f}\n"
+    obj_str += f"vt {big_square_uv:.6f} {big_square_uv:.6f}\n"
 
 
     obj_str1 = obj_str
