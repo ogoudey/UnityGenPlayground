@@ -97,7 +97,7 @@ async def createSound(sound_description):
     log("Creating sounds...", type='italic')
     agent = SoundDesigner()
     prompt = prompt = {"Object description": sound_leaves,
-                "Available assets": sound_leaves}
+                "Available assets": sound_leaves}uniform_uv
     t = time.time()
     print(agent.name, "started")
     result = await Runner.run(agent, json.dumps(prompt))

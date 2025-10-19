@@ -82,7 +82,7 @@ class VRWorldGen(WorldGen):
     def __init__(self, asset_project_path: Path = None, scene_name: str = None, restriction: str = None):
         super().__init__(asset_project_path, scene_name, None, restriction)
         agents.tools.asset_project = asset_project_path
-        self.coordinator.tools.extend([positionVRHumanPlayer, createGround, createSkybox, createSun, populateHorizon])
+        self.coordinator.tools.extend([positionVRHumanPlayer, createGround, createSkybox, createSun]) #, populateHorizon
         self.coordinator.instructions = Coordinator.phobia_v1[MODEL]
         self.patient = Phobos() 
 
