@@ -1,7 +1,7 @@
 import os
 import random
 
-from agents import Agent
+from agents import Agent, ModelSettings
 from pydantic import BaseModel
 
 
@@ -87,6 +87,9 @@ Your role is to reliably build a coherent, grounded Unity world from the descrip
             instructions=instructions or Coordinator.acrophobia_v1[MODEL],
             tools=tools or [getContactPoints, proposeObject, positionObject],
             model=MODEL,
+            #model_settings=ModelSettings(
+            #    reasoning=Reasoning(effort="high", summary="detailed")
+            #),
         )
         self.restriction = None
         

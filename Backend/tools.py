@@ -101,7 +101,7 @@ async def createSound(sound_description):
     log("Creating sounds...", type='italic')
     agent = SoundDesigner()
     prompt = prompt = {"Object description": sound_leaves,
-                "Available assets": sound_leaves}uniform_uv
+                "Available assets": sound_leaves}
     t = time.time()
     print(agent.name, "started")
     result = await Runner.run(agent, json.dumps(prompt))
@@ -176,11 +176,11 @@ async def createGround(steps_to_ground_construction: str, resolution: int, scale
     
     grid = result.final_output.grid
     explanation = result.final_output.explanation_of_heights
-    if horizon_plain and set_perimeter_to_0:
-        object_asset_path, unity.ground_matrix = obj_building.obj_from_grid(str(asset_project / "Assets/Manifest"), grid, scale, extend_to_big=True)
+    if horizon_plain and set_perimeter_to_0 and PROCEDURAL == "y":
+        object_asset_path, unity.ground_matrix = obj_building.obj_from_grid_procedural(str(asset_project / "Assets/Manifest"), grid, scale)
 
     else:
-        object_asset_path, unity.ground_matrix = obj_building.obj_from_grid(str(asset_project / "Assets/Manifest"), grid, scale) # writes objget_ground
+        object_asset_path, unity.ground_matrix = obj_building.obj_from_grid(str(asset_project / "Assets/Manifest"), grid, scale)
 
     unity.ground_scale = scale
     print("Ground obj written.")
