@@ -1,6 +1,7 @@
 import random
 import json
 import numpy as np
+from tqdm import tqdm
 
 default_grid = """0 0 0 0 0 0 0 0 0 0 0 0
 0 0 0 0 0 2 0 0 0 0 0 0
@@ -15,7 +16,11 @@ default_grid = """0 0 0 0 0 0 0 0 0 0 0 0
 0 0 0 0 0 0 0 0 0 0 0 0
 0 0 0 0 0 0 0 0 0 0 0 0"""
 
-pad = 1000
+mini_grid = """1 1 1
+1 2 1
+1 1 1"""
+
+pad = 100
 
 def make_quads(matrix, x, y, obj_str, visited=[]):
     x_per_row = len(matrix)
@@ -38,40 +43,18 @@ def make_quads(matrix, x, y, obj_str, visited=[]):
 
     return new_line, visited
 
-def facify(matrix, extended_to_big=True):
+def facify(matrix):
     lines = ""
-    x_per_row = len(matrix)
-    print(x_per_row)
-    index_offset = 6 if extended_to_big else 0
-    if extended_to_big:
-        lines += f"f 1/1 5/5 6/6 2/2\n"
-        lines += f"f 2/2 6/6 {5 + x_per_row}/{5 + x_per_row} 3/3\n"
-        lines += f"f 3/3 {5 + x_per_row}/{5 + x_per_row} {6 + x_per_row}/{6 + x_per_row} 4/4\n"
-        lines += f"f 5/5 {7 + x_per_row * (x_per_row - 1)}/{7 + x_per_row * (x_per_row - 1)} {8 + x_per_row * (x_per_row - 1)}/{8 + x_per_row * (x_per_row - 1)} 6/6\n"
-        lines += f"f {5 + x_per_row}/{5 + x_per_row} {7 + x_per_row * x_per_row}/{7 + x_per_row * x_per_row} {8 + x_per_row * x_per_row}/{8 + x_per_row * x_per_row} {6 + x_per_row}/{6 + x_per_row}\n"
-        lines += f"f {7 + x_per_row * (x_per_row - 1)}/{7 + x_per_row * (x_per_row - 1)} {9 + x_per_row * x_per_row}/{9 + x_per_row * x_per_row} {10 + x_per_row * x_per_row}/{10 + x_per_row * x_per_row} {8 + x_per_row * (x_per_row - 1)}/{8 + x_per_row * (x_per_row - 1)}\n"
-        lines += f"f {8 + x_per_row * (x_per_row - 1)}/{8 + x_per_row * (x_per_row - 1)} {10 + x_per_row * x_per_row}/{10 + x_per_row * x_per_row} {11 + x_per_row * x_per_row}/{11 + x_per_row * x_per_row} {7 + x_per_row * x_per_row}/{7 + x_per_row * x_per_row}\n"
-        lines += f"f {7 + x_per_row * x_per_row}/{7 + x_per_row * x_per_row} {11 + x_per_row * x_per_row}/{11 + x_per_row * x_per_row} {12 + x_per_row * x_per_row}/{12 + x_per_row * x_per_row} {8 + x_per_row * x_per_row}/{8 + x_per_row * x_per_row}\n"
-    visited = []
+    row_size = len(matrix)
     
-    for x in range(0, len(matrix[0]) -1):    
-        if not (x, 0) in visited:
-            visited.append((x, 0))
-            lines += f"f {0 + x + index_offset}/{0 + x + index_offset} {x_per_row + 1 + x + index_offset}/{x_per_row + 1 + x + index_offset} {x_per_row + 2 + x + index_offset}/{x_per_row + 2 + x + index_offset} {1 + x + index_offset}/{1 + x + index_offset}\n"
-    index_offset = 7 if extended_to_big else 0
-    for y in range(1, len(matrix) -2):
+    visited = []
+
+    for y in tqdm(range(0, len(matrix) -1)):
         for x in range(0, len(matrix[y]) -1):    
                 if not (x, y) in visited:
                     visited.append((x, y))
-                    lines += f"f {y*x_per_row + x + index_offset}/{y*x_per_row + x + index_offset} {(y+1)*x_per_row + x + index_offset}/{(y+1)*x_per_row + x + index_offset} {(y+1)*x_per_row + x + 1 + index_offset}/{(y+1)*x_per_row + x + 1 + index_offset} {y*x_per_row + x + 1 + index_offset}/{y*x_per_row + x + 1 + index_offset}\n"
-    index_offset = 6 if extended_to_big else 0
-    y = len(matrix) - 2
-    for x in range(1, len(matrix[-1])):    
-        if not (x, y) in visited:
-            visited.append((x, y))
-            lines += f"f {y*x_per_row + x + index_offset}/{y*x_per_row + x + index_offset} {(y+1)*x_per_row + x + 1 + index_offset}/{(y+1)*x_per_row + x + 1 + index_offset} {(y+1)*x_per_row + x + 2 + index_offset}/{(y+1)*x_per_row + x + 2 + index_offset} {y*x_per_row + x + 1 + index_offset}/{y*x_per_row + x + 1 + index_offset}\n"
-
-    
+                    lines += f"f {y*row_size + x + 1}/{y*row_size + x + 1} {(y+1)*row_size + x + 1}/{(y+1)*row_size + x + 1} {(y+1)*row_size + x + 2}/{(y+1)*row_size + x + 2} {y*row_size + x + 2}/{y*row_size + x + 2}\n"
+ 
     
     return lines, visited
 
@@ -136,135 +119,76 @@ def obj_from_grid(obj_path: str, grid: str = default_grid, scale=5.0):
 
 def obj_from_grid_procedural(obj_path: str, grid: str = default_grid, scale=5.0):
     location = {"x": 0.0, "y": 0.0, "z": 0.0}
-    matrix = []
     obj_str = ""
     lines = grid.split("\n")
+    line = lines[0].split(" ")
     dimension = scale*len(lines) - scale
     print(grid)
     
-    
-    
+    big_world = []
+    small_world = []
 
-    # regions 1-3
-    obj_str += f"v {pad} {0.0} {pad + dimension}\n" 
-    obj_str += f"v {0.0} {0.0} {pad + dimension}\n"
-    obj_str += f"v {-dimension} {0.0} {pad + dimension}\n"
-    obj_str += f"v {-(pad + dimension)} {0.0} {pad + dimension}\n" 
+    # Section I
+    for y in range(0, pad):
+        row = []
+        for x in range(0, pad + len(line) + pad):
+            row.append(0.0)
+            obj_str += f"v {float(pad - x)*scale} {0.0} {float(pad + len(lines) - y - 1)*scale}\n"
+        big_world.append(row)
+        print(pad + len(lines) - y - 1, ": ",row)
+    print("-----------")
 
-    
-    #obj_str += f"v {0.0} {0.0} {dimension}\n"
-    #obj_str += f"v {dimension} {0.0} {dimension}\n"
-    
-
-    
-
-    print("\nVVVVVVVVV\n")
-    obj_str += f"v {pad} {0.0} {dimension}\n"
-    line = lines[0].split(" ")
-    row = []
-    
-    for x in range(0, len(line)):
-        try:
-            row.append(float(line[x]))
-            obj_str += f"v {-float(x)*scale} {float(line[x])} {dimension}\n"  
-        except Exception:
-            print(line[x], "is an arifact of the grid. Ignoring...")
-    print(line)
-    obj_str += f"v {-(pad + dimension)} {0.0} {dimension}\n"
-    matrix.append(row)
-    for y in range(1, len(lines) -1):
+    # Section II
+    for y in range(0, len(lines)):
         line = lines[y].split(" ")
         row = []
-        
+        for x in range(0, pad):
+            obj_str += f"v {float(pad - x)*scale} {0.0} {dimension - float(y)*scale}\n"
+            row.append(0.0)
+
+        small_world_row = []
         for x in range(0, len(line)):
             try:
+                small_world_row.append(float(line[x]))
                 row.append(float(line[x]))
                 obj_str += f"v {-float(x)*scale} {float(line[x])} {dimension - float(y)*scale}\n"  
             except Exception:
                 print(line[x], "is an arifact of the grid. Ignoring...")
-        print(line)
-
-            
-        matrix.append(row)
-
-    obj_str += f"v {pad} {0.0} {0.0}\n"
-    line = lines[-1].split(" ")
-    row = []
-    for x in range(0, len(line)):
-        try:
-            row.append(float(line[x]))
-            obj_str += f"v {-float(x)*scale} {float(line[x])} {0.0}\n"  
-        except Exception:
-            print(line[x], "is an arifact of the grid. Ignoring...")
-    print(line)
-    matrix.append(row)
+        small_world.append(small_world_row)
+        
+        for x in range(0, pad):
+            obj_str += f"v {float(-len(line) - x)*scale} {0.0} {dimension - float(y)*scale}\n"
+            row.append(0.0)
+        big_world.append(row)
+        print((dimension - float(y)*scale)/scale, ": ",row)
+    print("-----------")
     
-    #obj_str += f"v {0.0} {0.0} {0.0}\n"
-    #obj_str += f"v {dimension} {0.0} {0.0}\n"
-    obj_str += f"v {-(pad + dimension)} {0.0} {0.0}\n"
+    # Section III
+    for y in range(0, pad):
+        row = []
+        for x in range(0, pad + len(line) + pad):
+            row.append(0.0)
+            obj_str += f"v {float(pad - x)*scale} {0.0} {float(- y - 1)*scale}\n"
+        big_world.append(row)
+        print(- y - 1, ": ",row)
 
-    obj_str += f"v {pad} {0.0} {-pad}\n"
-    obj_str += f"v {0.0} {0.0} {-pad}\n"
-    obj_str += f"v {-dimension} {0.0} {-pad}\n"
-    obj_str += f"v {-(pad + dimension)} {0.0} {-pad}\n"
-
-
-    print("\nVVVVVVVVV\n")
-    local_matrix = matrix.copy()
-    print(local_matrix) 
-
-
-    # Texture coordinates need to be fixed. I can't figure it out.
-
-    uniform_uv = 1
-    big_square_uv = 1
-    sliver_uv = 1
-
-    obj_str += f"vt {pad/2:.6f} {0:.6f}\n"
-    obj_str += f"vt {pad:.6f} {0:.6f}\n"
-    obj_str += f"vt {0:.6f} {pad:.6f}\n"
-    obj_str += f"vt {0:.6f} {pad:.6f}\n"
-    obj_str += f"vt {0:.6f} {pad:.6f}\n"
     
 
-    line = lines[0].split(" ")
-    for x in range(0, len(line)):
-        u = x / (len(line) - 1) * scale*scale
-        v = y / (len(lines) - 1) * scale*scale
-        obj_str += f"vt {u:.6f} {v:.6f}\n"
-    
-    obj_str += f"vt {0:.6f} {1/2:.6f}\n"
-
-    for y in range(1, len(lines) -1):
-        line = lines[y].split(" ")
-        for x in range(0, len(line)):
+    # Textures
+    for y in range(0, len(big_world)):
+        for x in range(0, len(big_world[y])):
             try:
-                u = x / (len(line) - 1) * scale*scale
-                v = y / (len(lines) - 1) * scale*scale
+                u = x / (len(big_world[0]) - 1) * scale*scale
+                v = y / (len(big_world) - 1) * scale*scale
                 obj_str += f"vt {u:.6f} {v:.6f}\n"
                 
             except Exception:
                 print("Could not add vt")    
     
-    obj_str += f"vt {big_square_uv:.6f} {sliver_uv:.6f}\n"
-
-    line = lines[-1].split(" ")
-    for x in range(0, len(line)):
-        u = x / (len(line) - 1) * scale*scale
-        v = y / (len(lines) - 1) * scale*scale
-        obj_str += f"vt {u:.6f} {v:.6f}\n"
-
-    obj_str += f"vt {big_square_uv:.6f} {big_square_uv:.6f}\n"
-
-
-    obj_str += f"vt {pad*u:.6f} {pad:.6f}\n"
-    obj_str += f"vt {pad*u:.6f} {pad:.6f}\n"
-    obj_str += f"vt {pad*u:.6f} {pad:.6f}\n"
-    obj_str += f"vt {pad*u:.6f} {pad:.6f}\n"
 
 
     obj_str1 = obj_str
-    face_data, visits = facify(matrix, extended_to_big=extend_to_big)
+    face_data, visits = facify(big_world)
 
     obj_str1 += face_data
     print("File contains", len(face_data.split("\n")), "faces.")
@@ -279,4 +203,4 @@ def obj_from_grid_procedural(obj_path: str, grid: str = default_grid, scale=5.0)
     print("Ground obj written to", out_path1)
     out_path = out_path1
     
-    return out_path, local_matrix
+    return out_path, small_world
