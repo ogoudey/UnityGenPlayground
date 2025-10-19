@@ -14,6 +14,10 @@ from logger import log
 
 import obj_building
 import procedural
+
+PROCEDURAL = (os.getenv("PROCEDURAL") or "n").strip() or "n"
+
+
 """ Preprocessing depends on type of worldgen. These global variables are set from worldgen.TypeofWorldGen """
 
 asset_catalog = {}

@@ -19,6 +19,7 @@ from scene import World
 
 MODEL = (os.getenv("MODEL") or "o3-mini").strip() or "o3-mini"
 ASSET_LIB_PATH = (os.getenv("ASSET_LIB_PATH") or "../Resources/Asset Projects").strip() or "../Resources/Asset Projects"  
+PROCEDURAL = (os.getenv("MODEL") or "o3-mini").strip() or "o3-mini"
 
 class WorldGen:
     

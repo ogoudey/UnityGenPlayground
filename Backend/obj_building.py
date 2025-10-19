@@ -1,5 +1,6 @@
 import random
 import json
+import numpy as np
 
 default_grid = """0 0 0 0 0 0 0 0 0 0 0 0
 0 0 0 0 0 2 0 0 0 0 0 0
@@ -74,7 +75,7 @@ def facify(matrix, extended_to_big=True):
     
     return lines, visited
 
-def obj_from_grid(obj_path: str, grid: str = default_grid, scale=5.0, extend_to_big=False):
+def obj_from_grid(obj_path: str, grid: str = default_grid, scale=5.0):
     location = {"x": 0.0, "y": 0.0, "z": 0.0}
     scale = 5
     matrix = []
@@ -133,13 +134,14 @@ def obj_from_grid(obj_path: str, grid: str = default_grid, scale=5.0, extend_to_
     return out_path, matrix
     # Generate faces
 
-def obj_from_grid_procedural(obj_path: str, grid: str = default_grid, scale=5.0, extend_to_big=True):
+def obj_from_grid_procedural(obj_path: str, grid: str = default_grid, scale=5.0):
     location = {"x": 0.0, "y": 0.0, "z": 0.0}
     matrix = []
     obj_str = ""
     lines = grid.split("\n")
     dimension = scale*len(lines) - scale
     print(grid)
+    
     
     
 
@@ -267,9 +269,6 @@ def obj_from_grid_procedural(obj_path: str, grid: str = default_grid, scale=5.0,
     obj_str1 += face_data
     print("File contains", len(face_data.split("\n")), "faces.")
     
-    if extend_to_big:
-        print("\nVVVV extending to inf. VVVV\n")
-
 
 
     
