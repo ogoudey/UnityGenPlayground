@@ -479,6 +479,7 @@ def set_ID(text: str, new_id: str=None) -> str:
         
 def get_guid(meta_file: str) -> str:
     """Returns the 'guid' property from a Unity .meta YAML file."""
+    print(f"Getting GUID for {meta_file}")
     with open(meta_file, "r") as f:
         data = pyyaml.safe_load(f)
     

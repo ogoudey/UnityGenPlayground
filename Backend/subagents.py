@@ -119,7 +119,7 @@ Rules:
 - Shape the terrain according to the prompt, and form around the placed objects (if any).
 - Use the planTexture tool to set the texture/material of the ground (include the path in what you return). 
 - After the grid, add an explanation of the landscape and its features. Reference explicitly the input description but don't refer to indices. Put your explanation in terms of meters, not indices. Give abundant information about the ground in terms of meters.
-- The values on the perimeter of the world must be 0. This is important because this smallish grid you're making slots in a plain.
+- The values on the perimeter of the world must be 0. This is important because this smallish grid you're making slots within an outside plain. This outside plain is at "ground level" - heights of 0.
                                  
 Output format must follow GroundData:
 - grid: the float grid as plain text sized according to the resolution (perimeter 0) Must be N x N. 

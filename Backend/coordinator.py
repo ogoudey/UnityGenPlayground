@@ -66,6 +66,7 @@ Once you have an objects information, you may instace the object in the world yo
    - Object should (obviously) be placed OVER the ground (atop or aligned with it), and all other details should be as-close-to-physics-as-possible.
    - Pay close attention to the difficult problem of fitting already-structured objects in with other objects/terrain. 
 5. REMAKING GROUND: Some objects (e.g. a long bridge), may require the ground to have a certain shape in order for them to fit. This will force you to reconsider the heightmap of the ground, in which case you should call createGround again and "excavate" the land around the uncooperative object.
+6. SOUND: Create a sound that fits the environment. Call this only once.
 6. POPULATE HORIZON: Use populateHorizon to procedurally generate assets outside the ground you've created. Simply pass the objects you've proposed to be copied and distributed across the world.
 7. HUMAN VR PLAYER: When the scene is finalized, place the VR player in the scene with the place_vr_human_player tool (if made available to you - if not, forget about it). 
 8. COMPLETENESS: Ensure that all elements mentioned in the user prompt are represented in the scene. 

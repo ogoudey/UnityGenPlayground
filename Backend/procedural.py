@@ -7,6 +7,10 @@ def populate(asset_path_list, unity):
     ground_matrix, ground_scale = unity.ground_matrix, unity.ground_scale
     dimension = len(ground_matrix)*ground_scale - ground_scale
 
+    if len(ground_matrix) == 0:
+        print("Cannot populate assets over no ground...")
+        return "Cannot populate assets over no ground..."
+
     def in_no_pose_zone(point):
         if point[0] < ground_scale * (len(ground_matrix[0]) - 1) and point[0] > 0:
             if point[1] < ground_scale * (len(ground_matrix) - 1) and point[1] > 0:

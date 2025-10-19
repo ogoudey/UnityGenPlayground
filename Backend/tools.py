@@ -185,8 +185,8 @@ async def createGround(steps_to_ground_construction: str, resolution: int, scale
     try:
         assert len(unity.ground_matrix[0]) == len(unity.ground_matrix)
     except AssertionError:
-        print("Ground matrix is not square. Retrying...")
-        raise AssertionError("Ground matrix is not square. Retrying...")
+        print(f"Ground matrix is not square but {len(unity.ground_matrix[0])} by {len(unity.ground_matrix)}. Retrying...")
+        raise AssertionError(f"Ground matrix is not square but {len(unity.ground_matrix[0])} by {len(unity.ground_matrix)}. Try a smaller resolution to increase performance.")
     
     ground_name = object_asset_path.split("/")[-1]
         
@@ -220,7 +220,7 @@ async def createGround(steps_to_ground_construction: str, resolution: int, scale
 def populateHorizon(asset_name_list: str) -> str:
     """
         Beyond the heightmap and region that you've added objects to, there is a background world that extends to the horizon. You are not required to position objects in this zone. Rather, pass a list of objects that you've already proposed to this tool, and some procedure will automatically populate this zone outside of the important region you've designed. Therefore, pass objects that would realistically be 'randomly' generated.
-        asset_name_list: A stringified list of proposed object names. Make sure the names match exactly the Name field of a proposed object returned from proposeObject(). Example: "[\"a house\", \"Bridge 1\", \"Candle 2\"]".
+        asset_name_list: A stringified list of proposed object names. Make sure the names match exactly the Name field of a proposed object returned from proposeObject(). Example: "[\"a house\", \"tree 2\", \"Grass1\"]". All objects are scattered according to Perlin Noise.
 
     """
     log("Populating horizon", type='italic')

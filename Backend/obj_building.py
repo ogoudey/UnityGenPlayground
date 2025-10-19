@@ -1,17 +1,18 @@
 import random
 import json
 
-default_grid = """0 0 0 0 0 0 0 0 0 0 0
-0 0 0 0 0 2 0 0 0 0 0
-0 0 0 0 0 3 0 0 0 0 0
-0 0 0 0 0 6 0 0 0 0 0
-0 0 0 0 0 8 0 0 0 0 0
-0 0 0 0 0 10 0 0 0 0 0
-0 0 0 0 0 0 0 0 0 0 0
-0 0 0 0 0 0 0 0 0 0 0
-0 0 0 0 0 0 0 0 0 0 0
-0 0 0 0 0 0 0 0 0 0 0
-0 0 0 0 0 0 0 0 0 0 0"""
+default_grid = """0 0 0 0 0 0 0 0 0 0 0 0
+0 0 0 0 0 2 0 0 0 0 0 0
+0 0 0 0 0 3 0 0 0 0 0 0
+0 0 0 0 0 6 0 0 0 0 0 0
+0 0 0 0 0 8 0 0 0 0 0 0
+0 0 0 0 0 10 0 0 0 0 0 0
+0 0 0 0 0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0 0 0 0 0"""
 
 pad = 1000
 
@@ -73,7 +74,66 @@ def facify(matrix, extended_to_big=True):
     
     return lines, visited
 
-def obj_from_grid(obj_path: str, grid: str = default_grid, scale=5.0, extend_to_big=True):
+def obj_from_grid(obj_path: str, grid: str = default_grid, scale=5.0, extend_to_big=False):
+    location = {"x": 0.0, "y": 0.0, "z": 0.0}
+    scale = 5
+    matrix = []
+    obj_str = ""
+    lines = grid.split("\n")
+
+    dimension = scale*len(lines) - scale
+    print(grid)
+    
+    print("\nVVVVVVVVV\n")
+    for y in range(0, len(lines)):
+        line = lines[y].split(" ")
+        row = []
+        
+        for x in range(0, len(line)):
+            row.append(float(line[x]))
+            try:
+                obj_str += f"v {-float(x)*scale} {float(line[x])} {dimension - float(y)*scale}\n"  
+            except Exception:
+                print(line[x], "is an arifact of the grid. Ignoring...")
+        print(line)
+        
+
+            
+        matrix.append(row)
+    print("\nVVVVVVVVV\n")
+    print(matrix) 
+
+
+    for y in range(0, len(lines)):
+        line = lines[y].split(" ")
+        for x in range(0, len(line)):
+            try:
+                u = x / (len(line) - 1) * scale*scale
+                v = y / (len(lines) - 1) * scale*scale
+                obj_str += f"vt {u:.6f} {v:.6f}\n"
+                
+            except Exception:
+                print("Could not add vt")         
+                
+                
+    """ 1st pass """
+    obj_str1 = obj_str
+    face_data, visits = facify(matrix)
+    obj_str1 += face_data
+    print("File contains", len(face_data.split("\n")), "faces.")
+    
+    
+    out_file = "ground"
+    out_path1 = obj_path + "/" + out_file + str(random.randint(100, 999)) + ".obj"
+    with open(out_path1, "w") as f:
+        f.write(obj_str1)
+    print("Ground obj written to", out_path1)
+    out_path = out_path1
+    
+    return out_path, matrix
+    # Generate faces
+
+def obj_from_grid_procedural(obj_path: str, grid: str = default_grid, scale=5.0, extend_to_big=True):
     location = {"x": 0.0, "y": 0.0, "z": 0.0}
     matrix = []
     obj_str = ""
@@ -152,13 +212,17 @@ def obj_from_grid(obj_path: str, grid: str = default_grid, scale=5.0, extend_to_
     print(local_matrix) 
 
 
-    uniform_uv = x / (len(line) - 1) * scale*scale
-    big_square_uv = uniform_uv * pad
-    sliver_uv = uniform_uv * dimension
-    obj_str += f"vt {big_square_uv:.6f} {big_square_uv:.6f}\n"
-    obj_str += f"vt {sliver_uv:.6f} {big_square_uv:.6f}\n"
-    obj_str += f"vt {big_square_uv:.6f} {big_square_uv:.6f}\n"
-    
+    # Texture coordinates need to be fixed. I can't figure it out.
+
+    uniform_uv = 1
+    big_square_uv = 1
+    sliver_uv = 1
+
+    obj_str += f"vt {pad/2:.6f} {0:.6f}\n"
+    obj_str += f"vt {pad:.6f} {0:.6f}\n"
+    obj_str += f"vt {0:.6f} {pad:.6f}\n"
+    obj_str += f"vt {0:.6f} {pad:.6f}\n"
+    obj_str += f"vt {0:.6f} {pad:.6f}\n"
     
 
     line = lines[0].split(" ")
@@ -167,7 +231,7 @@ def obj_from_grid(obj_path: str, grid: str = default_grid, scale=5.0, extend_to_
         v = y / (len(lines) - 1) * scale*scale
         obj_str += f"vt {u:.6f} {v:.6f}\n"
     
-    obj_str += f"vt {big_square_uv:.6f} {sliver_uv:.6f}\n"
+    obj_str += f"vt {0:.6f} {1/2:.6f}\n"
 
     for y in range(1, len(lines) -1):
         line = lines[y].split(" ")
@@ -189,8 +253,12 @@ def obj_from_grid(obj_path: str, grid: str = default_grid, scale=5.0, extend_to_
         obj_str += f"vt {u:.6f} {v:.6f}\n"
 
     obj_str += f"vt {big_square_uv:.6f} {big_square_uv:.6f}\n"
-    obj_str += f"vt {sliver_uv:.6f} {big_square_uv:.6f}\n"
-    obj_str += f"vt {big_square_uv:.6f} {big_square_uv:.6f}\n"
+
+
+    obj_str += f"vt {pad*u:.6f} {pad:.6f}\n"
+    obj_str += f"vt {pad*u:.6f} {pad:.6f}\n"
+    obj_str += f"vt {pad*u:.6f} {pad:.6f}\n"
+    obj_str += f"vt {pad*u:.6f} {pad:.6f}\n"
 
 
     obj_str1 = obj_str

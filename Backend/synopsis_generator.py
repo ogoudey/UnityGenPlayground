@@ -15,7 +15,7 @@ async def load(assets_info):
     return active_synopses
 
 async def update_synopsis_file(assets_info, synopses):
-    i = 1
+    i = 0
     updates_needed = len(assets_info) - len(synopses)
     for asset_path, asset_info in assets_info.items():
         found = False
@@ -40,7 +40,7 @@ async def update_synopsis_file(assets_info, synopses):
             s.write(output_str)
             print("Synopsis file updated.")
     represented_assets = {}
-    unrepresented_assets = 0
+    unrepresented_assets = []
     for synopsis, ante_asset_path in synopses.copy().items():
         found = False
         for asset_path in list(assets_info.keys()):
@@ -48,9 +48,9 @@ async def update_synopsis_file(assets_info, synopses):
                 found = True
                 represented_assets[synopsis] = ante_asset_path
         if not found:
-            unrepresented_assets += 1
-    if unrepresented_assets > 0:
-        print(f"{unrepresented_assets} marked as irrelevant because the assets are not imported.")
+            unrepresented_assets.append(ante_asset_path)
+    if len(unrepresented_assets) > 0:
+        print(f"The following asset are marked as irrelevant because the assets are not imported:\n{unrepresented_assets}")
     return represented_assets
     # synopses updated
 
@@ -58,7 +58,7 @@ async def update_synopsis_file(assets_info, synopses):
 async def generate_synopsis(asset_info):
     synopsis_generator = Agent(
         name="SynopsisGenerator",
-        instructions = "Give a brief description of the asset, given supplied info. Context: You are describing a .prefab asset for a Unity world. Later these synopses will be used to assist retrieval of the asset based on a new desired description. For example, later, something like 'a small rock with moss' will be passed to an agent who then looks at synopses like the one you are generating and returns the corresponding asset info. So keep it brief. Put your answer as a 'noun phrase' - no 'this object is...' but rather 'a rock with such and such...'",
+        instructions = "Give a brief description of the asset, given supplied info. Context: You are describing a .prefab asset for a Unity world. Later these synopses will be used to assist retrieval of the asset based on a new desired description. If you include measurement information in the synopsis, be sure its accurate. For example, later, something like 'a small rock with moss' will be passed to an agent who then looks at synopses like the one you are generating and returns the corresponding asset info. So keep it brief. Put your answer as a 'noun phrase' - no 'this object is...' but rather 'a rock with such and such...'",
         model=MODEL
     )
     prompt = {"Asset info": asset_info}
