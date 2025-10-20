@@ -1,6 +1,6 @@
 # World Generator
 
-## Main Setup
+## Setup
 To use this project,
 
 1. Clone this repository
