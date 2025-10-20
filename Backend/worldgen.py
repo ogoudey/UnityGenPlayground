@@ -9,7 +9,7 @@ import assets
 import synopsis_generator
 from enrichment import Phobos
 from coordinator import Checker, Reformer, Coordinator
-from tools import getGroundMatrix, proposeObject, positionObject, positionVRHumanPlayer, createSkybox, createGround, getContactPoints, createSun, populateHorizon
+from tools import getGroundMatrix, proposeObject, positionObject, positionVRHumanPlayer, createSkybox, createGround, getContactPoints, createSun, populateHorizon, createSound, create50mx50mGround
 
 from logger import log
 
@@ -19,7 +19,7 @@ from scene import World
 
 MODEL = (os.getenv("MODEL") or "o3-mini").strip() or "o3-mini"
 ASSET_LIB_PATH = (os.getenv("ASSET_LIB_PATH") or "../Resources/Asset Projects").strip() or "../Resources/Asset Projects"  
-PROCEDURAL = (os.getenv("MODEL") or "o3-mini").strip() or "o3-mini"
+PROCEDURAL = (os.getenv("PROCEDURAL") or "n").strip() or "n"
 
 class WorldGen:
     
@@ -83,7 +83,7 @@ class VRWorldGen(WorldGen):
     def __init__(self, asset_project_path: Path = None, scene_name: str = None, restriction: str = None):
         super().__init__(asset_project_path, scene_name, None, restriction)
         agents.tools.asset_project = asset_project_path
-        self.coordinator.tools.extend([positionVRHumanPlayer, createGround, createSkybox, createSun]) #, populateHorizon
+        self.coordinator.tools.extend([positionVRHumanPlayer, createGround, createSkybox, createSun, createSound]) #, populateHorizon
         self.coordinator.instructions = Coordinator.phobia_v1[MODEL]
         self.patient = Phobos() 
 
@@ -109,7 +109,31 @@ class AcrophobiaWorldGen(VRWorldGen):
     async def get_prompt(self):
         print("Getting prompt from patient...")
         result = await Runner.run(self.patient, self.patient.acrophobia)
-        return result.final_output       
+        return result.final_output
+
+class Acrophobia50mx50mWorldGen(VRWorldGen):
+    bridge_prompt="Generate a world that triggers acrophobia while crossing a bridge."
+    mountain_prompt="Generate a world that triggers acrophobia on the summit of a mountain."
+    skyscraper_prompt="Generate a world that triggers acrophobia on a tall skyscraper."
+    building_prompt="Generate a world that triggers acrophobia on a medium-sized building - not too scary."
+    roof_prompt="Generate a world that triggers a very sensitive acrophobia by placing a player on the roof of a low house/building."
+    platform_prompt="Generate a world that triggers a very sensitive acrophobia by placing a player on a platform."
+    
+    bridge_regime_prompt="Generate multiple stages of worlds that trigger acrophobia while crossing a bridge. Have the stages get progressively harder. Let there be three stages and let the heights of the bridges in each stage progress as 2m, 5m, 10m above ground or sea level."
+
+    def __init__(self, asset_project_path: str="acrophobia_v1", restricted: bool = False):
+        asset_project_path = Path(ASSET_LIB_PATH) / asset_project_path
+        agents.tools.asset_project = asset_project_path
+        restriction = f"These are the assets the system is restricted to:\n{[key.split('/')[-1] for key in list(agents.tools.asset_catalog.keys())]}" if restricted else ""
+        super().__init__(asset_project_path, f"acro_{MODEL}_{random.randint(100, 999)}", restriction)
+        self.coordinator.instructions = Coordinator.acrophobia_v1[MODEL]
+        self.coordinator.tools.remove(createGround)
+        self.coordinator.tools.extend([create50mx50mGround])
+
+    async def get_prompt(self):
+        print("Getting prompt from patient...")
+        result = await Runner.run(self.patient, self.patient.acrophobia)
+        return result.final_output   
     
     
         

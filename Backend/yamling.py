@@ -3,7 +3,7 @@ import math
 import random
 import os
 import re
-
+import sys
 from ruamel.yaml import YAML as ruamel_YAML
 from ruamel.yaml.nodes import ScalarNode, MappingNode, SequenceNode
 
@@ -229,38 +229,48 @@ class YAML:
         sound_game_object = node_to_python(default[0])
         audio_source = node_to_python(default[1])
         sound_transform = node_to_python(default[2])
+        print(sound_game_object)
         try:
             sound_path = self.proposed_objects[name]
             print("Found", name, "in proposed_objects w path", sound_path)
         except KeyError(name + " not in proposed_objects"):
             print("Lookup in proposed_objects has failed.")
-        sound_game_object_id = str(random.randint(100000000, 999999999))
-        sound_game_object["anchor"] = sound_game_object_id
-        audio_source_id = str(random.randint(100000000, 999999999))
-        transform_id = str(random.randint(100000000, 999999999))
-        components = sound_game_object["m_Component"]    
-        components[0]["fileID"] = transform_id
-        components[0]["fileID"] = audio_source_id
-        sound_game_object["m_Name"] = name
-        
-        audio_source["anchor"] = audio_source_id
-        metaguid = get_guid(sound_path + ".meta")
-        audio_source["m_Resource"]["guid"] = metaguid
+            raise KeyError
+        try:
+            sound_game_object_id = str(random.randint(100000000, 999999999))
+            sound_game_object["anchor"] = sound_game_object_id
+            audio_source_id = str(random.randint(100000000, 999999999))
+            transform_id = str(random.randint(100000000, 999999999))
+            components = sound_game_object["GameObject"]["m_Component"]    
+            components[0]["fileID"] = transform_id
+            components[1]["fileID"] = audio_source_id
+            sound_game_object["GameObject"]["m_Name"] = name
+            
+            audio_source["anchor"] = audio_source_id
+            metaguid = get_guid(sound_path + ".meta")
+            audio_source["AudioSource"]["m_Resource"]["guid"] = metaguid
 
-        # Change volume?
+            # Change volume?
 
-        sound_transform["anchor"] = transform_id
-        sound_transform["m_GameObject"]["fileID"] = sound_game_object_id
-        # change position if sound is spatialized
+            sound_transform["anchor"] = transform_id
+            sound_transform["Transform"]["m_GameObject"]["fileID"] = sound_game_object_id
+            # change position if sound is spatialized
 
-        sceneroots = self.get_doc("SceneRoots")
-        sceneroots["m_Roots"].append({"fileID": sound_transform})
-        
-        self.wrapped.append(sound_transform)
-        self.wrapped.append(audio_source)
-        self.wrapped.append(sound_game_object)
-        print("Sound added to YAML")
-
+            sceneroots = self.get_doc("SceneRoots")
+            sceneroots["m_Roots"].append({"fileID": sound_transform})
+            
+            self.wrapped.append(sound_transform)
+            self.wrapped.append(audio_source)
+            self.wrapped.append(sound_game_object)
+            print("Sound added to YAML")
+        except Exception as e:
+            exc_type, exc_obj, exc_tb = sys.exc_info()
+            fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
+            line_number = exc_tb.tb_lineno
+            print(f"Error: {e}")
+            print(f"Type: {exc_type}")
+            print(f"File: {fname}")
+            print(f"Line Number: {line_number}")
 
     def add_prefab_instance(self, name, transform, rotation):
         yaml = ruamel_YAML(typ='rt')
@@ -904,7 +914,7 @@ Transform:
   m_GameObject: {fileID: 786546698}
   serializedVersion: 2
   m_LocalRotation: {x: 0.668346, y: -0.12872267, z: -0.119008936, w: 0.7228977}
-  m_LocalPosition: {x: 15.31607, y: 9.356531, z: 8.9202175}
+  m_LocalPosition: {x: 15.31607, y: 40.356531, z: 8.9202175}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []

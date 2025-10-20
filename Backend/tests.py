@@ -14,42 +14,77 @@ import asyncio
 
 import coordinator as agents
 
-from worldgen import AcrophobiaWorldGen, VRWorldGen
+from worldgen import AcrophobiaWorldGen, VRWorldGen, Acrophobia50mx50mWorldGen
 
 MODEL = (os.getenv("MODEL") or "o3-mini").strip() or "o3-mini"  
 
 
 async def test_acrophobia_bridge():
-    gen = AcrophobiaWorldGen()
+    gen = Acrophobia50mx50mWorldGen()
     await gen.load()
-    await gen.run(AcrophobiaWorldGen.bridge_prompt)
+    await gen.run(Acrophobia50mx50mWorldGen.bridge_prompt)
 
 async def test_acrophobia_mountain():
-    gen = AcrophobiaWorldGen()
+    gen = Acrophobia50mx50mWorldGen()
     await gen.load()
     await gen.run(AcrophobiaWorldGen.mountain_prompt)
 
 async def test_acrophobia_skyscraper():
+    gen = Acrophobia50mx50mWorldGen()
+    await gen.load()
+    await gen.run(Acrophobia50mx50mWorldGen.skyscraper_prompt)
+
+async def test_acrophobia_building():
+    gen = Acrophobia50mx50mWorldGen()
+    await gen.load()
+    await gen.run(Acrophobia50mx50mWorldGen.building_prompt)
+
+async def test_acrophobia_roof():
+    gen = Acrophobia50mx50mWorldGen()
+    await gen.load()
+    await gen.run(Acrophobia50mx50mWorldGen.roof_prompt)
+
+async def test_acrophobia_platform():
+    gen = Acrophobia50mx50mWorldGen()
+    await gen.load()
+    await gen.run(Acrophobia50mx50mWorldGen.platform_prompt)
+
+async def test_acrophobia_bridge_regime():
+    gen = Acrophobia50mx50mWorldGen()
+    await gen.load()
+    await gen.regime(Acrophobia50mx50mWorldGen.bridge_regime_prompt)
+
+async def test_acrophobia_bridge_pro():
+    gen = AcrophobiaWorldGen()
+    await gen.load()
+    await gen.run(AcrophobiaWorldGen.bridge_prompt)
+
+async def test_acrophobia_mountain_pro():
+    gen = AcrophobiaWorldGen()
+    await gen.load()
+    await gen.run(AcrophobiaWorldGen.mountain_prompt)
+
+async def test_acrophobia_skyscraper_pro():
     gen = AcrophobiaWorldGen()
     await gen.load()
     await gen.run(AcrophobiaWorldGen.skyscraper_prompt)
 
-async def test_acrophobia_building():
+async def test_acrophobia_building_pro():
     gen = AcrophobiaWorldGen()
     await gen.load()
     await gen.run(AcrophobiaWorldGen.building_prompt)
 
-async def test_acrophobia_roof():
+async def test_acrophobia_roof_pro():
     gen = AcrophobiaWorldGen()
     await gen.load()
     await gen.run(AcrophobiaWorldGen.roof_prompt)
 
-async def test_acrophobia_platform():
+async def test_acrophobia_platform_pro():
     gen = AcrophobiaWorldGen()
     await gen.load()
     await gen.run(AcrophobiaWorldGen.platform_prompt)
 
-async def test_acrophobia_bridge_regime():
+async def test_acrophobia_bridge_regime_pro():
     gen = AcrophobiaWorldGen()
     await gen.load()
     await gen.regime(AcrophobiaWorldGen.bridge_regime_prompt)

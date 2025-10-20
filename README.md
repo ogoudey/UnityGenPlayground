@@ -16,6 +16,9 @@ where `<asset project repo>` is [`acrophobia_v1`](https://github.com/ogoudey/acr
 
 The browser will now display a GUI. Prompt the chatbot to generate the worlds. Then in Unity go to `File > Open Scene > <the generated scene>`
 
+### More:
+Make sure that skyboxes in the Skybox Materials folder work, and that ground textures in the Ground Textures folder works.
+
 ## VR Setup
 (Assuming a VIVE headset and a wireless adapter, a Windows computer, etc.)
 1. Plug the headset into the power brick (make sure the power brick is ON)

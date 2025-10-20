@@ -15,9 +15,6 @@ from logger import log
 import obj_building
 import procedural
 
-PROCEDURAL = (os.getenv("PROCEDURAL") or "n").strip() or "n"
-
-
 """ Preprocessing depends on type of worldgen. These global variables are set from worldgen.TypeofWorldGen """
 
 asset_catalog = {}
@@ -72,7 +69,10 @@ async def positionSun(length_of_day: float, time_of_day: float, sun_brightness: 
     return f"Successfully added the Sun"
 
 @function_tool
-async def createSkybox(skybox_description: str) -> Designation:
+async def createSkybox(skybox_description: str) -> str:
+    """
+    Adds a skybox to the world...
+    """
     log("Creating skybox...", type='italic')
     agent = SkyboxPlanner()
     prompt = {"Object description": skybox_description,
@@ -97,7 +97,10 @@ async def createSkybox(skybox_description: str) -> Designation:
         return f"Failed to add '{skybox_name}' to the scene. There are likely no available skyboxes! (Incomplete asset library)...)"
 
 @function_tool
-async def createSound(sound_description):
+async def createSound(sound_description: str) -> str:
+    """
+    Creates a sound in the scene that matches your description. (Limited to static wind sounds currently)
+    """
     log("Creating sounds...", type='italic')
     agent = SoundDesigner()
     prompt = prompt = {"Object description": sound_leaves,
@@ -139,28 +142,47 @@ async def createSun(description_of_sun_behavior: str) -> str:
     return f"Successfully placed the Sun in the scene"
 
 @function_tool
-async def createGround(steps_to_ground_construction: str, resolution: int, scale: float):
+async def create50mx50mGround(steps_to_ground_construction: str):
     """ 
-        Calls an agent to construct the ground you give a plan for. The agent can only generate a heightmap in the +X, +Z plane. Be somewhat general. It will literally generate a <resolution> by <resolution> grid (the vertices), scaled up by <scale> to be a (<resolution> * <scale> - <scale>) meters by (<resolution> * <scale> - <scale>) meters topology. The perimeter of the grid must be at height 0. Finer resolution compromises performance, while scale compromises realism - keep this in mind.
-        steps_to_ground_construction: a plan of how the ground creator should construct the ground. (0, 0, 0) is 0m, 0m, 0m. (Example (a string):
+        Calls an agent to construct the ground you give a plan for. The agent can only generate a heightmap in the +X, +Z plane. Be general and let the planner get creative. Clarify the requirements of the ground, but don't micromanage. It will literally generate a 26 by 26 grid (the vertices), scaled up by 2.0 to be a 50 meters by 50 meters topology. The perimeter of the grid must be at height 0.
+        steps_to_ground_construction: a plan of how the ground creator should construct the ground. (0, 0, 0) is 0m, 0m, 0m. Example (a string):
             To make a volcano:
                 1. Form the mountain
                 2. Make the crater in the top.
             Another example involving remaking:
-            Make room for a house with a flat 4mx4m base at (5, 2.5, 5)
+            Make room for a house with a flat 4mx4m base at (4, 2.5, 4) - a "remaking ground" call.
+                1. Since the horizonal scale is 2.0, turn the 4, 4 into coordinates 2,2. Make this coordinate have height 2.5
+                2. Make in the +X, +Z direction the base of the house. 4m / scale of 2.0 is 2.0 or 2 grid cells. So make (2, 2), (4, 4), and (2, 2) all height 2.5 too.
+                3. Make the points surrounding the indent a sort of gradient. Have them all close to 2.5, and spread that out, without affecting other landmarks.
+                
+    This Tool should be called multiple times to reshape the ground in order to fit the objects that are static or immalleable.
+    """
+    await create_ground(steps_to_ground_construction, 10, 5.0, procedural=False)
+
+@function_tool
+async def createGround(steps_to_ground_construction: str, resolution: int, scale: float):
+    """ 
+        Calls an agent to construct the ground you give a plan for. The agent can only generate a heightmap in the +X, +Z plane. Be general and let the planner get creative. Clarify the requirements of the ground, but don't micromanage. It will literally generate a <resolution> by <resolution> grid (the vertices), scaled up by <scale> to be a (<resolution> * <scale> - <scale>) meters by (<resolution> * <scale> - <scale>) meters topology. The perimeter of the grid must be at height 0. Finer resolution compromises performance, while scale compromises realism - keep this in mind. The ground must be square - N by N.
+        steps_to_ground_construction: a plan of how the ground creator should construct the ground. (0, 0, 0) is 0m, 0m, 0m. Example (a string):
+            To make a volcano:
+                1. Form the mountain
+                2. Make the crater in the top.
+            Another example involving remaking:
+            Make room for a house with a flat 4mx4m base at (5, 2.5, 5) - a "remaking ground" call.
                 1. Since the horizonal scale is 5.0, turn the 5, 5 into coordinates 1,1. Make this coordinate have height 2.5
                 2. Make in the -X, +Z direction the base of the house. 4m / scale of 5.0 is .8 or 1 grid cell. So make (1, 2), (2, 2), and (2, 1) all height 2.5 too.
                 3. Make the points surrounding the indent a sort of gradient. Have them all close to 2.5, and spread that out, without affecting other landmarks.
-        resolution: an integer that is the number of vertices along one edge of the ground mesh. The ground must be a square. (Example: 11)
+        resolution: an integer < 30 that is the number of vertices along one edge of the ground mesh. The ground must be a square. For performance reasons, keep the resolution under 30. (Example: 11)
         scale: a float that is the number of meters between each vertex. (Example: 5.0)
                 
     This Tool can be called multiple times to reshape the ground, in order to fit the objects that are static or immalleable.
     """
-    log("Creating ground...", type='italic')
-    set_perimeter_to_0=True
-    horizon_plain = True
+    await create_ground(steps_to_ground_construction, resolution, scale, procedural=True)
 
-    agent = GroundCreator(tools=[addTexture], set_perimeter_to_0=set_perimeter_to_0)
+async def create_ground(steps_to_ground_construction, resolution, scale, procedural):
+    log("Creating ground...", type='italic')
+
+    agent = GroundCreator(tools=[addTexture], set_perimeter_to_0=True)
     global unity
     prompt = {"Steps to plan": steps_to_ground_construction, "Resolution": resolution, "Scale": scale}
     
@@ -176,11 +198,18 @@ async def createGround(steps_to_ground_construction: str, resolution: int, scale
     
     grid = result.final_output.grid
     explanation = result.final_output.explanation_of_heights
-    if horizon_plain and set_perimeter_to_0 and PROCEDURAL == "y":
-        object_asset_path, unity.ground_matrix = obj_building.obj_from_grid_procedural(str(asset_project / "Assets/Manifest"), grid, scale)
+    if procedural:
+        object_asset_path, ground_matrix = obj_building.obj_from_grid_procedural(str(asset_project / "Assets/Manifest"), grid, scale)
 
     else:
-        object_asset_path, unity.ground_matrix = obj_building.obj_from_grid(str(asset_project / "Assets/Manifest"), grid, scale)
+        object_asset_path, ground_matrix = obj_building.obj_from_grid(str(asset_project / "Assets/Manifest"), grid, scale)
+
+    try:
+        assert len(ground_matrix[0]) == len(ground_matrix)
+        unity.ground_matrix = ground_matrix
+    except AssertionError:
+        print(f"Ground matrix is not square but {len(ground_matrix[0])} by {len(ground_matrix)}. Retrying...")
+        raise AssertionError(f"Ground matrix is not square but {len(ground_matrix[0])} by {len(ground_matrix)}. Try a smaller resolution to increase performance.")
 
     unity.ground_scale = scale
     print("Ground obj written.")
@@ -204,7 +233,7 @@ async def createGround(steps_to_ground_construction: str, resolution: int, scale
     unity.contact_points["Ground"] = []
     for i in range(len(unity.ground_matrix) -1, -1, -1):
         for j in range(0, len(unity.ground_matrix[i])):
-            contact_point = (j * 5, unity.ground_matrix[i][j] + float(json_location["y"]), 50 - i * 5)
+            contact_point = (j * scale, unity.ground_matrix[i][j] + float(json_location["y"]), (resolution*scale - scale) - i*scale)
             unity.contact_points["Ground"].append(contact_point)    
     
     print(unity.ground_matrix, "\n...end ground_matrix.")
@@ -277,6 +306,7 @@ async def proposeObject(description: str):
         Args:
             description: Some text describing that the object should be like, refering to a singular object that's likely to be selected from a common asset library. For example, "water", "a rock", "a house", etc.
         If you don't get an object you want, its because there's nothing like the desired asset in the library of available assets. In this case, get creative and find a new solution. You don't NEED to place the object returned, which is the object-planner's best guess.
+        By the way, water is one of the objects.
     """
     log("Proposing object", type='italic')
     if asset_project == "":
@@ -325,10 +355,10 @@ async def proposeObject(description: str):
 @function_tool
 async def positionObject(object_name: str, position_of_object_origin: str, rotation: str, explanation: str) -> str:
     """
-        This function permits you to place a proposed object in the scene. You may place a single instance of the object or multiple ones, but always refer to the object you've planned. You cannot scale the object. 
+        This function permits you to place a proposed object in the scene. You may place a single instance of the object or multiple ones, but always refer to the object you've planned. You cannot scale the object. Pay close attention to how the object will be positioned in the world, given that you are positioning its local origin.
         Args:
             object_name: The name of the object you have proposed. (Must match exactly that name.)
-            position_of_object_origin: Must be a JSON-encoded string. OPTIONALLY, can be a list of such strings in order to place a sequence objects or scatter them. Examples:
+            position_of_object_origin: Must be a JSON-encoded string. OPTIONALLY, can be a list of such strings in order to place a sequence objects or scatter them. Remember, Y is up! Examples:
                 "{\"x\": 75, \"y\": 2.8, \"z\": 70}", OR "[{\"x\": 73, \"y\": 10, \"z\": 20}, {\"x\": 50, \"y\": 1.2, \"z\": 72}, ...]"
             rotation: Must be a JSON-encoded string. OPTIONALLY, can be a list of such strings in order to place a sequence objects. Example:
                 "{\"x\": 90, \"y\": 0, \"z\": 45}", "[{\"x\": 90, \"y\": 0, \"z\": 45}, {\"x\": 0, \"y\": 0, \"z\": 270}]"
@@ -450,7 +480,7 @@ def positionVRHumanPlayer(transform: str, rotation: str = "{\"x\": 75, \"y\": 10
 @function_tool
 async def getContactPoints() -> str:
     """
-        Returns the points in the scene which are available to place objects on. These points are the vertices of the ground.
+        Returns the vertices of the ground. This is mainly useful for recalling whether the ground meets the positioned objects correctly.
     """
     global unity
     print(unity.contact_points)

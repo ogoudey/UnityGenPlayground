@@ -48,7 +48,7 @@ def facify(matrix):
     row_size = len(matrix)
     
     visited = []
-
+    print("Constructing faces for each row...")
     for y in tqdm(range(0, len(matrix) -1)):
         for x in range(0, len(matrix[y]) -1):    
                 if not (x, y) in visited:
