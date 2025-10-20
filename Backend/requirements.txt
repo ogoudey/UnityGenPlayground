@@ -1,8 +1,8 @@
 openai-agents
 pyyaml
-ruemel.yaml
+ruamel.yaml
 flask
 flask[async]
 pydantic
 numpy
-noise
+perlin-noise

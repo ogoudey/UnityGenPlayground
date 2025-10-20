@@ -5,17 +5,26 @@
 #       
 #       and go to localhost:5000
 
-
+print("Before imports")
 
 
 import os
 import json
 import asyncio
 import time
+
+print("STandard imports done")
+
+
 from flask import Flask, request, render_template, jsonify, Response, stream_with_context
 from multiprocessing import Process
 
+print("Kess standard mports done")
+
 from worldgen import AcrophobiaWorldGen, VRWorldGen
+
+print("wiorld gen imports done")
+
 
 from logger import queue
 
