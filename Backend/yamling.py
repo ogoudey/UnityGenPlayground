@@ -241,9 +241,11 @@ class YAML:
             sound_game_object["anchor"] = sound_game_object_id
             audio_source_id = str(random.randint(100000000, 999999999))
             transform_id = str(random.randint(100000000, 999999999))
-            components = sound_game_object["GameObject"]["m_Component"]    
-            components[0]["fileID"] = transform_id
-            components[1]["fileID"] = audio_source_id
+            components = sound_game_object["GameObject"]["m_Component"]
+            components.append(f"component: {{fileID: {transform_id}}}")
+            components.append(f"component: {{fileID: {audio_source_id}}}")
+            #components[0]["fileID"] = transform_id
+            #components[1]["fileID"] = audio_source_id
             sound_game_object["GameObject"]["m_Name"] = name
             
             audio_source["anchor"] = audio_source_id
@@ -257,7 +259,7 @@ class YAML:
             # change position if sound is spatialized
 
             sceneroots = self.get_doc("SceneRoots")
-            sceneroots["m_Roots"].append({"fileID": sound_transform})
+            sceneroots["m_Roots"].append({"fileID": transform_id})
             
             self.wrapped.append(sound_transform)
             self.wrapped.append(audio_source)
@@ -625,9 +627,7 @@ GameObject:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
-  m_Component:
-  - component: {fileID: 987559415}
-  - component: {fileID: 987559414}
+  m_Component: []
   m_Layer: 0
   m_Name: scloudsave.com - Light Breeze White Noise - Dream Shard
   m_TagString: Untagged

@@ -157,7 +157,7 @@ async def create50mx50mGround(steps_to_ground_construction: str):
                 
     This Tool should be called multiple times to reshape the ground in order to fit the objects that are static or immalleable.
     """
-    await create_ground(steps_to_ground_construction, 10, 5.0, procedural=False)
+    return await create_ground(steps_to_ground_construction, 11, 5.0, procedural=False)
 
 @function_tool
 async def createGround(steps_to_ground_construction: str, resolution: int, scale: float):
@@ -177,7 +177,7 @@ async def createGround(steps_to_ground_construction: str, resolution: int, scale
                 
     This Tool can be called multiple times to reshape the ground, in order to fit the objects that are static or immalleable.
     """
-    await create_ground(steps_to_ground_construction, resolution, scale, procedural=True)
+    return await create_ground(steps_to_ground_construction, resolution, scale, procedural=True)
 
 async def create_ground(steps_to_ground_construction, resolution, scale, procedural):
     log("Creating ground...", type='italic')

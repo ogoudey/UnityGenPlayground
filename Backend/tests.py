@@ -119,13 +119,14 @@ test_dispatcher = {
 }
 
 if __name__ == "__main__":
-    if sys.argv[1]:
+    try:
+        test = sys.argv[1]
         try:
-            test_function = test_dispatcher[sys.argv[1]]
-        except Exception("Invalid test name. Choose from: " + list(test_dispatcher.keys())):
+            test_function = test_dispatcher[test]
+        except Exception("Invalid test name. Choose from: " + str(list(test_dispatcher.keys()))):
             sys.exit(1)
         asyncio.run(test_function())   
-    else:
+    except IndexError:
         print("Please include test from:", list(test_dispatcher.keys()))
 
 
