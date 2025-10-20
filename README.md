@@ -25,8 +25,10 @@ python3 tests.py
 Then open the Asset Project in Unity and open the generated scene.
 
 
-### More:
-Make sure that skyboxes in the Skybox Materials folder work, and that ground textures in the Ground Textures folder works.
+### Check:
+git may not be the best solution for sharing Unity projects. In particular, I think AllSkyFree and YughuesFreeGroundMaterials must go through the Unity Asset Store. So import them to the project and then reconstitute [`acrophobia_v1`](https://github.com/ogoudey/acrophobia_v1).
+
+Make sure that skyboxes in `Assets/Skybox Materials` work, and that the ground textures in `Assets/Ground Textures` work.
 
 ## VR Setup
 (Assuming a VIVE headset and a wireless adapter, a Windows computer, etc.)
