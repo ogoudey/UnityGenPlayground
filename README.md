@@ -35,3 +35,7 @@ Make sure that skyboxes in `Assets/Skybox Materials` work, and that the ground t
 1. Plug the headset into the power brick (make sure the power brick is ON)
 2. Open up SteamVR (takes a minute)
 3. Open up VIVE Wireless (takes a minute)
+
+## Also got:
+SteamVR Plugin 2.8.0 (accept all recommended settings)
+Vive Input Utility 1.20.0 (need?)
