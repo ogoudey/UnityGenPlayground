@@ -21,7 +21,8 @@ from scene import World
 MODEL = (os.getenv("MODEL") or "o3-mini").strip() or "o3-mini"
 ASSET_LIB_PATH = (os.getenv("ASSET_LIB_PATH") or "../Resources/Asset Projects").strip() or "../Resources/Asset Projects"  
 DRAWING = True
-
+if DRAWING:
+    print(f"Will draw a graph for coordinator...")
 class WorldGen:
     
     def __init__(self, asset_project_path: Path = None, scene_name: str = None, preexisting_world: str = None, restriction: str = None):
