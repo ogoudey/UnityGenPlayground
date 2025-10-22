@@ -355,9 +355,25 @@ class YAML:
         pass
 
     def set_vr_player(self, transform:str, rotation: str):
+        """
+        Dispatches to the various configurations of VR player. Either:
+          a. VIVECameraRig/SteamVR: sufficient for Unity 6 (+)
+          b. SteamVRUnityPlugin/SteamVR + VIVESR: for data collection. Needs Unity 2019 (what I often refer to as Unity 5) Must consider movement (hopefully through SteamVR)
+          c. SteamVRUnityPlugin/SteamVR: w/o data collection, Unity 5.    # Not needed I guess...
+        """
+        dispatcher = {"6": setup_VIVE,
+                      "5": setup_data_collection}
+        dispatch = dispatcher[UNITY_VERSION]
+        print(f"Unity version set to {UNITY_VERSION}. Dispatching {dispatch.__name__}...")
+        dispatch(transform, rotation)
+
+    def setup_data_collectio(self, transform:str, rotation: str):
+        # TODO 
+
+    def setup_VIVE(self, transform:str, rotation: str):
         yaml = ruamel_YAML(typ='rt')
         print("In YAMLING")
-        default = list(yaml.compose_all(preprocess_text(vr_setup_init_text)))[0]
+        default = list(yaml.compose_all(preprocess_text(ViveCameraRig_setup_init_text)))[0]
         wrapped = node_to_python(default)
         
         quaternion = euler_to_xyzw_quaternion(rotation)
@@ -1027,7 +1043,7 @@ Transform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 """
 
-vr_setup_init_text = """
+ViveCameraRig_setup_init_text = """
 --- !u!1001 &1214490813
 PrefabInstance:
   m_ObjectHideFlags: 0
