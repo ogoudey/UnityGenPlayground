@@ -1,0 +1,5 @@
+Backend/.venv
+Backend/__pycache__
+Resources/Asset Projects/*
+
+!Resources/Asset Projects/.gitkeep
