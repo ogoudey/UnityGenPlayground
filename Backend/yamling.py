@@ -129,7 +129,8 @@ class YAML:
             texture_path = proposed_objects_entry["Texture"]
             if not texture_path == "None":
                 texture_metaguid = get_guid(texture_path + ".meta")
-        except Exception(name + " not in proposed_objects, or " + texture_path):
+        except Exception:
+            print(name + " not in proposed_objects, or " + texture_path):
             print("Lookup in proposed_objects has failed.")
         
 
@@ -186,7 +187,8 @@ class YAML:
         try:
             prefab_path = self.proposed_objects[name]
             print("Found", name, "in proposed_objects w path", prefab_path)
-        except KeyError(name + " not in proposed_objects"):
+        except KeyError:
+            print(name + " not in proposed_objects")
             print("Lookup in proposed_objects has failed.")
 
         self.placed_assets[name] = {"transform": transform, "rotation": rotation}
@@ -236,7 +238,8 @@ class YAML:
         try:
             sound_path = self.proposed_objects[name]
             print("Found", name, "in proposed_objects w path", sound_path)
-        except KeyError(name + " not in proposed_objects"):
+        except KeyError:
+            print(name + " not in proposed_objects")
             print("Lookup in proposed_objects has failed.")
             raise KeyError
         try:
@@ -286,7 +289,8 @@ class YAML:
         try:
             prefab_path = self.proposed_objects[name]
             print("Found", name, "in proposed_objects w path", prefab_path)
-        except KeyError(name + " not in proposed_objects"):
+        except KeyError:
+            print(name + " not in proposed_objects")
             print("Lookup in proposed_objects has failed.")
         try:
             print(prefab_path)
