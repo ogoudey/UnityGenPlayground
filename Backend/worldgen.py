@@ -2,6 +2,7 @@ from pathlib import Path
 import os
 import random
 from agents import Runner
+from agents.extensions.visualization import draw_graph
 import coordinator as agents
 import time
 
@@ -19,12 +20,17 @@ from scene import World
 
 MODEL = (os.getenv("MODEL") or "o3-mini").strip() or "o3-mini"
 ASSET_LIB_PATH = (os.getenv("ASSET_LIB_PATH") or "../Resources/Asset Projects").strip() or "../Resources/Asset Projects"  
-PROCEDURAL = (os.getenv("PROCEDURAL") or "n").strip() or "n"
+DRAWING = True
 
 class WorldGen:
     
     def __init__(self, asset_project_path: Path = None, scene_name: str = None, preexisting_world: str = None, restriction: str = None):
         self.asset_project_path = asset_project_path
+        if asset_project_path and asset_project_path.exists():
+            print(f"Asset Project is \033[1m\033[36m{asset_project_path}\033[0m")
+        else:
+            print("\033[1m\033[31mAsset project path does not exist or was not provided.\033[0m")
+            raise FileNotFoundError("Asset project path does not exist or was not provided.")
         agents.tools.asset_project = asset_project_path
         
         if preexisting_world:
@@ -69,6 +75,9 @@ class WorldGen:
         log(result.final_output)
         log(f"World generated at {scene_path}", type="bold")
 
+        if DRAWING:
+            draw_graph(self.coordinator, filename="coordinator_graph")
+
 
     async def regime(self, regime_prompt):
         print("\n>>>>>> ", regime_prompt, "\n")
@@ -99,7 +108,7 @@ class AcrophobiaWorldGen(VRWorldGen):
     
     bridge_regime_prompt="Generate multiple stages of worlds that trigger acrophobia while crossing a bridge. Have the stages get progressively harder. Let there be three stages and let the heights of the bridges in each stage progress as 2m, 5m, 10m above ground or sea level."
 
-    def __init__(self, asset_project_path: str="acrophobia_v1", restricted: bool = False):
+    def __init__(self, asset_project_path: str="acrophobia_u5", restricted: bool = False):
         asset_project_path = Path(ASSET_LIB_PATH) / asset_project_path
         agents.tools.asset_project = asset_project_path
         restriction = f"These are the assets the system is restricted to:\n{[key.split('/')[-1] for key in list(agents.tools.asset_catalog.keys())]}" if restricted else ""
@@ -125,7 +134,7 @@ class Acrophobia50mx50mWorldGen(VRWorldGen):
         asset_project_path = Path(ASSET_LIB_PATH) / asset_project_path
         agents.tools.asset_project = asset_project_path
         restriction = f"These are the assets the system is restricted to:\n{[key.split('/')[-1] for key in list(agents.tools.asset_catalog.keys())]}" if restricted else ""
-        super().__init__(asset_project_path, f"acro_{MODEL}_{random.randint(100, 999)}", restriction)
+        super().__init__(asset_project_path, f"acro_50_{MODEL}_{random.randint(100, 999)}", restriction)
         self.coordinator.instructions = Coordinator.acrophobia_v1[MODEL]
         self.coordinator.tools.remove(createGround)
         self.coordinator.tools.extend([create50mx50mGround])

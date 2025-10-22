@@ -8,11 +8,15 @@ import json
 
 
 def load(asset_project_path):
-    with open(asset_project_path / "asset_catalog.json", "r") as f:
-        j = f.read()
-        assets_info = json.loads(j)
+    try:
+        with open(asset_project_path / "asset_catalog.json", "r") as f:
+            j = f.read()
+            assets_info = json.loads(j)
+    except FileNotFoundError: 
+        print(f"\033[1m\033[31mThe Asset Project {asset_project_path} has no asset catalog - you must put an `asset_catalog.json` in the Asset Project.\033[0m")
+        raise FileNotFoundError("The Asset Project {asset_project_path} has no asset catalog - you must put an `asset_catalog.json` in the Asset Project.")
     print(f"In asset project folder {asset_project_path}**")
-    print(f"Asset info sheet loaded with {len(assets_info)} entries")
+    print(f"Asset catalog loaded with {len(assets_info)} entries")
     
     
     removed_count = 0
@@ -50,7 +54,7 @@ def get_found(file_type=".prefab", asset_projects="", asset_project_path=""):
     print(f"Looking in {rel_path} for {file_type}...")
     if os.name == 'nt':
         matches = []
-        for root, _, files in os.walk(folder):
+        for root, _, files in os.walk(rel_path):
             for name in files:
                 if fnmatch.fnmatch(name, f"*{file_type}"):
                     matches.append(os.path.join(root, name))
@@ -71,7 +75,10 @@ def get_found(file_type=".prefab", asset_projects="", asset_project_path=""):
 
     # Normalize paths (optional, makes everything consistent)
     files = [str(pathlib.Path(f).as_posix()) for f in matches]
-    print(f"The folder at {rel_path} has {len(files)} {file_type} assets.")
+    if len(files) > 0:
+        print(f"The folder at {rel_path} has {len(files)} {file_type} assets.")
+    else:
+        print(f"\033[1m\033[31mThe folder at {rel_path} has no files of type {file_type}!\033[0m")
     return files
 
 
