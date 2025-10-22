@@ -392,6 +392,8 @@ class YAML:
 
         if camera_rig is None:
             print("Cannot find [CameraRig] prefab in init text (??)")
+        quaternion = euler_to_xyzw_quaternion(rotation)
+
         modifications = camera_rig["PrefabInstance"]["m_Modification"]["m_Modifications"]
         for mod in modifications:
             if "target" in mod and "guid" in mod["target"]:
