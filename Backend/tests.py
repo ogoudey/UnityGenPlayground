@@ -20,78 +20,78 @@ MODEL = (os.getenv("MODEL") or "o3-mini").strip() or "o3-mini"
 
 
 async def test_acrophobia_bridge(ap=None):
-    gen = Acrophobia50mx50mWorldGen(ap)
+    gen = Acrophobia50mx50mWorldGen() if ap is None else Acrophobia50mx50mWorldGen(ap)
     await gen.load()
     await gen.run(Acrophobia50mx50mWorldGen.bridge_prompt)
 
 async def test_acrophobia_mountain(ap=None):
-    gen = Acrophobia50mx50mWorldGen(ap)
+    gen = Acrophobia50mx50mWorldGen() if ap is None else Acrophobia50mx50mWorldGen(ap)
     await gen.load()
     await gen.run(AcrophobiaWorldGen.mountain_prompt)
 
 async def test_acrophobia_skyscraper(ap=None):
-    gen = Acrophobia50mx50mWorldGen(ap)
+    gen = Acrophobia50mx50mWorldGen() if ap is None else Acrophobia50mx50mWorldGen(ap)
     await gen.load()
     await gen.run(Acrophobia50mx50mWorldGen.skyscraper_prompt)
 
 async def test_acrophobia_building(ap=None):
-    gen = Acrophobia50mx50mWorldGen(ap)
+    gen = Acrophobia50mx50mWorldGen() if ap is None else Acrophobia50mx50mWorldGen(ap)
     await gen.load()
     await gen.run(Acrophobia50mx50mWorldGen.building_prompt)
 
 async def test_acrophobia_roof(ap=None):
-    gen = Acrophobia50mx50mWorldGen(ap)
+    gen = Acrophobia50mx50mWorldGen() if ap is None else Acrophobia50mx50mWorldGen(ap)
     await gen.load()
     await gen.run(Acrophobia50mx50mWorldGen.roof_prompt)
 
 async def test_acrophobia_platform(ap=None):
-    gen = Acrophobia50mx50mWorldGen(ap)
+    gen = Acrophobia50mx50mWorldGen() if ap is None else Acrophobia50mx50mWorldGen(ap)
     await gen.load()
     await gen.run(Acrophobia50mx50mWorldGen.platform_prompt)
 
 async def test_acrophobia_bridge_regime(ap=None):
-    gen = Acrophobia50mx50mWorldGen(ap)
+    gen = Acrophobia50mx50mWorldGen() if ap is None else Acrophobia50mx50mWorldGen(ap)
     await gen.load()
     await gen.regime(Acrophobia50mx50mWorldGen.bridge_regime_prompt)
 
 async def test_acrophobia_bridge_pro(ap=None):
-    gen = AcrophobiaWorldGen(ap)
+    gen = AcrophobiaWorldGen() if ap is None else AcrophobiaWorldGen(ap)
     await gen.load()
     await gen.run(AcrophobiaWorldGen.bridge_prompt)
 
 async def test_acrophobia_mountain_pro(ap=None):
-    gen = AcrophobiaWorldGen(ap)
+    gen = AcrophobiaWorldGen() if ap is None else AcrophobiaWorldGen(ap)
     await gen.load()
     await gen.run(AcrophobiaWorldGen.mountain_prompt)
 
 async def test_acrophobia_skyscraper_pro(ap=None):
-    gen = AcrophobiaWorldGen(ap)
+    gen = AcrophobiaWorldGen() if ap is None else AcrophobiaWorldGen(ap)
     await gen.load()
     await gen.run(AcrophobiaWorldGen.skyscraper_prompt)
 
 async def test_acrophobia_building_pro(ap=None):
-    gen = AcrophobiaWorldGen(ap)
+    gen = AcrophobiaWorldGen() if ap is None else AcrophobiaWorldGen(ap)
     await gen.load()
     await gen.run(AcrophobiaWorldGen.building_prompt)
 
 async def test_acrophobia_roof_pro(ap=None):
-    gen = AcrophobiaWorldGen(ap)
+    gen = AcrophobiaWorldGen() if ap is None else AcrophobiaWorldGen(ap)
     await gen.load()
     await gen.run(AcrophobiaWorldGen.roof_prompt)
 
 async def test_acrophobia_platform_pro(ap=None):
-    gen = AcrophobiaWorldGen(ap)
+    gen = AcrophobiaWorldGen() if ap is None else AcrophobiaWorldGen(ap)
     await gen.load()
     await gen.run(AcrophobiaWorldGen.platform_prompt)
 
 async def test_acrophobia_bridge_regime_pro(ap=None):
-    gen = AcrophobiaWorldGen(ap)
+    gen = AcrophobiaWorldGen() if ap is None else AcrophobiaWorldGen(ap)
     await gen.load()
     await gen.regime(AcrophobiaWorldGen.bridge_regime_prompt)
 
 ### General test
 async def test_acrophobia_emulate(ap=None):
-    gen = AcrophobiaWorldGen(ap)
+    gen = AcrophobiaWorldGen() if ap is None else AcrophobiaWorldGen(ap)
     await gen.load()
     prompt = gen.get_prompt()
     print("Prompt:", prompt)

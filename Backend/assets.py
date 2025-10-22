@@ -15,7 +15,7 @@ def load(asset_project_path):
     except FileNotFoundError: 
         print(f"\033[1m\033[31mThe Asset Project {asset_project_path} has no asset catalog - you must put an `asset_catalog.json` in the Asset Project.\033[0m")
         raise FileNotFoundError("The Asset Project {asset_project_path} has no asset catalog - you must put an `asset_catalog.json` in the Asset Project.")
-    print(f"In asset project folder {asset_project_path}**")
+    print(f"In asset project folder {asset_project_path}")
     print(f"Asset catalog loaded with {len(assets_info)} entries")
     
     

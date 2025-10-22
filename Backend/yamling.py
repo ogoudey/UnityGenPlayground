@@ -130,7 +130,7 @@ class YAML:
             if not texture_path == "None":
                 texture_metaguid = get_guid(texture_path + ".meta")
         except Exception:
-            print(name + " not in proposed_objects, or " + texture_path):
+            print(name + " not in proposed_objects, or " + texture_path)
             print("Lookup in proposed_objects has failed.")
         
 
@@ -369,6 +369,7 @@ class YAML:
 
     def setup_data_collectio(self, transform:str, rotation: str):
         # TODO 
+        pass
 
     def setup_VIVE(self, transform:str, rotation: str):
         yaml = ruamel_YAML(typ='rt')
