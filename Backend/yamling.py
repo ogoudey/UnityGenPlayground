@@ -64,7 +64,7 @@ class YAML:
         if not father_id:
             print("Failed to find root transform of Sun stuff:\n", wrapped)
         if UNITY_VERSION == "5":
-            print("Leaving before modifying sceneroots.")
+            print("Leaving before modifying sceneroots (Unity 5 thing).")
             return
         sceneroots = self.get_doc("SceneRoots")
         sceneroots["m_Roots"].append({"fileID": father_id})
@@ -160,7 +160,7 @@ class YAML:
         wrapped["PrefabInstance"]["m_SourcePrefab"]["guid"] = metaguid
 
         if UNITY_VERSION == "5":
-            print("Leaving before modifying sceneroots.")
+            print("Leaving before modifying sceneroots (Unity 5 thing).")
             return
 
         sceneroots = self.get_doc("SceneRoots")
@@ -177,7 +177,7 @@ class YAML:
                             self.wrapped.remove(doc)
                             print("Removed prefab!")
                             if UNITY_VERSION == "5":
-                                print("Leaving before modifying sceneroots.")
+                                print("Leaving before modifying sceneroots (Unity 5 thing).")
                                 return
                             sceneroots = self.get_doc("SceneRoots")
                             prefab_id = doc["anchor"]
@@ -235,7 +235,7 @@ class YAML:
                         mod["value"] = quaternion[3]  
         wrapped["PrefabInstance"]["m_SourcePrefab"]["guid"] = metaguid
         if UNITY_VERSION == "5":
-            print("Leaving before modifying sceneroots.")
+            print("Leaving before modifying sceneroots (Unity 5 thing).")
             return
         sceneroots = self.get_doc("SceneRoots")
         sceneroots["m_Roots"].append({"fileID": id_out})
@@ -373,12 +373,12 @@ class YAML:
     def set_vr_player(self, transform:str, rotation: str):
         """
         Dispatches to the various configurations of VR player. Either:
-          a. VIVECameraRig/SteamVR: sufficient for Unity 6 (+)
+          a. VIVECameraRig/SteamVR: sufficient for Unity 6(+)
           b. SteamVRUnityPlugin/SteamVR + VIVESR: for data collection. Needs Unity 2019 (what I often refer to as Unity 5) Must consider movement (hopefully through SteamVR)
           c. SteamVRUnityPlugin/SteamVR: w/o data collection, Unity 5.    # Not needed I guess...
         """
-        dispatcher = {"6": setup_VIVE,
-                      "5": setup_data_collection}
+        dispatcher = {"6": self.setup_VIVE,
+                      "5": self.setup_data_collection}
         dispatch = dispatcher[UNITY_VERSION]
         print(f"Unity version set to {UNITY_VERSION}. Dispatching {dispatch.__name__}...")
         dispatch(transform, rotation)
@@ -663,7 +663,8 @@ def convert_numbers(obj):
         return obj
 
 def write_obj_meta(obj_path, guid):
-    if os.path.exists(obj_path + ".meta"):
+    print("writing object meta for", obj_path)
+    if os.path.exists(obj_path / ".meta"):
         print("Obj meta already exists, using existing one.")
         return
 
@@ -682,8 +683,8 @@ def write_obj_meta(obj_path, guid):
         default_flow_style=False, 
         sort_keys=False
     )
-    
-    with open(obj_path + ".meta", "w") as f:
+    print("Before meta write")
+    with open(obj_path.with_suffix(obj_path.suffix + ".meta"), "w") as f:
         f.write(yaml_str)
         
     print("Meta file with updated GUID written")

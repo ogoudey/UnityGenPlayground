@@ -50,7 +50,7 @@ def get_tree(file_type=".prefab", folder="../Assets"):
 
 
 def get_found(file_type=".prefab", asset_projects="", asset_project_path=""):
-    rel_path = asset_project_path.replace(asset_projects + "/", "")
+    rel_path = asset_project_path.replace(asset_projects + "/", "") # dodges OS difference
     print(f"Looking in {rel_path} for {file_type}...")
     if os.name == 'nt':
         matches = []

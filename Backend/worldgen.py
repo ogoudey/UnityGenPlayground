@@ -19,7 +19,7 @@ from supertools import CoordinatorRunner
 from scene import World
 
 MODEL = (os.getenv("MODEL") or "o3-mini").strip() or "o3-mini"
-ASSET_LIB_PATH = (os.getenv("ASSET_LIB_PATH") or "../Resources/Asset Projects").strip() or "../Resources/Asset Projects"  
+ASSET_LIB_PATH = (os.getenv("ASSET_LIB_PATH") or "../Resources/Asset Projects").strip() or "../Resources/Asset Projects"
 DRAWING = True
 if DRAWING:
     print(f"Will draw a graph for coordinator...")
@@ -69,7 +69,7 @@ class WorldGen:
         """
         print("\n>>>>>> ", prompt, "\n")
         result = await Runner.run(self.coordinator, prompt, max_turns=20)
-        path = str(self.asset_project_path / "Assets" / self.scene_name)
+        path = str(self.asset_project_path / "Assets" / "Scenes" / self.scene_name)
         scene_path = agents.tools.unity.done_and_write(path)
         print(f"Scene @ {scene_path}")
         print(f"Coordinator response: \n{result.final_output}")

@@ -45,4 +45,4 @@ For gathering data
 10. Press Play on Unity. If asked to "generate actions", do so. If asked to create actions.json, do so. And click Generate and Save.
 
 ** Path B **
-11. To start logging data, inspect the SRanipal Eye Framework prefab and check Enable Eye Data Callback. Data is saved to the desktop in `AcroGenData/<sceneName>/<timestamp>/eye_tracking_log_test.csv`.
+11. To start logging data, inspect the SRanipal Eye Framework prefab and check Enable Eye Data Callback. To set the subject name inspect the object with EyeTrackingManager. Data is saved to the desktop in `AcroGenData/<sceneName>/<timestamp>/eye_tracking_log_test.csv`.

@@ -44,8 +44,11 @@ class World:
             else:
                 print("Ground exists in YAML - couldn't be removed.")
         guid = uuid.uuid4().hex
+        print("before writing meta")
         yamling.write_obj_meta(self.yaml.proposed_objects[ground_name]["Ground"], guid)
+        print("meta written")
         self.yaml.add_ground_prefab_instance(ground_name, guid, transform)
+        print("back from add_gnd_prefab_instance")
         self.ground = ground_name
 
     def add_data(self, object_data):

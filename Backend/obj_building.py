@@ -2,6 +2,7 @@ import random
 import json
 import numpy as np
 from tqdm import tqdm
+from pathlib import Path
 
 default_grid = """0 0 0 0 0 0 0 0 0 0 0 0
 0 0 0 0 0 2 0 0 0 0 0 0
@@ -58,7 +59,7 @@ def facify(matrix):
     
     return lines, visited
 
-def obj_from_grid(obj_path: str, grid: str = default_grid, scale=5.0):
+def obj_from_grid(obj_path: Path, grid: str = default_grid, scale=5.0):
     location = {"x": 0.0, "y": 0.0, "z": 0.0}
     scale = 5
     matrix = []
@@ -66,7 +67,7 @@ def obj_from_grid(obj_path: str, grid: str = default_grid, scale=5.0):
     lines = grid.split("\n")
 
     dimension = scale*len(lines) - scale
-    print(grid)
+    #print(grid)
     
     print("\nVVVVVVVVV\n")
     for y in range(0, len(lines)):
@@ -79,13 +80,13 @@ def obj_from_grid(obj_path: str, grid: str = default_grid, scale=5.0):
                 obj_str += f"v {-float(x)*scale} {float(line[x])} {dimension - float(y)*scale}\n"  
             except Exception:
                 print(line[x], "is an arifact of the grid. Ignoring...")
-        print(line)
+        #print(line)
         
 
             
         matrix.append(row)
-    print("\nVVVVVVVVV\n")
-    print(matrix) 
+    #print("\nVVVVVVVVV\n")
+    #print(matrix) 
 
 
     for y in range(0, len(lines)):
@@ -107,8 +108,8 @@ def obj_from_grid(obj_path: str, grid: str = default_grid, scale=5.0):
     print("File contains", len(face_data.split("\n")), "faces.")
     
     
-    out_file = "ground"
-    out_path1 = obj_path + "/" + out_file + str(random.randint(100, 999)) + ".obj"
+    out_file = "ground" + str(random.randint(100, 999)) + ".obj"
+    out_path1 = obj_path / out_file
     with open(out_path1, "w") as f:
         f.write(obj_str1)
     print("Ground obj written to", out_path1)
@@ -117,10 +118,13 @@ def obj_from_grid(obj_path: str, grid: str = default_grid, scale=5.0):
     return out_path, matrix
     # Generate faces
 
-def obj_from_grid_procedural(obj_path: str, grid: str = default_grid, scale=5.0):
+def obj_from_grid_procedural(obj_path: Path, grid: str = default_grid, scale=5.0):
     location = {"x": 0.0, "y": 0.0, "z": 0.0}
     obj_str = ""
     lines = grid.split("\n")
+
+
+
     line = lines[0].split(" ")
     dimension = scale*len(lines) - scale
     print(grid)
@@ -128,6 +132,9 @@ def obj_from_grid_procedural(obj_path: str, grid: str = default_grid, scale=5.0)
     big_world = []
     small_world = []
 
+    if not len(lines) == len(line):
+        print(f"Height {len(lines)} does not equal width {len(line)}")
+        raise AssertionError(f"Agent did not generate square ground. It was {len(lines)} by {len(line)}. Try a smaller resolution.")
     # Section I
     for y in range(0, pad):
         row = []
@@ -135,8 +142,8 @@ def obj_from_grid_procedural(obj_path: str, grid: str = default_grid, scale=5.0)
             row.append(0.0)
             obj_str += f"v {float(pad - x)*scale} {0.0} {float(pad + len(lines) - y - 1)*scale}\n"
         big_world.append(row)
-        print(pad + len(lines) - y - 1, ": ",row)
-    print("-----------")
+        #print(pad + len(lines) - y - 1, ": ",row)
+    #print("-----------")
 
     # Section II
     for y in range(0, len(lines)):
@@ -160,8 +167,8 @@ def obj_from_grid_procedural(obj_path: str, grid: str = default_grid, scale=5.0)
             obj_str += f"v {float(-len(line) - x)*scale} {0.0} {dimension - float(y)*scale}\n"
             row.append(0.0)
         big_world.append(row)
-        print((dimension - float(y)*scale)/scale, ": ",row)
-    print("-----------")
+        #print((dimension - float(y)*scale)/scale, ": ",row)
+    #print("-----------")
     
     # Section III
     for y in range(0, pad):
@@ -170,7 +177,7 @@ def obj_from_grid_procedural(obj_path: str, grid: str = default_grid, scale=5.0)
             row.append(0.0)
             obj_str += f"v {float(pad - x)*scale} {0.0} {float(- y - 1)*scale}\n"
         big_world.append(row)
-        print(- y - 1, ": ",row)
+        #print(- y - 1, ": ",row)
 
     
 
@@ -193,11 +200,9 @@ def obj_from_grid_procedural(obj_path: str, grid: str = default_grid, scale=5.0)
     obj_str1 += face_data
     print("File contains", len(face_data.split("\n")), "faces.")
     
-
-
-    
-    out_file = "ground"
-    out_path1 = obj_path + "/" + out_file + str(random.randint(100, 999)) + ".obj"
+    obj_path.mkdir(parents=True, exist_ok=True)
+    out_file = f"ground_pro{random.randint(100, 999)}.obj"
+    out_path1 = obj_path / out_file
     with open(out_path1, "w") as f:
         f.write(obj_str1)
     print("Ground obj written to", out_path1)

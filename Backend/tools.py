@@ -3,7 +3,7 @@ import sys
 import time
 import json
 from dataclasses import dataclass
-
+from pathlib import Path
 from agents import function_tool, Runner
 from pydantic import BaseModel
 
@@ -22,7 +22,7 @@ synopses = {}
 skybox_material_leaves = []
 ground_material_leaves = []
 sound_leaves = []
-asset_project = ""
+asset_project = None
 
 
 
@@ -199,10 +199,10 @@ async def create_ground(steps_to_ground_construction, resolution, scale, procedu
     grid = result.final_output.grid
     explanation = result.final_output.explanation_of_heights
     if procedural:
-        object_asset_path, ground_matrix = obj_building.obj_from_grid_procedural(str(asset_project / "Assets/Manifest"), grid, scale)
+        object_asset_path, ground_matrix = obj_building.obj_from_grid_procedural(asset_project / "Assets" / "Manifest", grid, scale)
 
     else:
-        object_asset_path, ground_matrix = obj_building.obj_from_grid(str(asset_project / "Assets/Manifest"), grid, scale)
+        object_asset_path, ground_matrix = obj_building.obj_from_grid(asset_project / "Assets" / "Manifest", grid, scale)
 
     try:
         assert len(ground_matrix[0]) == len(ground_matrix)
@@ -221,7 +221,7 @@ async def create_ground(steps_to_ground_construction, resolution, scale, procedu
         print(f"Ground matrix is not square but {len(unity.ground_matrix[0])} by {len(unity.ground_matrix)}. Retrying...")
         raise AssertionError(f"Ground matrix is not square but {len(unity.ground_matrix[0])} by {len(unity.ground_matrix)}. Try a smaller resolution to increase performance.")
     
-    ground_name = object_asset_path.split("/")[-1]
+    ground_name = object_asset_path.name
         
     unity.yaml.proposed_objects[ground_name] = {"Ground": object_asset_path, "Texture": texture_path}
     print(ground_name, "added to proposed_objects w path", object_asset_path)
@@ -309,7 +309,7 @@ async def proposeObject(description: str):
         By the way, water is one of the objects.
     """
     log("Proposing object", type='italic')
-    if asset_project == "":
+    if asset_project is None:
         print("Asset project not set. Needed for linking objects.")
         return f"Somethings wrong. Report to user: 'Asset project not set (is {asset_project}) Needed for linking objects.'"
     global unity
@@ -341,9 +341,9 @@ async def proposeObject(description: str):
     else:
         print(f"\tGathered info:\n{object_data}")
         object_name = object_data["Name"]
-
-    unity.yaml.proposed_objects[object_name] = str(asset_project / object_asset_path)
-    #print(f"\t{object_name} added to proposed_objects w path {object_asset_path}")
+    proposed_object_path = asset_project / object_asset_path
+    unity.yaml.proposed_objects[object_name] = proposed_object_path.as_posix()
+    print(f"\t{object_name} added to proposed_objects w path {proposed_object_path.as_posix()}")
     log(f"Proposed {object_name}.", type='italic')
     json_blob = {
         "Object": object_data,
@@ -404,7 +404,9 @@ async def positionObject(object_name: str, position_of_object_origin: str, rotat
     failed_placements = [] 
     max_len = len(objects_to_sequence)
     #print(objects_to_sequence)
-    object_short_path = unity.yaml.proposed_objects[object_name].replace(str(asset_project) + "/", "")
+    print(unity.yaml.proposed_objects[object_name], "goes to...", unity.yaml.proposed_objects[object_name])
+    object_short_path = unity.yaml.proposed_objects[object_name].relative_to(asset_project)
+    print(object_short_path, "in assest_catalog?")
     if object_short_path in list(asset_catalog.keys()):
         object_data = asset_catalog[object_short_path]
     else:
@@ -421,7 +423,9 @@ async def positionObject(object_name: str, position_of_object_origin: str, rotat
                 if (json_location["x"], json_location["y"], json_location["z"]) in unity.contact_points[parent]:
                     print("POPPING contact point", (json_location["x"], json_location["y"], json_location["z"]), "from contact points")
                     #unity.contact_points[object_name].remove((json_location["x"], json_location["y"], json_location["z"]))
-                    
+            print("Positioning...........")
+            print(object_short_path)       
+            print("...........") 
             if object_short_path in list(asset_catalog.keys()):        
                 unity.add_prefab(object_name, json_location, json_rotation)
             else:

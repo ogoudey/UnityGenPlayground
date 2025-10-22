@@ -110,7 +110,7 @@ Output format must follow GroundData:
 - texture_path: the path to the asset of the material for this ground, as returned by the planTexture tool.
 - explanation_of_heights: an explanation in around one sentence.
 """}
-    instructions_v3_perimeter_0={"o4-mini":"""Return a heightmap for the ground as an grid of floats, given the input plan, resolution, and scale. 
+    instructions_v3_perimeter_0={"o4-mini":"""Return a square heightmap for the ground as a N by N grid of floats, given the input plan, resolution, and scale. 
 Rules:
 - Write the grid directly as <resolution> rows of <resolution> numbers each, separated by spaces. Do not add code, JSON, or extra symbols.  Think of the lower-left cell as 0,0
 - Each number is the ground height in meters. Suppose that -1m is sea level. 
