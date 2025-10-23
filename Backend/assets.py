@@ -6,10 +6,11 @@ import pathlib
 from collections import defaultdict
 import json
 
-
+USE_EXPANDED = False
 def load(asset_project_path):
     try:
-        with open(asset_project_path / "asset_catalog.json", "r") as f:
+        name_of_asset_catalog = "asset_catalog_expanded.json" if USE_EXPANDED else "asset_catalog.json"
+        with open(asset_project_path / , "r") as f:
             j = f.read()
             assets_info = json.loads(j)
     except FileNotFoundError: 
