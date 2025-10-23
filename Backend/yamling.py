@@ -276,7 +276,8 @@ class YAML:
             
             audio_source["anchor"] = audio_source_id
             metaguid = get_guid(sound_path + ".meta")
-            audio_source["AudioSource"]["m_Resource"]["guid"] = metaguid
+            print(f"New metaguid for sound: {metaguid}")
+            
 
             # Change volume?
 
@@ -284,8 +285,11 @@ class YAML:
             sound_transform["Transform"]["m_GameObject"]["fileID"] = sound_game_object_id
             # change position if sound is spatialized
             if not UNITY_VERSION == "5":
+                audio_source["AudioSource"]["m_Resource"]["guid"] = metaguid # no m_Resource in Unity 5
                 sceneroots = self.get_doc("SceneRoots")
                 sceneroots["m_Roots"].append({"fileID": transform_id})
+            else: # Unity 5
+                audio_source["AudioSource"]["m_audioClip"] = "f{{fileID: 8300000, guid: {metaguid}, type: 3}}"
             
             self.wrapped.append(sound_transform)
             self.wrapped.append(audio_source)
