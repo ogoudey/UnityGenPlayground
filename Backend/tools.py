@@ -182,7 +182,7 @@ async def createGround(steps_to_ground_construction: str, resolution: int, scale
 async def create_ground(steps_to_ground_construction, resolution, scale, procedural):
     log("Creating ground...", type='italic')
 
-    agent = GroundCreator(tools=[addTexture], set_perimeter_to_0=True)
+    agent = GroundCreator(tools=[addTexture], set_perimeter_to_0=True, resolution=resolution, scale=scale)
     global unity
     prompt = {"Steps to plan": steps_to_ground_construction, "Resolution": resolution, "Scale": scale}
     

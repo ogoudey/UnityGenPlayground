@@ -30,8 +30,12 @@ class WorldGen:
         if asset_project_path and asset_project_path.exists():
             print(f"Asset Project is \033[1m\033[36m{asset_project_path}\033[0m")
         else:
-            print("\033[1m\033[31mAsset project path does not exist or was not provided.\033[0m")
-            raise FileNotFoundError("Asset project path does not exist or was not provided.")
+            if asset_project_path:
+                print(f"Asset project with path {asset_project_path} does not exist.")
+                raise FileNotFoundError(f"Asset project with path {asset_project_path} does not exist.")
+            else:
+                print("\033[1m\033[31mAsset project path does not exist or was not provided.\033[0m")
+                raise FileNotFoundError("Asset project path does not exist or was not provided.")
         agents.tools.asset_project = asset_project_path
         
         if preexisting_world:

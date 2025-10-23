@@ -89,16 +89,17 @@ def status_stream():
     def generate():
         while True:
             try:
-                if not queue.empty():
-                    log_entry = queue.get_nowait()
-                    print("Queue has:", log_entry)
-                    payload = json.dumps(log_entry)  # {"message": "...", "type": "..."}
-                    print("Sending payload")
-                    yield f"data: {payload}\n\n"
-                else:
-                    # Always yield something periodically to keep the connection alive
-                    yield ": keep-alive\n\n"
-                    time.sleep(0.1)
+                if queue is not None:
+                    if not queue.empty():
+                        log_entry = queue.get_nowait()
+                        print("Queue has:", log_entry)
+                        payload = json.dumps(log_entry)  # {"message": "...", "type": "..."}
+                        print("Sending payload")
+                        yield f"data: {payload}\n\n"
+                    else:
+                        # Always yield something periodically to keep the connection alive
+                        yield ": keep-alive\n\n"
+                        time.sleep(0.1)
             except Exception as e:
                 print("Error in SSE:", e)
                 time.sleep(1)
@@ -116,7 +117,7 @@ def status_stream():
     
 
 Class_from_Asset_Project = {
-    "Acrophobia_v1": AcrophobiaWorldGen,
+    "acrophobia_v1": AcrophobiaWorldGen,
 }
 
 if __name__ == '__main__':
