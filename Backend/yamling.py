@@ -169,6 +169,7 @@ class YAML:
         print("Asset added to YAML.")            
     
     def remove_prefab_instance_if_exists(self, name):
+        print("removing if exists")
         for doc in self.wrapped:
             if "PrefabInstance" in doc:
                 for mod in doc["PrefabInstance"]["m_Modification"]["m_Modifications"]:
@@ -184,7 +185,9 @@ class YAML:
                             sceneroots["m_Roots"].remove({"fileID": prefab_id})
                             print("Removed prefabID from scene root.")
                             return True
-
+        if UNITY_VERSION == "5":
+            print("Leaving before modifying sceneroots (Unity 5 thing).")
+            return False
         sceneroots = self.get_doc("SceneRoots")
         sceneroots["m_Roots"].remove({"fileID": prefab_id})
         return False
@@ -562,7 +565,7 @@ def get_guid(meta_file: str) -> str:
     print(f"Getting GUID for {meta_file}")
     with open(meta_file, "r") as f:
         data = pyyaml.safe_load(f)
-    
+    print("found meta")
     # Ensure 'guid' exists
     if "guid" not in data:
         raise KeyError(f"'guid' not found in {meta_file}")

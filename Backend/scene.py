@@ -1,5 +1,5 @@
 import uuid
-
+from pathlib import Path
 import yamling
 
 
@@ -34,7 +34,7 @@ class World:
 
     def add_orphan_prefab(self, name, location, rotation):
         guid = uuid.uuid4().hex
-        yamling.write_obj_meta(self.yaml.proposed_objects[name], guid)     
+        yamling.write_obj_meta(Path(self.yaml.proposed_objects[name]), guid)     
         self.yaml.add_orphan_prefab_instance(name, guid, location, rotation)
 
     def add_ground(self, ground_name, transform={"x":0.0, "y":0.0, "z":0.0}, rotation={"x":0.0, "y":0.0, "z":0.0}):
@@ -45,7 +45,8 @@ class World:
                 print("Ground exists in YAML - couldn't be removed.")
         guid = uuid.uuid4().hex
         print("before writing meta")
-        yamling.write_obj_meta(self.yaml.proposed_objects[ground_name]["Ground"], guid)
+        posix_path = self.yaml.proposed_objects[ground_name]["Ground"]
+        yamling.write_obj_meta(Path(posix_path), guid)
         print("meta written")
         self.yaml.add_ground_prefab_instance(ground_name, guid, transform)
         print("back from add_gnd_prefab_instance")

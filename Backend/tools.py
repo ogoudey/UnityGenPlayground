@@ -223,8 +223,8 @@ async def create_ground(steps_to_ground_construction, resolution, scale, procedu
     
     ground_name = object_asset_path.name
         
-    unity.yaml.proposed_objects[ground_name] = {"Ground": object_asset_path, "Texture": texture_path}
-    print(ground_name, "added to proposed_objects w path", object_asset_path)
+    unity.yaml.proposed_objects[ground_name] = {"Ground": object_asset_path.as_posix(), "Texture": texture_path}
+    print(ground_name, "added to proposed_objects w path", object_asset_path.as_posix())
     
     json_location = {"x": 0, "y": 0, "z": 0}
     unity.add_ground(ground_name, json_location)
@@ -328,7 +328,7 @@ async def proposeObject(description: str):
 
     print(f"Matched synopsis '{result.final_output.synopsis}' to description '{description}'")
     try:
-        object_asset_path = synopses[result.final_output.synopsis]
+        object_asset_path = Path(synopses[result.final_output.synopsis])
     except KeyError:
         print(result.final_output, "is not in synopsis file. (Agent problem - the list of synopses were passed to it.)")
         return f"This agent failed to match the description to an object, maybe because the object does not exist in the available assets."
@@ -405,10 +405,11 @@ async def positionObject(object_name: str, position_of_object_origin: str, rotat
     max_len = len(objects_to_sequence)
     #print(objects_to_sequence)
     print(unity.yaml.proposed_objects[object_name], "goes to...", unity.yaml.proposed_objects[object_name])
-    object_short_path = unity.yaml.proposed_objects[object_name].relative_to(asset_project)
+    object_short_path = Path(unity.yaml.proposed_objects[object_name]).relative_to(asset_project)
+    
     print(object_short_path, "in assest_catalog?")
-    if object_short_path in list(asset_catalog.keys()):
-        object_data = asset_catalog[object_short_path]
+    if object_short_path.as_posix() in list(asset_catalog.keys()):
+        object_data = asset_catalog[object_short_path.as_posix()]
     else:
         object_data = {"Name": object_name}
     object_data["Position"] = json_location
@@ -426,7 +427,7 @@ async def positionObject(object_name: str, position_of_object_origin: str, rotat
             print("Positioning...........")
             print(object_short_path)       
             print("...........") 
-            if object_short_path in list(asset_catalog.keys()):        
+            if object_short_path.as_posix() in list(asset_catalog.keys()):        
                 unity.add_prefab(object_name, json_location, json_rotation)
             else:
                 unity.add_orphan_prefab(object_name, json_location, json_rotation)
@@ -493,11 +494,11 @@ async def getContactPoints() -> str:
 
     
 """ Helpers """
-def asset_lookup(asset_path: str) -> dict:
-    if asset_path in list(asset_catalog.keys()):
-        return asset_catalog[asset_path]
+def asset_lookup(asset_path: Path) -> dict:
+    if asset_path.as_posix() in list(asset_catalog.keys()):
+        return asset_catalog[asset_path.as_posix()]
     else:
         #return {"Name": "unknown_object"+str(random.randint(100, 999)), "Importances": None}
-        print(asset_path, "not in", list(asset_catalog.keys()))
+        print(asset_path.as_posix(), "not in", list(asset_catalog.keys()))
         return None
         raise Exception("Asset is unavailable. Please choose an another asset.")
