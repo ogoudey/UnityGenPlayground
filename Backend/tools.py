@@ -460,7 +460,7 @@ def positionVRHumanPlayer(transform: str, rotation: str = "{\"x\": 75, \"y\": 10
         "{\"x\": 90, \"y\": 0, \"z\": 45}" 
     explanation: A human-readable explanation of the placement(s). Example: "I put the water here to be above the height y=0.5 along the riverbed", or "I put a patch of trees in this section". Be sure to explain the height with regard to the contact points and the open spaces of the heightmap."
 
-    Only call this function once, if successful.
+    Only call this function once, and remember to be careful not to make them floating. Use what you know about the objects and their positionings.
     """
     print(f"Placing human VR player ---> location {transform}, rotation {rotation}")
     print(f"Why this placement?:\n\t{explanation}")

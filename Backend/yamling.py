@@ -289,7 +289,7 @@ class YAML:
                 sceneroots = self.get_doc("SceneRoots")
                 sceneroots["m_Roots"].append({"fileID": transform_id})
             else: # Unity 5
-                audio_source["AudioSource"]["m_audioClip"] = "f{{fileID: 8300000, guid: {metaguid}, type: 3}}"
+                audio_source["AudioSource"]["m_audioClip"] = f"{{fileID: 8300000, guid: {metaguid}, type: 3}}"
             
             self.wrapped.append(sound_transform)
             self.wrapped.append(audio_source)
