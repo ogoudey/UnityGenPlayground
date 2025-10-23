@@ -73,7 +73,7 @@ class WorldGen:
         """
         print("\n>>>>>> ", prompt, "\n")
         result = await Runner.run(self.coordinator, prompt, max_turns=20)
-        path = str(self.asset_project_path / "Assets" / "Scenes" / self.scene_name)
+        path = str(self.asset_project_path / "Assets" / "Scenes" / self.scene_name) # should stringify later?
         scene_path = agents.tools.unity.done_and_write(path)
         print(f"Scene @ {scene_path}")
         print(f"Coordinator response: \n{result.final_output}")
@@ -82,9 +82,12 @@ class WorldGen:
 
         if DRAWING:
             draw_graph(self.coordinator, filename="coordinator_graph")
+        return path
 
 
     async def regime(self, regime_prompt):
+        log("Starting regime")
+
         print("\n>>>>>> ", regime_prompt, "\n")
         result = await Runner.run(self.coordinator_runner, regime_prompt)
         print(f"Coordinator manager response: \n{result.final_output}")
@@ -97,7 +100,7 @@ class VRWorldGen(WorldGen):
     def __init__(self, asset_project_path: Path = None, scene_name: str = None, restriction: str = None):
         super().__init__(asset_project_path, scene_name, None, restriction)
         agents.tools.asset_project = asset_project_path
-        self.coordinator.tools.extend([positionVRHumanPlayer, createGround, createSkybox, createSun, createSound]) #, populateHorizon
+        self.coordinator.tools.extend([positionVRHumanPlayer, createGround, createSkybox, createSun, createSound, populateHorizon])
         self.coordinator.instructions = Coordinator.phobia_v1[MODEL]
         self.patient = Phobos() 
 
@@ -142,6 +145,7 @@ class Acrophobia50mx50mWorldGen(VRWorldGen):
         super().__init__(asset_project_path, f"acro_50_{MODEL}_{random.randint(100, 999)}", restriction)
         self.coordinator.instructions = Coordinator.acrophobia_v1[MODEL]
         self.coordinator.tools.remove(createGround)
+        self.coordinator.tools.remove(populateHorizon)
         self.coordinator.tools.extend([create50mx50mGround])
 
     async def get_prompt(self):

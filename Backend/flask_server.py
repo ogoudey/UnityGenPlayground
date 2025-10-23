@@ -12,6 +12,7 @@ import os
 import json
 import asyncio
 import time
+from multiprocessing import Manager
 
 print("STandard imports done")
 
@@ -25,8 +26,7 @@ from worldgen import AcrophobiaWorldGen, VRWorldGen
 
 print("wiorld gen imports done")
 
-
-from logger import queue
+queue = None
 
 current_process = None  # global process handle
 
@@ -76,6 +76,7 @@ def index():
     return render_template('index.html', prompt="Running", asset_projects=asset_projects)
 
 async def async_run(prompt, asset_project_path):
+    #log(f"{prompt} received...")
     Class_Name = Class_from_Asset_Project[asset_project_path]
     gen = Class_Name(asset_project_path)
     await gen.load()
@@ -86,20 +87,23 @@ def run(prompt, asset_project_path):
 
 @app.route('/status_stream')
 def status_stream():
+    print(f"[status_stream] PID: {os.getpid()}")
+
     def generate():
         while True:
             try:
-                if queue is not None:
-                    if not queue.empty():
-                        log_entry = queue.get_nowait()
-                        print("Queue has:", log_entry)
-                        payload = json.dumps(log_entry)  # {"message": "...", "type": "..."}
-                        print("Sending payload")
-                        yield f"data: {payload}\n\n"
-                    else:
-                        # Always yield something periodically to keep the connection alive
-                        yield ": keep-alive\n\n"
-                        time.sleep(0.1)
+                print(f"[SSE] queue size: {queue.qsize()}")
+                if not queue.empty():
+                    print("Queue is not empty!")
+                    log_entry = queue.get_nowait()
+                    print("Queue has:", log_entry)
+                    payload = json.dumps(log_entry)  # {"message": "...", "type": "..."}
+                    print("Sending payload")
+                    yield f"data: {payload}\n\n"
+                else:
+                    # Always yield something periodically to keep the connection alive
+                    yield ": keep-alive\n\n"
+                    time.sleep(0.1)
             except Exception as e:
                 print("Error in SSE:", e)
                 time.sleep(1)
@@ -118,9 +122,13 @@ def status_stream():
 
 Class_from_Asset_Project = {
     "acrophobia_v1": AcrophobiaWorldGen,
+    "acrophobia_u5": AcrophobiaWorldGen
 }
 
 if __name__ == '__main__':
     print("Server restart...")
-    app.run(debug=True) # 
+    import logger
+    
+    manager, queue = logger.get_manager_and_queue()
+    app.run(debug=True, use_reloader=False) # 
     

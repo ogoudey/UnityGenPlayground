@@ -1,17 +1,20 @@
 import time
+#import queue
+import os
+import queue
 
 from multiprocessing import Manager
 
-manager = None
+_manager = None
 queue = None
 
 
-def log(message, type='normal'):
-    global manager
-    global queue
-    
-    if manager is None:
-        manager = Manager()
-        queue = manager.Queue()
+
+
+def log(message, type):
+    if queue is None:
+        queue = queue.Queue()
+    print("[logger] Queue object id:", id(queue))
     queue.put({"message": message, "type": type})
-    time.sleep(0.001)
+    print(f"[Logger] queue size: {queue.qsize()}")
+    print("[Logger]", queue.pop(0)[0])

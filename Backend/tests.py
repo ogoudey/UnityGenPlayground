@@ -89,6 +89,16 @@ async def test_acrophobia_bridge_regime_pro(ap=None):
     await gen.load()
     await gen.regime(AcrophobiaWorldGen.bridge_regime_prompt)
 
+async def test_acrophobia_run(ap=None):
+    gen = AcrophobiaWorldGen() if ap is None else AcrophobiaWorldGen(ap)
+    await gen.load()
+    await gen.run(input("\nPrompt:\n"))
+
+async def test_acrophobia_regime(ap=None):
+    gen = AcrophobiaWorldGen() if ap is None else AcrophobiaWorldGen(ap)
+    await gen.load()
+    await gen.run(input("\nPrompt:\n"))
+
 ### General test
 async def test_acrophobia_emulate(ap=None):
     gen = AcrophobiaWorldGen() if ap is None else AcrophobiaWorldGen(ap)
@@ -124,6 +134,8 @@ test_dispatcher = {
     "test_acro_roof_pro": test_acrophobia_roof_pro,
     "test_acro_platform_pro": test_acrophobia_platform_pro,
     "test_regime_pro": test_acrophobia_bridge_regime_pro,
+    "test_acro_run": test_acrophobia_run,
+    "test_acro_regime": test_acrophobia_regime
 }
 
 if __name__ == "__main__":

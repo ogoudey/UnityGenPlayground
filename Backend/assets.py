@@ -29,7 +29,7 @@ def load(asset_project_path):
     if removed_count > 0:
         print(f"Removed {removed_count} missing assets")
     else:
-        print("No missing assets found")
+        print("All asset catalog entries accounted for in folders.")
 
     return assets_info
 

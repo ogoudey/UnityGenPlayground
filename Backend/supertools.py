@@ -20,7 +20,7 @@ class CoordinatorRunner(Agent):
     Until the user suggests world generation, you may describe how you can generate a VR world in Unity for the user.
     If it's conversational, keep your answer to brief, one-liners - like a text message.
     
-    Once generating, your FINAL OUTPUT will occur after having generated the world, so please put it in the past tense."""
+    Once generating, your FINAL OUTPUT will occur after having generated the world, so please put it in the past tense. Include in your this FINAL OUTPUT the file name(s) of the generated scene(s)."""
 
     def __init__(self, run_coordinator_function, name=None, instructions=None, ):
         global coordinator_function

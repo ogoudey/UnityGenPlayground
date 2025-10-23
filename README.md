@@ -34,6 +34,7 @@ cd Backend
 git may not be the best solution for sharing Unity projects. In particular, I think AllSkyFree and YughuesFreeGroundMaterials must go through the Unity Asset Store. So import them to the project and then reconstitute [`acrophobia_v1`](https://github.com/ogoudey/acrophobia_v1).
 
 Make sure that skyboxes in `Assets/Skybox Materials` work, and that the ground textures in `Assets/Ground Textures` work.
+If some assets aren't rendering even though they're added to the scene, reimport them.
 
 ## VR Setup
 (Assuming a VIVE headset and a wireless adapter, a Windows computer, etc.)

@@ -159,13 +159,14 @@ class YAML:
       
         wrapped["PrefabInstance"]["m_SourcePrefab"]["guid"] = metaguid
 
+        self.wrapped.append(wrapped)
         if UNITY_VERSION == "5":
-            print("Leaving before modifying sceneroots (Unity 5 thing).")
+            print("Leaving before modifying sceneroots (Unity 5 thing). Ground added to YAML.")
             return
 
         sceneroots = self.get_doc("SceneRoots")
         sceneroots["m_Roots"].append({"fileID": id_out})
-        self.wrapped.append(wrapped)
+        
         print("Asset added to YAML.")            
     
     def remove_prefab_instance_if_exists(self, name):
@@ -237,13 +238,14 @@ class YAML:
                     if mod.get("propertyPath") == "m_LocalRotation.w":
                         mod["value"] = quaternion[3]  
         wrapped["PrefabInstance"]["m_SourcePrefab"]["guid"] = metaguid
+        self.wrapped.append(wrapped)
         if UNITY_VERSION == "5":
             print("Leaving before modifying sceneroots (Unity 5 thing).")
             return
         sceneroots = self.get_doc("SceneRoots")
         sceneroots["m_Roots"].append({"fileID": id_out})
         print("\rInit YAML succcessfully updated.")
-        self.wrapped.append(wrapped)
+        
         print("Asset added to YAML.")
 
     def add_sound(self, name):
