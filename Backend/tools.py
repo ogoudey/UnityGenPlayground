@@ -189,7 +189,7 @@ async def create_ground(steps_to_ground_construction, resolution, scale, procedu
     if len(unity.ground_matrix) > 0:
         prompt["Existing ground to edit"] = unity.ground_matrix
         prompt["Existing ground scale"] = unity.ground_scale
-    
+        prompt["Existing texture"] = unity.current_texture
     t = time.time()
     print(agent.name, "started")
     print(prompt)
@@ -214,7 +214,7 @@ async def create_ground(steps_to_ground_construction, resolution, scale, procedu
     unity.ground_scale = scale
     print("Ground obj written.")
     texture_path = result.final_output.texture_path
-    
+    unity.current_texture = texture_path
     try:
         assert len(unity.ground_matrix[0]) == len(unity.ground_matrix)
     except AssertionError:

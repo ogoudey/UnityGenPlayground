@@ -10,6 +10,7 @@ class World:
         
         self.ground_matrix = []
         self.ground_scale = 5.0
+        self.current_texture = ""
         self.contact_points = dict()
         self.objects = []
         self.ground = None

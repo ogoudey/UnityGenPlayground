@@ -563,7 +563,7 @@ def set_ID(text: str, new_id: str=None) -> str:
 def get_guid(meta_file: str) -> str:
     """Returns the 'guid' property from a Unity .meta YAML file."""
     print(f"Getting GUID for {meta_file}")
-    with open(meta_file, "r") as f:
+    with open(meta_file, "r") as f: # this should fail on Windows - path is from textureplanner -> WindowsPath ->getguid(Windowspath + .meta)
         data = pyyaml.safe_load(f)
     print("found meta")
     # Ensure 'guid' exists
