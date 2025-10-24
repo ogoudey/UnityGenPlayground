@@ -172,7 +172,7 @@ async def createGround(steps_to_ground_construction: str, resolution: int, scale
                 1. Since the horizonal scale is 5.0, turn the 5, 5 into coordinates 1,1. Make this coordinate have height 2.5
                 2. Make in the -X, +Z direction the base of the house. 4m / scale of 5.0 is .8 or 1 grid cell. So make (1, 2), (2, 2), and (2, 1) all height 2.5 too.
                 3. Make the points surrounding the indent a sort of gradient. Have them all close to 2.5, and spread that out, without affecting other landmarks.
-        resolution: an integer < 30 that is the number of vertices along one edge of the ground mesh. The ground must be a square. For performance reasons, keep the resolution under 30. (Example: 11)
+        resolution: an integer < 20 that is the number of vertices along one edge of the ground mesh. The ground must be a square. For performance reasons, keep the resolution under 20. (Example: 11)
         scale: a float that is the number of meters between each vertex. (Example: 5.0)
                 
     This Tool can be called multiple times to reshape the ground, in order to fit the objects that are static or immalleable.
