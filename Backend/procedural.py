@@ -1,5 +1,5 @@
 import sys
-
+import random
 
 
 if sys.platform == "win32":
@@ -36,17 +36,17 @@ def populate(asset_path_list, unity):
         # noise
         
         if WINDOWS_PNOISE:
-            p_noise_list = generate_points(x_range, y_range, n_points=100, scale=0.1, threshold=0.0)
+            p_noise_list = generate_points(100, x_range, y_range, scale=0.1, threshold=0.0)
         else:
             p_noise_list = perlin_points_2d(x_range, y_range, n_points=100, scale=0.1, threshold=0.0)
         for point in p_noise_list:
             if not in_no_pose_zone(point):
                 print("Adding prefab")
-                unity.add_prefab(asset, {"x": point[0], "y": 0, "z": point[1]}, {"x": 0, "y": 0, "z": 0})
+                unity.add_prefab(asset, {"x": point[0], "y": 0.0, "z": point[1]}, {"x": 0.0, "y": random.random()*360, "z": 0.0})
     
 
 def generate_points(n_points, x_range, y_range, scale=1.0, threshold=0.1):
-    noise = PerlinNoise(octaves=4)
+    noise = Noise2D(octaves=4)
     points = []
 
     for _ in range(n_points * 5):  # oversample and filter by threshold
