@@ -180,7 +180,7 @@ class YAML:
                             print("Removed prefab!")
                             if UNITY_VERSION == "5":
                                 print("Leaving before modifying sceneroots (Unity 5 thing).")
-                                return
+                                return True
                             sceneroots = self.get_doc("SceneRoots")
                             prefab_id = doc["anchor"]
                             sceneroots["m_Roots"].remove({"fileID": prefab_id})
