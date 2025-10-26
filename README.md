@@ -45,3 +45,7 @@ If some assets aren't rendering even though they're added to the scene, reimport
 ## Also got:
 SteamVR Plugin 2.8.0 (accept all recommended settings)
 Vive Input Utility 1.20.0 (need?)
+
+## Illustrative Traces:
+* Minimal flow - trace_ae37433b1bed4ab1aba36bb22df2641f
+* Remake ground flow - trace_bf2a1ad6f25e4b36b1f2f6b6dbdd13d6
