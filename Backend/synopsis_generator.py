@@ -14,7 +14,7 @@ async def load(assets_info):
     active_synopses = await update_synopsis_file(assets_info, synopses)
     return active_synopses
 
-async def update_synopsis_file(assets_info, synopses):
+async def update_synopsis_file(assets_info, synopses) -> dict[str, str]:
     i = 0
     updates_needed = len(assets_info) - len(synopses)
     for asset_path, asset_info in assets_info.items():
@@ -39,7 +39,7 @@ async def update_synopsis_file(assets_info, synopses):
             output_str = json.dumps(synopses, indent=2)
             s.write(output_str)
             print("Synopsis file updated.")
-    represented_assets = {}
+    represented_assets = dict()
     unrepresented_assets = []
     for synopsis, ante_asset_path in synopses.copy().items():
         found = False

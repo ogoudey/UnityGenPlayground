@@ -25,29 +25,7 @@ class Propositions:
 UNITY_VERSION = (os.getenv("UNITY_VERSION") or "6").strip() or "6"
 print(f"\nGenerating world for \033[1m\033[36mUnity {UNITY_VERSION}\033[0m. Use \033[1m\033[36mexport UNITY_VERSION='<5|6>'\033[0m")
 
-def node_to_python(node: MappingNode) -> Any:
-    if isinstance(node, ScalarNode):
-        return node.value
-    if isinstance(node, SequenceNode):
-        values_to_objects = []
-        for value in node.value:
-            values_to_objects.append(node_to_python(value))
-        return values_to_objects
-    if isinstance(node, MappingNode):  
-        map_dict = {}
-        if hasattr(node, "tag") and "!UnityTag" in node.tag:
-            map_dict["tag"] = node.tag.removeprefix("!UnityTag")    
-        if hasattr(node, "anchor") and node.anchor:
-            map_dict["anchor"] = node.anchor
-        for mapping_duple in node.value:
-            map_dict[node_to_python(mapping_duple[0])] = node_to_python(mapping_duple[1]) 
-        return map_dict
-    else:
-        print("Weird node detected:", type(node))
-        print(node)
-        return None
-
-class YAML:
+class UnityFile:
     def __init__(self):
         nodes = compose(scene_init_text[UNITY_VERSION])
         # self.level0 is a list of MappingNodes
@@ -55,7 +33,16 @@ class YAML:
         
         self.proposed_objects: Propositions = Propositions()
         self.placed_assets = dict()
-    
+
+    def propose_object(self, name: str, asset_path: AssetPath | dict[str, AssetPath]):
+        self.proposed_objects.add(name, asset_path)
+
+    def get_asset_path(self, name: str) -> AssetPath:
+        if not isinstance(self.proposed_objects[name], AssetPath):
+            raise Exception(f"Looked for single AssetPath for {name}")
+        else:
+            return self.proposed_objects[name]
+
     def set_sun(self, length_of_day: float, time_of_day: float, sun_brightness:float):
         rot = (time_of_day / length_of_day) * 360
         rotation = {"x": rot, "y": 0, "z": 0}
@@ -79,12 +66,10 @@ class YAML:
             return
         sceneroots = self.get_doc("SceneRoots")
         sceneroots["m_Roots"].append({"fileID": father_id})
-        print("\rSun added to YAML.")
-            
+        print("\rSun added to YAML.")   
         
     def set_skybox(self, name):
         print("Setting skybox...")
-        
         mat_path = self.proposed_objects[name].asset_path
         guid = get_guid(mat_path + ".meta")
         try:
@@ -225,39 +210,31 @@ class YAML:
             print(name + " not in proposed_objects")
             print("Lookup in proposed_objects has failed.")
             raise KeyError
-        try:
-            sound_game_object_id = str(random.randint(100000000, 999999999))
-            sound_game_object["anchor"] = sound_game_object_id
-            audio_source_id = str(random.randint(100000000, 999999999))
-            transform_id = str(random.randint(100000000, 999999999))
-            components = sound_game_object["GameObject"]["m_Component"]
-            components.append(f"component: {{fileID: {transform_id}}}")
-            components.append(f"component: {{fileID: {audio_source_id}}}")
-            sound_game_object["GameObject"]["m_Name"] = name
-            audio_source["anchor"] = audio_source_id
-            metaguid = get_guid(sound_path + ".meta")
-            print(f"New metaguid for sound: {metaguid}")
-            sound_transform["anchor"] = transform_id
-            sound_transform["Transform"]["m_GameObject"]["fileID"] = sound_game_object_id
-            # change position if sound is spatialized
-            if not UNITY_VERSION == "5":
-                audio_source["AudioSource"]["m_Resource"]["guid"] = metaguid # no m_Resource in Unity 5
-                sceneroots = self.get_doc("SceneRoots")
-                sceneroots["m_Roots"].append({"fileID": transform_id})
-            else: # Unity 5
-                audio_source["AudioSource"]["m_audioClip"] = f"{{fileID: 8300000, guid: {metaguid}, type: 3}}"
-            self.wrapped.append(sound_transform)
-            self.wrapped.append(audio_source)
-            self.wrapped.append(sound_game_object)
-            print("Sound added to YAML")
-        except Exception as e:
-            exc_type, exc_obj, exc_tb = sys.exc_info()
-            fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
-            line_number = exc_tb.tb_lineno
-            print(f"Error: {e}")
-            print(f"Type: {exc_type}")
-            print(f"File: {fname}")
-            print(f"Line Number: {line_number}")
+        sound_game_object_id = str(random.randint(100000000, 999999999))
+        sound_game_object["anchor"] = sound_game_object_id
+        audio_source_id = str(random.randint(100000000, 999999999))
+        transform_id = str(random.randint(100000000, 999999999))
+        components = sound_game_object["GameObject"]["m_Component"]
+        components.append(f"component: {{fileID: {transform_id}}}")
+        components.append(f"component: {{fileID: {audio_source_id}}}")
+        sound_game_object["GameObject"]["m_Name"] = name
+        audio_source["anchor"] = audio_source_id
+        metaguid = get_guid(sound_path + ".meta")
+        print(f"New metaguid for sound: {metaguid}")
+        sound_transform["anchor"] = transform_id
+        sound_transform["Transform"]["m_GameObject"]["fileID"] = sound_game_object_id
+        # change position if sound is spatialized
+        if not UNITY_VERSION == "5":
+            audio_source["AudioSource"]["m_Resource"]["guid"] = metaguid # no m_Resource in Unity 5
+            sceneroots = self.get_doc("SceneRoots")
+            sceneroots["m_Roots"].append({"fileID": transform_id})
+        else: # Unity 5
+            audio_source["AudioSource"]["m_audioClip"] = f"{{fileID: 8300000, guid: {metaguid}, type: 3}}"
+        self.wrapped.append(sound_transform)
+        self.wrapped.append(audio_source)
+        self.wrapped.append(sound_game_object)
+        print("Sound added to YAML")
+
 
     def add_prefab_instance(self, name, transform, rotation):
         composed = compose(prefab_init_text)
@@ -271,14 +248,15 @@ class YAML:
             print(name + " not in proposed_objects")
             print("Lookup in proposed_objects has failed.")
         try:
-            print(prefab_path)
             father_ID = self.get_father_id_of_root_transform_of_prefab(prefab_path)
         except Exception:
-            print("Could not find fatherID of root transform")
+            print("Could not find fatherID of root transform for path {prefab_path}")
+            raise FileNotFoundError(f"Could not find fatherID of root transform {prefab_path}")
         try:    
-            guid = get_guid(prefab_path + ".meta")
+            guid = get_guid(f"{prefab_path}.meta")
         except Exception:
-            print("Could not get guid from .meta file:", prefab_path + ".meta")
+            print(f"Could not get guid from .meta file: {prefab_path}.meta")
+            raise FileNotFoundError(f"Could not get guid from .meta file: {prefab_path}.meta")
         self.placed_assets[name] = {"transform": transform, "rotation": rotation}
         scale = 1.0
         quaternion = euler_to_xyzw_quaternion(rotation)
@@ -447,7 +425,48 @@ def compose(initializing_text: str) -> List[MappingNode]:
     yaml = ruamel_YAML(typ='rt')
     return list(yaml.compose_all(preprocess_text(initializing_text)))
 
-def euler_to_xyzw_quaternion(rotation):
+def node_to_python(node: MappingNode) -> Any:
+    if isinstance(node, ScalarNode):
+        return node.value
+    if isinstance(node, SequenceNode):
+        values_to_objects = []
+        for value in node.value:
+            values_to_objects.append(node_to_python(value))
+        return values_to_objects
+    if isinstance(node, MappingNode):  
+        map_dict = {}
+        if hasattr(node, "tag") and "!UnityTag" in node.tag:
+            map_dict["tag"] = node.tag.removeprefix("!UnityTag")    
+        if hasattr(node, "anchor") and node.anchor:
+            map_dict["anchor"] = node.anchor
+        for mapping_duple in node.value:
+            map_dict[node_to_python(mapping_duple[0])] = node_to_python(mapping_duple[1]) 
+        return map_dict
+    else:
+        print("Weird node detected:", type(node))
+        print(node)
+        return None
+
+def write_obj_meta(obj_path, guid):
+    print("writing object meta for", obj_path)
+    if os.path.exists(obj_path / ".meta"):
+        print("Obj meta already exists, using existing one.")
+        return
+    node = compose(obj_meta_init_text)[0]
+    wrapped = node_to_python(node)
+    wrapped["guid"] = guid
+    reformatted = convert_numbers(wrapped)
+    yaml_str = pyyaml.dump(
+        reformatted, 
+        default_flow_style=False, 
+        sort_keys=False
+    )
+    print("Before meta write")
+    with open(obj_path.with_suffix(obj_path.suffix + ".meta"), "w") as f:
+        f.write(yaml_str) 
+    print("Meta file with updated GUID written")
+
+def euler_to_xyzw_quaternion(rotation: dict) -> tuple:
     print("Rotation:", rotation)
     x_deg, y_deg, z_deg = rotation["x"], rotation["y"], rotation["z"]
 
@@ -472,17 +491,15 @@ def euler_to_xyzw_quaternion(rotation):
     print("Calculation of quaternion done:", (qx, qy, qz, qw))
     return (qx, qy, qz, qw)            
 
-def set_ID(text: str, new_id: str=None) -> str:
+def set_ID(text: MappingNode, new_id: str="") -> tuple[MappingNode, str]:
     """ Changes the ID in the anchor line """
-    if not new_id:
+    if new_id == "":
         new_id = str(random.randint(1000000000, 9999999999))
     if "anchor" in text.keys():
         text["anchor"] = new_id
     else:
         raise ValueError("No anchor to be set!")
     return text, new_id
-
-
         
 def get_guid(meta_file: str) -> str:
     """Returns the 'guid' property from a Unity .meta YAML file."""
@@ -587,33 +604,6 @@ def convert_numbers(obj):
             return obj  # keep string if not a number
     else:
         return obj
-
-def write_obj_meta(obj_path, guid):
-    print("writing object meta for", obj_path)
-    if os.path.exists(obj_path / ".meta"):
-        print("Obj meta already exists, using existing one.")
-        return
-
-    yaml = ruamel_YAML(typ='rt')
-    default = list(yaml.compose_all(obj_meta_init_text))[0]
-
-    wrapped = node_to_python(default)
-    wrapped["guid"] = guid
-
-    
-
-    reformatted = convert_numbers(wrapped)
-    
-    yaml_str = pyyaml.dump(
-        reformatted, 
-        default_flow_style=False, 
-        sort_keys=False
-    )
-    print("Before meta write")
-    with open(obj_path.with_suffix(obj_path.suffix + ".meta"), "w") as f:
-        f.write(yaml_str)
-        
-    print("Meta file with updated GUID written")
 
 sound_init_text = """--- !u!1 &987559413
 GameObject:

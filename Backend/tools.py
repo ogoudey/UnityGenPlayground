@@ -8,30 +8,17 @@ from agents import function_tool, Runner
 from pydantic import BaseModel
 from subagents import AssetPath
 from subagents import ObjectPlanner, GroundCreator, SkyboxPlanner, TexturePlanner, SunPlanner, SoundDesigner
-
+from world import World, UnityWorld
 from logger import log
-
-
-
 import obj_building
 import procedural
+from typing import List
+import functools
+import inspect
+import sys
+import os
+import traceback
 
-""" Preprocessing depends on type of worldgen. These global variables are set from worldgen.TypeofWorldGen """
-
-
-
-asset_catalog = {}
-synopses = {}
-skybox_material_leaves = []
-ground_material_leaves = []
-sound_leaves = []
-asset_project = None
-
-
-
-global unity
-global proposed_objects
-    
 MODEL = (os.getenv("MODEL") or "o3-mini").strip() or "o3-mini"
 print(f"\nThe model running is {MODEL}. Use \033[1m\033[36mexport MODEL='<model_name>'\033[0m (Linux) or `setx MODEL '<model-name>'` (Windows) to change it.")
 
@@ -42,30 +29,90 @@ if USE_SHAP_E:
 else:
     print("Not using shap-e. (Normal)")
 
+asset_catalog: dict[str, dict] # and so on
+synopses: dict[str, str] # synopsis: asset_path
+skybox_material_leaves = List[str]
+ground_material_leaves = List[str]
+sound_leaves = List[str]
+asset_project: Path
+world: World | UnityWorld
+    
 
-@dataclass
-class PlaceableObject():
-    name: str
-    info: str
+
+### Form of a Tool ###
+
+#@function_tool
+#async def toolNameInThisFormat(args: basic_types) -> basic_type:
+#    """docstring"""
+#    blah blan
+
+#Try making parameters Pydantic Models
+
+### 
+
+def error_reporter(func):
+    if inspect.iscoroutinefunction(func):
+        @functools.wraps(func)
+        async def async_wrapper(*args, **kwargs):
+            try:
+                return await func(*args, **kwargs)
+            except Exception as e:
+                exc_type, exc_obj, exc_tb = sys.exc_info()
+                fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
+                line_number = exc_tb.tb_lineno
+                print("=== Exception caught in inner function ===")
+                print(f"Function: {func.__name__}")
+                print(f"Error: {e}")
+                print(f"Type: {exc_type.__name__}")
+                print(f"File: {fname}")
+                print(f"Line Number: {line_number}")
+                traceback.print_exc()
+        return async_wrapper
+    else:
+        @functools.wraps(func)
+        def sync_wrapper(*args, **kwargs):
+            try:
+                return func(*args, **kwargs)
+            except Exception as e:
+                exc_type, exc_obj, exc_tb = sys.exc_info()
+                fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
+                line_number = exc_tb.tb_lineno
+                print("=== Exception caught in inner function ===")
+                print(f"Function: {func.__name__}")
+                print(f"Error: {e}")
+                print(f"Type: {exc_type.__name__}")
+                print(f"File: {fname}")
+                print(f"Line Number: {line_number}")
+                traceback.print_exc()
+        return sync_wrapper
 
 @function_tool
-async def getGroundMatrix():
-    global unity
+async def getGroundMatrix() -> dict:
+    """docstring"""
+    return get_ground_matrix()
+
+@error_reporter
+def get_ground_matrix():
+    global world
     print("Recalling ground matrix...")
     log("Recalling ground heightmap...")
-    return {"Grid": unity.ground_matrix, "Information": "The ground goes from (0,0) to (-50, 50). That is, the top left of the matrix is -50, 50. All objects should be on over the ground."}   
+    return {"Grid": world.ground_matrix, "Information": "The ground goes from (0,0) to (-50, 50). That is, the top left of the matrix is -50, 50. All objects should be on over the ground."}   
 
 @function_tool
-async def positionSun(length_of_day: float, time_of_day: float, sun_brightness: float):
+async def positionSun(length_of_day: float, time_of_day: float, sun_brightness: float) -> str:
     """
         Args:
             length_of_day: It is like the planet rotation - how many hours in a day? In Earth-hours (example 18.0). 
             time_of_day: It is like the scene's position on the planet's latitude. Falls between 0.0 and `length_of_day`.
             sun_brightness: It is like the planet's distance from the sun, or like sun's luminosity, etc. Keep it from 0.0 to 1000.0. (0.01 is Earthlike)
     """
+    return position_sun(length_of_day, time_of_day, sun_brightness)
+
+@error_reporter
+def position_sun(length_of_day: float, time_of_day: float, sun_brightness: float):
     log("Positioning the sun in the sky...", type='italic')
-    global unity
-    unity.add_sun(length_of_day, time_of_day, sun_brightness)
+    global world
+    world.add_sun(length_of_day, time_of_day, sun_brightness)
     return f"Successfully added the Sun"
 
 @function_tool
@@ -73,34 +120,35 @@ async def createSkybox(skybox_description: str) -> str:
     """
     Adds a skybox to the world...
     """
+    return await create_skybox(skybox_description)
+
+@error_reporter
+async def create_skybox(skybox_description: str):
     log("Creating skybox...", type='italic')
     agent = SkyboxPlanner()
     prompt = {"Object description": skybox_description,
                 "Available assets": skybox_material_leaves}
-
     t = time.time()
     print(agent.name, "started")
     result = await Runner.run(agent, json.dumps(prompt))
     print(agent.name + ":", time.time() - t, "seconds.")
-    
-    global unity
+    global world
     object_asset_path = result.final_output.asset_path
     skybox_name = object_asset_path.split("/")[-1]
-    unity.yaml.proposed_objects.add(skybox_name, AssetPath(object_asset_path))
-
+    world.propose_object(skybox_name, AssetPath(asset_path=object_asset_path))
     print(skybox_name, "added to proposed_objects w path", object_asset_path)
-    try:
-        unity.add_skybox(skybox_name)
-        return f"Successfully added '{skybox_name}' to the scene."
-    except Exception:
-        print("Error adding skybox...")
-        return f"Failed to add '{skybox_name}' to the scene. There are likely no available skyboxes! (Incomplete asset library)...)"
+    world.add_skybox(skybox_name)
+    return f"Successfully added '{skybox_name}' to the scene."
 
 @function_tool
 async def createSound(sound_description: str) -> str:
     """
     Creates a sound in the scene that matches your description. (Limited to static wind sounds currently)
     """
+    return await create_sound(sound_description)
+
+@error_reporter
+async def create_sound(sound_description: str):
     log("Creating sounds...", type='italic')
     agent = SoundDesigner()
     prompt = prompt = {"Object description": sound_leaves,
@@ -109,25 +157,23 @@ async def createSound(sound_description: str) -> str:
     print(agent.name, "started")
     result = await Runner.run(agent, json.dumps(prompt))
     print(agent.name + ":", time.time() - t, "seconds.")
-
-    global unity
+    global world
     object_asset_path = result.final_output.asset_path
     sound_name = object_asset_path.split("/")[-1]
-    unity.yaml.proposed_objects[sound_name] = AssetPath(object_asset_path)
+    world.propose_object(sound_name, AssetPath(asset_path=object_asset_path))
     print(sound_name, "added to proposed_objects w path", object_asset_path)
-
-    try:
-        unity.add_sound(sound_name)
-        return f"Successfully added '{sound_name}' to the scene."
-    except Exception:
-        print(f"Error adding sound {sound_name}...")
-        return f"Failed to add '{sound_name}' to the scene. There are likely no available sound assets! (Incomplete asset library)...)"
+    world.add_sound(sound_name)
+    return f"Successfully added '{sound_name}' to the scene."
 
 @function_tool
 async def createSun(description_of_sun_behavior: str) -> str:
     """
         Plan and place the Sun in the scene. Call this once and only once for each scene. Just describe the Sun and its thematic context briefly. You are effectively prompting another sub-agent to actually deal with positioning the Sun.
     """
+    return await create_sun(description_of_sun_behavior)
+
+@error_reporter
+async def create_sun(description_of_sun_behavior: str) -> str:
     log("Creating sun...", type="italic")
     agent = SunPlanner(tools=[positionSun])
     prompt = {"Description of desired sun behavior": description_of_sun_behavior}
@@ -135,10 +181,7 @@ async def createSun(description_of_sun_behavior: str) -> str:
     t = time.time()
     print(agent.name, "started")
     await Runner.run(agent, json.dumps(prompt))
-    print(agent.name + ":", time.time() - t, "seconds.")
-
-    
-    # No PlaceableObject. Consider it placed.
+    print(agent.name + ":", time.time() - t, "seconds.")    
     return f"Successfully placed the Sun in the scene"
 
 @function_tool
@@ -179,67 +222,67 @@ async def createGround(steps_to_ground_construction: str, resolution: int, scale
     """
     return await create_ground(steps_to_ground_construction, resolution, scale, procedural=True)
 
+@error_reporter
 async def create_ground(steps_to_ground_construction, resolution, scale, procedural):
     log("Creating ground...", type='italic')
 
     agent = GroundCreator(tools=[addTexture], set_perimeter_to_0=True, resolution=resolution, scale=scale)
-    global unity
+    global world
     prompt = {"Steps to plan": steps_to_ground_construction, "Resolution": resolution, "Scale": scale}
     
-    if len(unity.ground_matrix) > 0:
-        prompt["Existing ground to edit"] = unity.ground_matrix
-        prompt["Existing ground scale"] = unity.ground_scale
-        prompt["Existing texture"] = unity.current_texture
+    if len(world.ground_matrix) > 0:
+        prompt["Existing ground to edit"] = world.ground_matrix
+        prompt["Existing ground scale"] = world.ground_scale
+        prompt["Existing texture"] = world.current_texture
     t = time.time()
     print(agent.name, "started")
-    print(prompt)
     result = await Runner.run(agent, json.dumps(prompt))
     print(agent.name + ":", time.time() - t, "seconds.")
     
     grid = result.final_output.grid
     explanation = result.final_output.explanation_of_heights
+
     if procedural:
         object_asset_path, ground_matrix = obj_building.obj_from_grid_procedural(asset_project / "Assets" / "Manifest", grid, scale)
-
     else:
         object_asset_path, ground_matrix = obj_building.obj_from_grid(asset_project / "Assets" / "Manifest", grid, scale)
 
     try:
         assert len(ground_matrix[0]) == len(ground_matrix)
-        unity.ground_matrix = ground_matrix
+        world.ground_matrix = ground_matrix
     except AssertionError:
         print(f"Ground matrix is not square but {len(ground_matrix[0])} by {len(ground_matrix)}. Retrying...")
         raise AssertionError(f"Ground matrix is not square but {len(ground_matrix[0])} by {len(ground_matrix)}. Try a smaller resolution to increase performance.")
 
-    unity.ground_scale = scale
+    world.ground_scale = scale
     print("Ground obj written.")
     texture_path = result.final_output.texture_path
-    unity.current_texture = texture_path
+    world.current_texture = texture_path
     try:
-        assert len(unity.ground_matrix[0]) == len(unity.ground_matrix)
+        assert len(world.ground_matrix[0]) == len(world.ground_matrix)
     except AssertionError:
-        print(f"Ground matrix is not square but {len(unity.ground_matrix[0])} by {len(unity.ground_matrix)}. Retrying...")
-        raise AssertionError(f"Ground matrix is not square but {len(unity.ground_matrix[0])} by {len(unity.ground_matrix)}. Try a smaller resolution to increase performance.")
+        print(f"Ground matrix is not square but {len(world.ground_matrix[0])} by {len(world.ground_matrix)}. Retrying...")
+        raise AssertionError(f"Ground matrix is not square but {len(world.ground_matrix[0])} by {len(world.ground_matrix)}. Try a smaller resolution to increase performance.")
     
     ground_name = object_asset_path.name
         
-    unity.yaml.proposed_objects[ground_name] = {"Ground": object_asset_path.as_posix(), "Texture": texture_path}
+    world.propose_object(ground_name, {"Ground": AssetPath(asset_path=object_asset_path), "Texture": AssetPath(asset_path=texture_path)})
     print(ground_name, "added to proposed_objects w path", object_asset_path.as_posix())
     
     json_location = {"x": 0, "y": 0, "z": 0}
-    unity.add_ground(ground_name, json_location)
+    world.add_ground(ground_name, json_location)
     # Add new contact points under ground
     print("Back from adding ground to scene.")
-    unity.contact_points["Ground"] = []
-    for i in range(len(unity.ground_matrix) -1, -1, -1):
-        for j in range(0, len(unity.ground_matrix[i])):
-            contact_point = (j * scale, unity.ground_matrix[i][j] + float(json_location["y"]), (resolution*scale - scale) - i*scale)
-            unity.contact_points["Ground"].append(contact_point)    
+    world.contact_points["Ground"] = []
+    for i in range(len(world.ground_matrix) -1, -1, -1):
+        for j in range(0, len(world.ground_matrix[i])):
+            contact_point = (j * scale, world.ground_matrix[i][j] + float(json_location["y"]), (resolution*scale - scale) - i*scale)
+            world.contact_points["Ground"].append(contact_point)    
     
-    print(unity.ground_matrix, "\n...end ground_matrix.")
+    print(world.ground_matrix, "\n...end ground_matrix.")
 
     formatted_rows, decimal = [], 1
-    for row in unity.ground_matrix:
+    for row in world.ground_matrix:
         # Format each number with fixed width and decimal precision
         row_str = ", ".join(f"{val:6.{decimal}f}" for val in row)
         formatted_rows.append(f"  [ {row_str} ]")
@@ -256,33 +299,31 @@ def populateHorizon(asset_name_list: str) -> str:
         asset_name_list: A stringified list of proposed object names. Make sure the names match exactly the Name field of a proposed object returned from proposeObject(). Example: "[\"a house\", \"tree 2\", \"Grass1\"]". All objects are scattered according to Perlin Noise.
 
     """
+    return populate_horizon(asset_name_list)
+
+@error_reporter
+def populate_horizon(asset_name_list: str):
     log("Populating horizon", type='italic')
-    # I'd like to have a random 2D coordinate generator that excludes numbers that fall within the indices of unity.ground_matrix * 
+    # I'd like to have a random 2D coordinate generator that excludes numbers that fall within the indices of world.ground_matrix * 
     try:
         asset_name_list = json.loads(asset_name_list)
     except:
         print(f"Failed to load json from {asset_name_list}")
         return f"Failed to json.loads({asset_name_list})."
-    
     print("Assets to populate horizon with:", asset_name_list)
-    
-    global unity
-    """
-    asset_path_list = []
-
-    for asset_name in asset_name_list:
-        if asset_name in list(unity.yaml.proposed_objects.keys()):
-            asset_path_list.append(unity.yaml.proposed_objects[asset_name])
-        else:
-            print(f"Cannot procedurally generate {asset_name} because it's not in {list(unity.yaml.proposed_objects.keys())}")
-    """
-    procedural.populate(asset_name_list, unity) # adds proposed objects to world randomly up to a limit (camera fov)
+    global world
+    procedural.populate(asset_name_list, world) # adds proposed objects to world randomly up to a limit (camera fov)
+    return f"Successfully populated horizon."
 
 @function_tool
 async def addTexture(material_of_object_description: str) -> str:
     """
         Returns the path to a material asset that matches the description. May return "None" if there's no match, in which case use that as the texture_path.
     """
+    return await add_texture(material_of_object_description)
+
+@error_reporter
+async def add_texture(material_of_object_description: str):
     log("Adding texture for ground...", type="italic")
     if len(ground_material_leaves) == 0:
         print("No textures for ground available! Skipping TexturePlanner.")
@@ -295,7 +336,7 @@ async def addTexture(material_of_object_description: str) -> str:
     result = await Runner.run(agent, json.dumps(prompt))
     print(agent.name + ":", time.time() - t, "seconds.")
     
-    global unity
+    global world
     mat_asset_path = result.final_output.asset_path
     print("Found", mat_asset_path, "for", material_of_object_description)
     return mat_asset_path
@@ -308,15 +349,19 @@ async def proposeObject(description: str):
         If you don't get an object you want, its because there's nothing like the desired asset in the library of available assets. In this case, get creative and find a new solution. You don't NEED to place the object returned, which is the object-planner's best guess.
         By the way, water is one of the objects.
     """
+    return await propose_object(description)
+
+@error_reporter
+async def propose_object(description: str):
     log("Proposing object", type='italic')
     if asset_project is None:
         print("Asset project not set. Needed for linking objects.")
         return f"Somethings wrong. Report to user: 'Asset project not set (is {asset_project}) Needed for linking objects.'"
-    global unity
+    global world
 
     if USE_SHAP_E:
         object_path = shap_e_test.generate(asset_project, prompt=description)
-        unity.yaml.proposed_objects[description] = str(object_path)
+        world.propose_object(description, AssetPath(asset_path=str(object_path)))
         return {"Object":{"Name":description, "Info": "Assume the origin is at the object's center."}}
     agent = ObjectPlanner(tools=[getGroundMatrix])
     prompt = {"Description of object": description, "Synopses to choose from": list(synopses.keys())}
@@ -342,7 +387,7 @@ async def proposeObject(description: str):
         print(f"\tGathered info:\n{object_data}")
         object_name = object_data["Name"]
     proposed_object_path = asset_project / object_asset_path
-    unity.yaml.proposed_objects[object_name] = proposed_object_path.as_posix()
+    world.propose_object(object_name, AssetPath(asset_path=proposed_object_path))
     print(f"\t{object_name} added to proposed_objects w path {proposed_object_path.as_posix()}")
     log(f"Proposed {object_name}.", type='italic')
     json_blob = {
@@ -364,13 +409,17 @@ async def positionObject(object_name: str, position_of_object_origin: str, rotat
                 "{\"x\": 90, \"y\": 0, \"z\": 45}", "[{\"x\": 90, \"y\": 0, \"z\": 45}, {\"x\": 0, \"y\": 0, \"z\": 270}]"
             explanation: A human-readable explanation of the placement(s). Include in your explanation the specific shape of the object, as contained in the PlaceableObject that you've planned. For most placements, its good practice to refer to a contact point from get_contact_points. If the object can't be placed on the ground, edit the ground with planandplaceGround."
     """
+    return position_object(object_name, position_of_object_origin, rotation, explanation)
+
+@error_reporter
+def position_object(object_name: str, position_of_object_origin: str, rotation: str, explanation: str) -> str:
     log(f"Positioning {object_name}...")
     print(f"Positioning '{object_name}' ---> {position_of_object_origin} with rotation(s) {rotation}")
-    global unity
+    global world
     try:
-        assert object_name in unity.yaml.proposed_objects
+        assert object_name in world.unity_file.proposed_objects
     except AssertionError:
-        print(f"Object {object_name} is not showing up in {unity.yaml.proposed_objects}")
+        print(f"Object {object_name} is not showing up in {world.unity_file.proposed_objects}")
         return f"The object {object_name} has not been proposed. Please call proposeObject before positionObject and refer to the proposed object in the arguments of positionObject."
     print(f"Why this position?:\n\t{explanation}")
     log(explanation)
@@ -404,12 +453,12 @@ async def positionObject(object_name: str, position_of_object_origin: str, rotat
     failed_placements = [] 
     max_len = len(objects_to_sequence)
     #print(objects_to_sequence)
-    print(unity.yaml.proposed_objects[object_name], "goes to...", unity.yaml.proposed_objects[object_name])
-    object_short_path = Path(unity.yaml.proposed_objects[object_name]).relative_to(asset_project)
+    print(world.unity_file.proposed_objects[object_name], "goes to...", world.unity_file.proposed_objects[object_name])
+    object_short_path = world.get_asset_path(object_name, asset_project).asset_path
     
     print(object_short_path, "in assest_catalog?")
-    if object_short_path.as_posix() in list(asset_catalog.keys()):
-        object_data = asset_catalog[object_short_path.as_posix()]
+    if object_short_path in list(asset_catalog.keys()):
+        object_data = asset_catalog[object_short_path]
     else:
         object_data = {"Name": object_name}
     object_data["Position"] = json_location
@@ -418,35 +467,24 @@ async def positionObject(object_name: str, position_of_object_origin: str, rotat
     while len(objects_to_sequence) > 0:
         json_location, json_rotation = objects_to_sequence.pop(0)
         print(object_name, "-->", (json_location, json_rotation))
-        try:
-            for parent, contact_points in unity.contact_points.items():
-                # Popping contact points
-                if (json_location["x"], json_location["y"], json_location["z"]) in unity.contact_points[parent]:
-                    print("POPPING contact point", (json_location["x"], json_location["y"], json_location["z"]), "from contact points")
-                    #unity.contact_points[object_name].remove((json_location["x"], json_location["y"], json_location["z"]))
-            print("Positioning...........")
-            print(object_short_path)       
-            print("...........") 
-            if object_short_path.as_posix() in list(asset_catalog.keys()):        
-                unity.add_prefab(object_name, json_location, json_rotation)
-            else:
-                unity.add_orphan_prefab(object_name, json_location, json_rotation)
-            unity.add_data(object_data)
-
-        except Exception as e:
-            exc_type, exc_obj, exc_tb = sys.exc_info()
-            fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
-            line_number = exc_tb.tb_lineno
-            print(f"Error: {e}")
-            print(f"Type: {exc_type}")
-            print(f"File: {fname}")
-            print(f"Line Number: {line_number}")
-            failed_placements.append((json_location, json_rotation))
+        for parent, contact_points in world.contact_points.items():
+            # Popping contact points
+            if (json_location["x"], json_location["y"], json_location["z"]) in world.contact_points[parent]:
+                print("POPPING contact point", (json_location["x"], json_location["y"], json_location["z"]), "from contact points")
+                #world.contact_points[object_name].remove((json_location["x"], json_location["y"], json_location["z"]))
+        print("Positioning...........")
+        print(object_short_path)       
+        print("...........") 
+        if object_short_path in list(asset_catalog.keys()):        
+            world.add_prefab(object_name, json_location, json_rotation)
+        else:
+            world.add_orphan_prefab(object_name, json_location, json_rotation)
+        world.add_data(object_data)
     if len(failed_placements) == max_len:
         return f"Failed to place one or all of {object_name}. Failed placements:\n{failed_placements}"
     response = f"Added object(s) to the scene. Recall the information of {object_name} at the placed point(s)."
-    print("Proposed objects:", unity.yaml.proposed_objects)
-    print("Proposed objects[positioned object]:", unity.yaml.proposed_objects[object_name])
+    print("Proposed objects:", world.unity_file.proposed_objects)
+    print("Proposed objects[positioned object]:", world.unity_file.proposed_objects[object_name])
 
     return response
     
@@ -467,7 +505,7 @@ def positionVRHumanPlayer(transform: str, rotation: str = "{\"x\": 75, \"y\": 10
     log("Positioning VR experience...", type='italic')
     log(explanation)
 
-    global unity
+    global world
     try:
         json_location = json.loads(transform)
     except ValueError:
@@ -479,7 +517,7 @@ def positionVRHumanPlayer(transform: str, rotation: str = "{\"x\": 75, \"y\": 10
         print("Error loading given rotation into JSON")
         return f"Failed to add object player to rotation {rotation} in the scene (json.loads() error) Make sure to pass a correct something that can be loaded with json.loads() into JSON."
     print(f"Parsed player's location and rotation into JSON")
-    unity.set_vr_player(json_location, json_rotation)
+    world.set_vr_player(json_location, json_rotation)
     return f"Successfully added player to the scene at {json_location}."
     
 @function_tool
@@ -487,12 +525,11 @@ async def getContactPoints() -> str:
     """
         Returns the vertices of the ground. This is mainly useful for recalling whether the ground meets the positioned objects correctly.
     """
-    global unity
-    print(unity.contact_points)
+    global world
+    print(world.contact_points)
     print("...end contact points")
-    return json.dumps(unity.contact_points)
+    return json.dumps(world.contact_points)
 
-    
 """ Helpers """
 def asset_lookup(asset_path: Path) -> dict:
     if asset_path.as_posix() in list(asset_catalog.keys()):
@@ -502,3 +539,10 @@ def asset_lookup(asset_path: Path) -> dict:
         print(asset_path.as_posix(), "not in", list(asset_catalog.keys()))
         return None
         raise Exception("Asset is unavailable. Please choose an another asset.")
+    
+### Tests ###
+if __name__ == "__main__":
+    from world import UnityWorld
+    u = UnityWorld("world")
+    u.propose_object("Thing", AssetPath(asset_path="path"))
+    u.add_prefab("Thing", {"x":0, "y":0, "z":0}, {"x":0, "y":0, "z":0})

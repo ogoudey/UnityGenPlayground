@@ -4,12 +4,11 @@ import random
 from agents import Agent, ModelSettings
 from pydantic import BaseModel
 
-
-import tools
+import tools as instruments
 from tools import getGroundMatrix, proposeObject, positionObject, positionVRHumanPlayer, createSkybox, createGround, getContactPoints, createSun, populateHorizon
 
 MODEL = (os.getenv("MODEL") or "o4-mini").strip() or "o4-mini"
-    
+
 class Check(BaseModel):
     #object_name: str
     check_status: bool
@@ -26,7 +25,6 @@ You are responsible for checking the placed assets in a Unity scene. You will be
     If there's not enough information to deduce the correctness of placement, be sure to explain that.
     Keep your answer brief and to the point. It is recommended to use get_ground_matrix for all checks. 
 """
-
     def __init__(self, name=None, instructions=None):
         super().__init__(
             name=name or f"Checker{random.randint(100,999)}",
@@ -36,7 +34,7 @@ You are responsible for checking the placed assets in a Unity scene. You will be
             model=MODEL,
         )
 
-class Coordinator(Agent):
+class Conductor(Agent):
     phobia_v1={"o4-mini":"""Whatever a universal scarer might be"""}
 
     acrophobia_v1={"o4-mini":"""You are the Coordinator agent responsible for generating a Unity scene that matches the user prompt. +X is "East"/to the right, +Y is up, and +Z "North".
@@ -80,7 +78,6 @@ General rules:
 - Stop once the world clearly reflects the prompt, and don't stop until you are done.
 
 Your role is to reliably build a coherent, grounded Unity world from the description."""}
-
     def __init__(self, name=None, instructions=None, tools=None):
         super().__init__(
             name=name or f"Coordinator{random.randint(100,999)}",
@@ -93,7 +90,6 @@ Your role is to reliably build a coherent, grounded Unity world from the descrip
         )
         self.restriction = None
         
-
 class Reformer(Agent):
     instructions_v1 = """
 Suppose you have already built a Unity scene. Now it is your job to incorporate the feedback of an agent who has provided feedback on misplaced objects. Place again, more precisely, the objects that are said to be in the wrong location. You can do this with placeObject. Another approach to correct the misplaced objects is to change the ground. Do this by (for example) changing the ground heightmap with planGround, then replace the ground in the scene with placeGround. Some objects (e.g. a long bridge), may require the ground to have a certain shape to make sense in, forcing you to reconsider the heightmap in this manner.

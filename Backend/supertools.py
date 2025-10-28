@@ -1,7 +1,7 @@
 import random
 import os
 
-from coordinator import Checker, Reformer, Coordinator
+from orchestra import Checker, Reformer, Coordinator
 
 from logger import log
 

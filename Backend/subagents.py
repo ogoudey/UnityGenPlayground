@@ -1,9 +1,9 @@
 import random
 import os
 import sys
-
+from pathlib import Path
 from agents import Agent
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator
 
 MODEL = (os.getenv("MODEL") or "o3-mini").strip() or "o3-mini"
 
@@ -13,11 +13,21 @@ class GroundData(BaseModel):
     explanation_of_heights: str
 
 class AssetPath(BaseModel):
+    
+
     asset_path: str
-    def __init__(self, asset_path: str):
-        if "\\" in asset_path:
-            raise ValueError(f"Invalid POSIX path (contains backslashes): {asset_path}")
-        self.asset_path = asset_path
+    @field_validator("asset_path", mode="before")
+    @classmethod
+    def normalize_path(cls, v):
+        """Convert Path objects to POSIX strings and validate."""
+        if isinstance(v, Path):
+            return v.as_posix()
+        if "\\" in str(v):
+            raise ValueError(f"Cannot make AssetPath from {v}")
+        return str(v)
+
+    def __fspath__(self):
+        return self.asset_path
 
 class SynopsisNote(BaseModel):
     synopsis: str
