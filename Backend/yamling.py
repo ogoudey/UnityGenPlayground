@@ -1,16 +1,31 @@
 import yaml as pyyaml
+from typing import List, Any
 import math
 import random
 import os
 import re
 import sys
+from subagents import AssetPath
 from ruamel.yaml import YAML as ruamel_YAML
 from ruamel.yaml.nodes import ScalarNode, MappingNode, SequenceNode
+
+class Propositions:
+    assets: dict[str, AssetPath | dict[str, AssetPath]]
+    def __init__(self):
+        self.assets = dict()
+    def add(self, name: str, asset_path: AssetPath | dict):
+        if isinstance(asset_path, AssetPath):
+            self.assets[name] = asset_path
+        else:
+            for subprop in asset_path.items():
+                self.add(subprop[0], subprop[1])
+    def __getitem__(self, name: str):
+        return self.assets[name]
 
 UNITY_VERSION = (os.getenv("UNITY_VERSION") or "6").strip() or "6"
 print(f"\nGenerating world for \033[1m\033[36mUnity {UNITY_VERSION}\033[0m. Use \033[1m\033[36mexport UNITY_VERSION='<5|6>'\033[0m")
 
-def node_to_python(node: str):
+def node_to_python(node: MappingNode) -> Any:
     if isinstance(node, ScalarNode):
         return node.value
     if isinstance(node, SequenceNode):
@@ -34,23 +49,19 @@ def node_to_python(node: str):
 
 class YAML:
     def __init__(self):
-        yaml = ruamel_YAML(typ='rt')
-
-        self.level0 = list(yaml.compose_all(preprocess_text(scene_init_text[UNITY_VERSION])))
+        nodes = compose(scene_init_text[UNITY_VERSION])
         # self.level0 is a list of MappingNodes
-        self.wrapped = [node_to_python(n) for n in self.level0]
+        self.wrapped: List = [node_to_python(n) for n in nodes]
         
-        self.proposed_objects = dict()
+        self.proposed_objects: Propositions = Propositions()
         self.placed_assets = dict()
     
-    def set_sun(self, length_of_day, time_of_day, sun_brightness):
+    def set_sun(self, length_of_day: float, time_of_day: float, sun_brightness:float):
         rot = (time_of_day / length_of_day) * 360
         rotation = {"x": rot, "y": 0, "z": 0}
         quaternion = euler_to_xyzw_quaternion(rotation)
-        print("Setting sun in YAML...")
-        yaml = ruamel_YAML(typ='rt')
-        default = list(yaml.compose_all(preprocess_text(sun_init_text)))
-        wrapped = [node_to_python(n) for n in default]
+        nodes = compose(sun_init_text)
+        wrapped = [node_to_python(n) for n in nodes]
         for doc in wrapped:
             if "Transform" in doc.keys():
                 if doc["Transform"]["m_Father"]["fileID"] == "0":
@@ -74,7 +85,7 @@ class YAML:
     def set_skybox(self, name):
         print("Setting skybox...")
         
-        mat_path = self.proposed_objects[name]
+        mat_path = self.proposed_objects[name].asset_path
         guid = get_guid(mat_path + ".meta")
         try:
             render_settings = self.get_doc("RenderSettings")
@@ -83,64 +94,23 @@ class YAML:
         except Exception:
             print("\rFailed to set skybox.")
             
-    def add_transform(self, guid: str, transform: dict):
-        yaml = ruamel_YAML(typ='rt')
-        default = list(yaml.compose_all(preprocess_text(transform_init_text)))[0]
-        wrapped = node_to_python(default)
-        
-        wrapped, id_out = set_ID(wrapped) # setID to random ID
-        
-        main = wrapped["Transform"]
-        main["m_LocalPosition"] = transform
-        self.wrapped.append(wrapped)
-        
-        sceneroots = self.get_doc("SceneRoots")
-        sceneroots["m_Roots"].append({"fileID": id_out})
-        return id_out
-    
-    def add_game_object(self, guid, transform_id):
-        """ Broken """
-        yaml = ruamel_YAML(typ='rt')
-        default = list(yaml.compose_all(preprocess_text(game_object_init_text)))
-        old_anchor = default[0]
-        new_anchor, id_out = set_ID(old_anchor) # to random ID
-        
-        body=default[1]
-        components = body["m_Component"]
-        for component in components:
-            if "component" in component: # all of them
-                component["component"]["fileID"] = transform_id
-
-        self.level0.append([new_anchor, body])
-        transform_body = self.get_element_by_id(transform_id)
-        transform_body["Transform"]["m_GameObject"]["fileID"] = id_out
-        return id_out      
-    
     def add_ground_prefab_instance(self, name, metaguid, transform):
         print("Adding ground to YAML...")
-        yaml = ruamel_YAML(typ='rt')
-        default = list(yaml.compose_all(preprocess_text(prefab_init_text)))[0]
-        
-        wrapped = node_to_python(default)
-        
+        node = compose(prefab_init_text)[0]
+        wrapped = node_to_python(node)
         wrapped, id_out = set_ID(wrapped) # to random ID
-        
-        texture = None
         try:
-            proposed_objects_entry = self.proposed_objects[name]
-            print("Found", name, "in proposed_objects w entry", proposed_objects_entry)
-            texture_path = proposed_objects_entry["Texture"]
+            proposed_object = self.proposed_objects[name].asset_path
+            print("Found", name, "in proposed_objects w entry", proposed_object)
+            texture_path = proposed_object["Texture"]
             if not texture_path == "None":
                 texture_metaguid = get_guid(texture_path + ".meta")
         except Exception:
             print(name + " not in proposed_objects, or " + texture_path)
             print("Lookup in proposed_objects has failed.")
-        
-
         modifications = wrapped["PrefabInstance"]["m_Modification"]["m_Modifications"]
         for mod in modifications:
             if "target" in mod and "guid" in mod["target"]:
-                
                 mod["target"]["guid"] = metaguid
                 if mod.get("propertyPath") == "m_Materials.Array.data[0]":
                     if not texture_path == "None":
@@ -156,17 +126,13 @@ class YAML:
                         mod["value"] = transform["y"]
                     if mod.get("propertyPath") == "m_LocalPosition.z":
                         mod["value"] = transform["z"]
-      
         wrapped["PrefabInstance"]["m_SourcePrefab"]["guid"] = metaguid
-
         self.wrapped.append(wrapped)
         if UNITY_VERSION == "5":
             print("Leaving before modifying sceneroots (Unity 5 thing). Ground added to YAML.")
             return
-
         sceneroots = self.get_doc("SceneRoots")
         sceneroots["m_Roots"].append({"fileID": id_out})
-        
         print("Asset added to YAML.")            
     
     def remove_prefab_instance_if_exists(self, name):
@@ -195,13 +161,12 @@ class YAML:
 
     def add_orphan_prefab_instance(self, name, metaguid, transform, rotation):
         print("Adding orphan prefab...")
-        yaml = ruamel_YAML(typ='rt')
-        default = list(yaml.compose_all(preprocess_text(prefab_init_text)))[0]
-        wrapped = node_to_python(default)
+        node = compose(prefab_init_text)[0]
+        wrapped = node_to_python(node)
         wrapped, id_out = set_ID(wrapped) # to random ID
         
         try:
-            prefab_path = self.proposed_objects[name]
+            prefab_path = self.proposed_objects[name].asset_path
             print("Found", name, "in proposed_objects w path", prefab_path)
         except KeyError:
             print(name + " not in proposed_objects")
@@ -249,14 +214,12 @@ class YAML:
         print("Asset added to YAML.")
 
     def add_sound(self, name):
-        yaml = ruamel_YAML(typ='rt')
-        default = list(yaml.compose_all(preprocess_text(sound_init_text)))
-        sound_game_object = node_to_python(default[0])
-        audio_source = node_to_python(default[1])
-        sound_transform = node_to_python(default[2])
-        print(sound_game_object)
+        nodes = compose(sound_init_text)
+        sound_game_object = node_to_python(nodes[0])
+        audio_source = node_to_python(nodes[1])
+        sound_transform = node_to_python(nodes[2])
         try:
-            sound_path = self.proposed_objects[name]
+            sound_path = self.proposed_objects[name].asset_path
             print("Found", name, "in proposed_objects w path", sound_path)
         except KeyError:
             print(name + " not in proposed_objects")
@@ -270,17 +233,10 @@ class YAML:
             components = sound_game_object["GameObject"]["m_Component"]
             components.append(f"component: {{fileID: {transform_id}}}")
             components.append(f"component: {{fileID: {audio_source_id}}}")
-            #components[0]["fileID"] = transform_id
-            #components[1]["fileID"] = audio_source_id
             sound_game_object["GameObject"]["m_Name"] = name
-            
             audio_source["anchor"] = audio_source_id
             metaguid = get_guid(sound_path + ".meta")
             print(f"New metaguid for sound: {metaguid}")
-            
-
-            # Change volume?
-
             sound_transform["anchor"] = transform_id
             sound_transform["Transform"]["m_GameObject"]["fileID"] = sound_game_object_id
             # change position if sound is spatialized
@@ -290,7 +246,6 @@ class YAML:
                 sceneroots["m_Roots"].append({"fileID": transform_id})
             else: # Unity 5
                 audio_source["AudioSource"]["m_audioClip"] = f"{{fileID: 8300000, guid: {metaguid}, type: 3}}"
-            
             self.wrapped.append(sound_transform)
             self.wrapped.append(audio_source)
             self.wrapped.append(sound_game_object)
@@ -310,7 +265,7 @@ class YAML:
         objects, id_out = set_ID(objects) # to random ID
         print(name, "in", self.proposed_objects, "?")
         try:
-            prefab_path = self.proposed_objects[name]
+            prefab_path = self.proposed_objects[name].asset_path
             print("Found", name, "in proposed_objects w path", prefab_path)
         except KeyError:
             print(name + " not in proposed_objects")
@@ -324,17 +279,13 @@ class YAML:
             guid = get_guid(prefab_path + ".meta")
         except Exception:
             print("Could not get guid from .meta file:", prefab_path + ".meta")
-        
         self.placed_assets[name] = {"transform": transform, "rotation": rotation}
-        
         scale = 1.0
-        
         quaternion = euler_to_xyzw_quaternion(rotation)
         print("Parsing init YAML...")
         modifications = objects["PrefabInstance"]["m_Modification"]["m_Modifications"]
         for mod in modifications:
             if "target" in mod and "guid" in mod["target"]:
-                
                 mod["target"]["guid"] = guid
                 if mod.get("propertyPath") == "m_Name":
                     mod["target"]["fileID"] = father_ID
@@ -370,15 +321,7 @@ class YAML:
         self.wrapped.append(objects)
         print("Asset added to YAML.")
 
-    def set_camera(self, transform, rotation):
-        # load init text
-
-        # set pose
-
-        # append transform to scene roots
-        pass
-
-    def set_vr_player(self, transform:str, rotation: str):
+    def set_vr_player(self, transform: dict, rotation: dict):
         """
         Dispatches to the various configurations of VR player. Either:
           a. VIVECameraRig/SteamVR: sufficient for Unity 6(+)
@@ -391,11 +334,9 @@ class YAML:
         print(f"Unity version set to {UNITY_VERSION}. Dispatching {dispatch.__name__}...")
         dispatch(transform, rotation)
 
-    def setup_data_collection(self, transform:str, rotation: str):
-        yaml = ruamel_YAML(typ='rt')
-        print("In YAMLING")
-        default = list(yaml.compose_all(preprocess_text(SRanipal_and_SteamVR_setup_init_text)))
-        coll = [node_to_python(n) for n in default]
+    def setup_data_collection(self, transform: dict, rotation: dict):
+        nodes = compose(SRanipal_and_SteamVR_setup_init_text)
+        coll = [node_to_python(n) for n in nodes]
         camera_rig = coll[5]
 
         if camera_rig is None:
@@ -422,7 +363,7 @@ class YAML:
         for doc in coll: # could also use .extend(coll)
             self.wrapped.append(doc)
 
-    def setup_VIVE(self, transform:str, rotation: str):
+    def setup_VIVE(self, transform: dict, rotation: dict):
         yaml = ruamel_YAML(typ='rt')
         print("In YAMLING")
         default = list(yaml.compose_all(preprocess_text(ViveCameraRig_setup_init_text)))[0]
@@ -459,9 +400,8 @@ class YAML:
     def get_father_id_of_root_transform_of_prefab(self, prefab_path):
         with open(prefab_path, "r") as f:
             prefab_file = f.read()
-        yaml = ruamel_YAML(typ='rt')
-        default = list(yaml.compose_all(preprocess_text(prefab_file)))
-        wrapped = [node_to_python(n) for n in default]
+        nodes = compose(prefab_file)
+        wrapped = [node_to_python(n) for n in nodes]
         for doc in wrapped:
             if "Transform" in doc.keys():
                 if doc["Transform"]["m_Father"]["fileID"] == "0":
@@ -482,8 +422,6 @@ class YAML:
             #anchor = entry.pop("anchor")
             tag = entry["tag"]
             anchor = entry["anchor"]
-
-
             objname = list(entry.keys())[2]
             objdata = entry[objname]
             out.append(f"--- !u!{tag} &{anchor}")
@@ -495,42 +433,19 @@ class YAML:
         print("YAML written to", file_name)
         return file_name
 
-    def dump(self, file_name="minimal.unity"):
-        
-        if not file_name.endswith(".unity"):
-            file_name += ".unity"
-            
-        # Dump YAML content to a string first
-        yaml_content = pyyaml.safe_dump_all(self.level0, sort_keys=False)
-        yaml_content = pyyaml_content.replace("!UnityTag", "!u!")
-
-
-        with open(file_name, "w") as f:
-            f.write(full_content)
-
     def get_doc(self, top_key):
         """
-        Return the value of a top-level key in any YAML document.
+        Return the value of a top-level key self.wrapped.
         Returns None if not found.
         """
         list_item = next((doc for doc in self.wrapped if top_key in doc.keys()), None)
         if list_item is None:
             return None
         return list_item[top_key]
-        
-    def get_element_by_id(id_):
-        for doc_i in range(0, len(self.level0)):
-            if "&" in self.level0[doc_i]:
-                if self.level0[doc_i].split("&")[1] == id_:
-                    return self.level0[doc_i + 1]
 
-def compose(initializing_text: str) -> list:
+def compose(initializing_text: str) -> List[MappingNode]:
     yaml = ruamel_YAML(typ='rt')
     return list(yaml.compose_all(preprocess_text(initializing_text)))
-
-def get_texture_meta(meta_path):
-    with open(meta_path, "r") as f:
-        data = pyyaml.safe_load(f)
 
 def euler_to_xyzw_quaternion(rotation):
     print("Rotation:", rotation)
@@ -578,7 +493,6 @@ def get_guid(meta_file: str) -> str:
     # Ensure 'guid' exists
     if "guid" not in data:
         raise KeyError(f"'guid' not found in {meta_file}")
-    
     return data["guid"]
 
 def try_number(val):

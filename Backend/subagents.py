@@ -14,6 +14,10 @@ class GroundData(BaseModel):
 
 class AssetPath(BaseModel):
     asset_path: str
+    def __init__(self, asset_path: str):
+        if "\\" in asset_path:
+            raise ValueError(f"Invalid POSIX path (contains backslashes): {asset_path}")
+        self.asset_path = asset_path
 
 class SynopsisNote(BaseModel):
     synopsis: str

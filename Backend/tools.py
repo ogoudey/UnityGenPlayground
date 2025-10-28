@@ -6,16 +6,19 @@ from dataclasses import dataclass
 from pathlib import Path
 from agents import function_tool, Runner
 from pydantic import BaseModel
-
+from subagents import AssetPath
 from subagents import ObjectPlanner, GroundCreator, SkyboxPlanner, TexturePlanner, SunPlanner, SoundDesigner
 
 from logger import log
+
 
 
 import obj_building
 import procedural
 
 """ Preprocessing depends on type of worldgen. These global variables are set from worldgen.TypeofWorldGen """
+
+
 
 asset_catalog = {}
 synopses = {}
@@ -44,9 +47,6 @@ else:
 class PlaceableObject():
     name: str
     info: str
-    
-class Designation(BaseModel):
-    asset_path: str
 
 @function_tool
 async def getGroundMatrix():
@@ -86,7 +86,7 @@ async def createSkybox(skybox_description: str) -> str:
     global unity
     object_asset_path = result.final_output.asset_path
     skybox_name = object_asset_path.split("/")[-1]
-    unity.yaml.proposed_objects[skybox_name] = object_asset_path
+    unity.yaml.proposed_objects.add(skybox_name, AssetPath(object_asset_path))
 
     print(skybox_name, "added to proposed_objects w path", object_asset_path)
     try:
@@ -113,7 +113,7 @@ async def createSound(sound_description: str) -> str:
     global unity
     object_asset_path = result.final_output.asset_path
     sound_name = object_asset_path.split("/")[-1]
-    unity.yaml.proposed_objects[sound_name] = object_asset_path
+    unity.yaml.proposed_objects[sound_name] = AssetPath(object_asset_path)
     print(sound_name, "added to proposed_objects w path", object_asset_path)
 
     try:
