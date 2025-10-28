@@ -10,7 +10,7 @@ from ruamel.yaml.nodes import ScalarNode, MappingNode, SequenceNode
 UNITY_VERSION = (os.getenv("UNITY_VERSION") or "6").strip() or "6"
 print(f"\nGenerating world for \033[1m\033[36mUnity {UNITY_VERSION}\033[0m. Use \033[1m\033[36mexport UNITY_VERSION='<5|6>'\033[0m")
 
-def node_to_python(node):
+def node_to_python(node: str):
     if isinstance(node, ScalarNode):
         return node.value
     if isinstance(node, SequenceNode):
@@ -305,10 +305,9 @@ class YAML:
             print(f"Line Number: {line_number}")
 
     def add_prefab_instance(self, name, transform, rotation):
-        yaml = ruamel_YAML(typ='rt')
-        default = list(yaml.compose_all(preprocess_text(prefab_init_text)))[0]
-        wrapped = node_to_python(default)
-        wrapped, id_out = set_ID(wrapped) # to random ID
+        composed = compose(prefab_init_text)
+        objects: str = node_to_python(composed[0])
+        objects, id_out = set_ID(objects) # to random ID
         print(name, "in", self.proposed_objects, "?")
         try:
             prefab_path = self.proposed_objects[name]
@@ -332,7 +331,7 @@ class YAML:
         
         quaternion = euler_to_xyzw_quaternion(rotation)
         print("Parsing init YAML...")
-        modifications = wrapped["PrefabInstance"]["m_Modification"]["m_Modifications"]
+        modifications = objects["PrefabInstance"]["m_Modification"]["m_Modifications"]
         for mod in modifications:
             if "target" in mod and "guid" in mod["target"]:
                 
@@ -363,12 +362,12 @@ class YAML:
                         mod["value"] = quaternion[2]
                     if mod.get("propertyPath") == "m_LocalRotation.w":
                         mod["value"] = quaternion[3]  
-        wrapped["PrefabInstance"]["m_SourcePrefab"]["guid"] = guid
+        objects["PrefabInstance"]["m_SourcePrefab"]["guid"] = guid
         if not UNITY_VERSION == "5":
             sceneroots = self.get_doc("SceneRoots")
             sceneroots["m_Roots"].append({"fileID": id_out})
         print("\rInit YAML succcessfully updated.")
-        self.wrapped.append(wrapped)
+        self.wrapped.append(objects)
         print("Asset added to YAML.")
 
     def set_camera(self, transform, rotation):
@@ -524,6 +523,10 @@ class YAML:
             if "&" in self.level0[doc_i]:
                 if self.level0[doc_i].split("&")[1] == id_:
                     return self.level0[doc_i + 1]
+
+def compose(initializing_text: str) -> list:
+    yaml = ruamel_YAML(typ='rt')
+    return list(yaml.compose_all(preprocess_text(initializing_text)))
 
 def get_texture_meta(meta_path):
     with open(meta_path, "r") as f:
@@ -1976,5 +1979,5 @@ Transform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 """
 
-def preprocess_text(text):
+def preprocess_text(text: str) -> str:
     return re.sub(r"!u!(\d+)", r"!UnityTag\1", text)
