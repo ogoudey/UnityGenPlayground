@@ -10,10 +10,11 @@ def unity(func):
 
 class World:
     def __init__(self, name:str):
-        self.name = name
+        pass
+        
 class UnityWorld(World):
-    def __init__(self, name:str):
-        super().__init__(name)
+    def __init__(self):
+        super().__init__()
         self.unity_file = yamling.UnityFile()
         self.ground_matrix = []
         self.ground_scale = 5.0
@@ -71,7 +72,7 @@ class UnityWorld(World):
                 print("Ground exists in YAML - couldn't be removed.")
         guid = uuid.uuid4().hex
         print("before writing meta")
-        posix_path: AssetPath = self.unity_file.proposed_objects[ground_name]["Ground"]
+        posix_path: AssetPath = self.unity_file.get_asset_path(ground_name)["Ground"]
         yamling.write_obj_meta(Path(posix_path), guid)
         print("meta written")
         self.unity_file.add_ground_prefab_instance(ground_name, guid, transform)
@@ -82,8 +83,8 @@ class UnityWorld(World):
         self.objects.append(object_data)
 
         
-    def done_and_write(self, file_name=None):
+    def done_and_write(self, file_name=None): # filename is always used
         print("\nObjects:\n", self.objects)
         if not file_name:
-            file_name = self.name
+            file_name = "Unknown"
         return self.unity_file.to_unity_yaml(file_name)

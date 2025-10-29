@@ -12,15 +12,15 @@ import random
 
 import asyncio
 
-from world import UnityFile
+from world import UnityWorld
 from worldgen import AcrophobiaWorldGen, VRWorldGen, Acrophobia50mx50mWorldGen
-from orchestra import Coordinator
+from orchestra import Conductor
 from agents import Runner
 
 MODEL = (os.getenv("MODEL") or "o3-mini").strip() or "o3-mini"  
 
 if __name__ == "__main__":
-    world = UnityFile()
+    world = UnityWorld()
     
     path = str(self.asset_project_path / "Assets" / "Scenes" / self.scene_name) # should stringify later?
     scene_path = agents.tools.unity.done_and_write(path)

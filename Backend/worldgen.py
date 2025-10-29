@@ -50,7 +50,7 @@ class UnityWorldGen(WorldGen):
         if not scene_name:
             scene_name = f"scene_{MODEL}_{random.randint(100, 999)}"
         self.scene_name = scene_name
-        instruments.world = UnityWorld(scene_name)   
+        instruments.world = UnityWorld()   
         self.conductor = Conductor()
         if restriction:
             self.conductor.restriction = restriction
@@ -76,7 +76,7 @@ class UnityWorldGen(WorldGen):
         """
         print("\n>>>>>> ", prompt, "\n")
         result = await Runner.run(self.conductor, prompt, max_turns=20)
-        path = str(self.asset_project_path / "Assets" / "Scenes" / self.scene_name) # should stringify later?
+        path = str(self.asset_project_path / "Assets" / "Generations" / self.scene_name) # should stringify later?
         scene_path = instruments.world.done_and_write(path)
         print(f"Scene @ {scene_path}")
         print(f"Conductor response: \n{result.final_output}")
@@ -93,7 +93,7 @@ class UnityWorldGen(WorldGen):
 
         print("\n>>>>>> ", regime_prompt, "\n")
         result = await Runner.run(self.conductor_runner, regime_prompt)
-        print(f"Coordinator manager response: \n{result.final_output}")
+        print(f"Conductor manager response: \n{result.final_output}")
         log(result.final_output)
         log("Done")
         
@@ -119,12 +119,14 @@ class AcrophobiaWorldGen(VRWorldGen):
     
     bridge_regime_prompt="Generate multiple stages of worlds that trigger acrophobia while crossing a bridge. Have the stages get progressively harder. Let there be three stages and let the heights of the bridges in each stage progress as 2m, 5m, 10m above ground or sea level."
 
-    def __init__(self, asset_project_path: str="acrophobia_u5", restricted: bool = False):
+    def __init__(self, asset_project_path: str="acrophobia_u5", restricted: bool = False, scene_name: str | None = None):
+        if scene_name is None:
+            scene_name = f"acro_50_{MODEL}_{random.randint(100, 999)}"
         asset_project_path = Path(ASSET_LIB_PATH) / asset_project_path
         instruments.asset_project = asset_project_path
         restriction = f"These are the assets the system is restricted to:\n{[key.split('/')[-1] for key in list(instruments.asset_catalog.keys())]}" if restricted else ""
         super().__init__(asset_project_path, f"acro_{MODEL}_{random.randint(100, 999)}", restriction)
-        self.conductor.instructions = Coordinator.acrophobia_v1[MODEL]
+        self.conductor.instructions = Conductor.acrophobia_v1[MODEL]
 
     async def get_prompt(self):
         print("Getting prompt from patient...")
@@ -141,12 +143,15 @@ class Acrophobia50mx50mWorldGen(VRWorldGen):
     
     bridge_regime_prompt="Generate multiple stages of worlds that trigger acrophobia while crossing a bridge. Have the stages get progressively harder. Let there be three stages and let the heights of the bridges in each stage progress as 2m, 5m, 10m above ground or sea level."
 
-    def __init__(self, asset_project_path: str="acrophobia_v1", restricted: bool = False):
+    def __init__(self, asset_project_path: str="acrophobia_v1", restricted: bool = False, scene_name: str | None = None):
         restriction = f"These are the assets the system is restricted to:\n{[key.split('/')[-1] for key in list(instruments.asset_catalog.keys())]}" if restricted else ""
-        super().__init__(asset_project_path, f"acro_50_{MODEL}_{random.randint(100, 999)}", restriction)
+        if scene_name is None:
+            scene_name = f"acro_50_{MODEL}_{random.randint(100, 999)}"
+        
         asset_project_path = Path(ASSET_LIB_PATH) / asset_project_path
         instruments.asset_project = asset_project_path
-        self.conductor.instructions = Coordinator.acrophobia_v1[MODEL]
+        super().__init__(asset_project_path, scene_name, restriction)
+        self.conductor.instructions = Conductor.acrophobia_v1[MODEL]
         self.conductor.tools.remove(createGround)
         self.conductor.tools.remove(populateHorizon)
         self.conductor.tools.extend([create50mx50mGround])

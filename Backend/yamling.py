@@ -37,7 +37,7 @@ class UnityFile:
     def propose_object(self, name: str, asset_path: AssetPath | dict[str, AssetPath]):
         self.proposed_objects.add(name, asset_path)
 
-    def get_asset_path(self, name: str) -> AssetPath:
+    def get_asset_path(self, name: str) -> AssetPath | dict:
         if not isinstance(self.proposed_objects[name], AssetPath):
             raise Exception(f"Looked for single AssetPath for {name}")
         else:
