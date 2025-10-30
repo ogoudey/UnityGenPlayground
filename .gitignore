@@ -1,5 +1,12 @@
 Backend/.venv
 Backend/__pycache__
+
 Resources/Asset Projects/*
+Backend/logs/*
+Backend/done_logs/*
+Backend/archived_logs/*
 
 !Resources/Asset Projects/.gitkeep
+!Backend/logs/.gitkeep
+!Backend/done_logs/.gitkeep
+!Backend/archived_logs/.gitkeep
