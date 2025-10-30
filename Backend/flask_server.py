@@ -117,13 +117,8 @@ def status_stream():
         }
     )
 
+from worldgen import Class_from_Asset_Projects
 
-    
-
-Class_from_Asset_Project = {
-    "acrophobia_v1": AcrophobiaWorldGen,
-    "acrophobia_u5": AcrophobiaWorldGen
-}
 
 if __name__ == '__main__':
     print("Server restart...")

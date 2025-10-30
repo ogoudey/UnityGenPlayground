@@ -11,19 +11,18 @@ import json
 import random
 
 import asyncio
-
+from logger import log
 from world import UnityWorld
 from worldgen import AcrophobiaWorldGen, VRWorldGen, Acrophobia50mx50mWorldGen
 from orchestra import Conductor
+from orchestra import instruments
 from agents import Runner
 
 MODEL = (os.getenv("MODEL") or "o3-mini").strip() or "o3-mini"  
 
-if __name__ == "__main__":
-    world = UnityWorld()
-    
+if __name__ == "__main__":    
     path = str(self.asset_project_path / "Assets" / "Scenes" / self.scene_name) # should stringify later?
-    scene_path = agents.tools.unity.done_and_write(path)
+    scene_path = instruments.unity.done_and_write(path)
     print(f"Scene @ {scene_path}")
     print(f"Coordinator response: \n{result.final_output}")
     log(result.final_output)

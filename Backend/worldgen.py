@@ -3,13 +3,13 @@ import os
 import random
 from agents import Runner
 from agents.extensions.visualization import draw_graph
-from conductors import instruments
+from Backend.orchestra import instruments
 import time
 from typing import Any
 import assets
 import synopsis_generator
 from enrichment import Phobos
-from conductors import Checker, Reformer, Conductor
+from Backend.orchestra import Checker, Reformer, Conductor
 from tools import getGroundMatrix, proposeObject, positionObject, positionVRHumanPlayer, createSkybox, createGround, getContactPoints, createSun, populateHorizon, createSound, create50mx50mGround
 
 from logger import log
@@ -17,6 +17,8 @@ from logger import log
 from supertools import ConductorRunner
 
 from world import UnityWorld
+
+
 
 MODEL = (os.getenv("MODEL") or "o3-mini").strip() or "o3-mini"
 ASSET_LIB_PATH = (os.getenv("ASSET_LIB_PATH") or "../Resources/Asset Projects").strip() or "../Resources/Asset Projects"
@@ -161,6 +163,7 @@ class Acrophobia50mx50mWorldGen(VRWorldGen):
         result = await Runner.run(self.patient, self.patient.acrophobia)
         return result.final_output   
     
-    
-        
-
+Class_from_Asset_Project = {
+    "acrophobia_v1": AcrophobiaWorldGen,
+    "acrophobia_u5": AcrophobiaWorldGen
+}

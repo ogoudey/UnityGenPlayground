@@ -3,13 +3,8 @@ from pathlib import Path
 import yamling
 from subagents import AssetPath
 
-def unity(func):
-    func.unity = True  # attach metadata
-    func.writes_to_YAML_object = True
-    return func
-
 class World:
-    def __init__(self, name:str):
+    def __init__(self):
         pass
         
 class UnityWorld(World):
@@ -34,36 +29,36 @@ class UnityWorld(World):
         print(relativized_path)
         return AssetPath(relativized_path)
 
-    @unity
+    
     def add_skybox(self, skybox_name):
         self.unity_file.set_skybox(skybox_name)
 
-    @unity 
+     
     def add_sun(self, length_of_day, time_of_day, sun_brightness):
         print({"length_of_day":length_of_day, "time_of_day":time_of_day, "sun_brightness":sun_brightness})
         self.unity_file.set_sun(length_of_day, time_of_day, sun_brightness)
 
-    @unity
+    
     def add_sound(self, sound_name):
         self.unity_file.add_sound(sound_name)
 
-    @unity
+    
     def set_vr_player(self, location, rotation):\
         self.unity_file.set_vr_player(location, rotation)
 
-    @unity       
+           
     def add_prefab(self, name, location, rotation):
         #if self.unity_file.remove_prefab_instance_if_exists(name):
         #    print(f"Removed existing object {name} from YAML")
         self.unity_file.add_prefab_instance(name, location, rotation)
 
-    @unity
+    
     def add_orphan_prefab(self, name, location, rotation):
         guid = uuid.uuid4().hex
         yamling.write_obj_meta(Path(self.unity_file.proposed_objects[name]), guid)     
         self.unity_file.add_orphan_prefab_instance(name, guid, location, rotation)
 
-    @unity
+    
     def add_ground(self, ground_name, transform={"x":0.0, "y":0.0, "z":0.0}, rotation={"x":0.0, "y":0.0, "z":0.0}):
         if self.ground:
             if self.unity_file.remove_prefab_instance_if_exists(self.ground):
