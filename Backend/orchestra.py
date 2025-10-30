@@ -81,7 +81,7 @@ Your role is to reliably build a coherent, grounded Unity world from the descrip
     def __init__(self, name=None, instructions=None, tools=None):
         super().__init__(
             name=name or f"Coordinator{random.randint(100,999)}",
-            instructions=instructions or Coordinator.acrophobia_v1[MODEL],
+            instructions=instructions or Conductor.acrophobia_v1[MODEL],
             tools=tools or [getContactPoints, proposeObject, positionObject],
             model=MODEL,
             #model_settings=ModelSettings(

@@ -14,11 +14,17 @@ class Propositions:
     def __init__(self):
         self.assets = dict()
     def add(self, name: str, asset_path: AssetPath | dict):
+        print("Adding", name)
         if isinstance(asset_path, AssetPath):
             self.assets[name] = asset_path
+        elif isinstance(asset_path, str):
+            self.assets[name] = AssetPath(asset_path=asset_path)
         else:
-            for subprop in asset_path.items():
-                self.add(subprop[0], subprop[1])
+            new_dict = dict()
+            for pair in asset_path.items():
+                new_dict[pair[0]] = AssetPath(asset_path=pair[1])
+            self.assets[name] = new_dict
+
     def __getitem__(self, name: str):
         return self.assets[name]
 
@@ -35,7 +41,9 @@ class UnityFile:
         self.placed_assets = dict()
 
     def propose_object(self, name: str, asset_path: AssetPath | dict[str, AssetPath]):
+        print(self.proposed_objects.assets)
         self.proposed_objects.add(name, asset_path)
+        print(self.proposed_objects.assets)
 
     def get_asset_path(self, name: str) -> AssetPath | dict:
         if not isinstance(self.proposed_objects[name], AssetPath):
@@ -391,8 +399,9 @@ class UnityFile:
     def to_unity_yaml(self, file_name="minimal.unity"):
         if file_name.endswith(".unity"):
             file_name = file_name.removesuffix(".unity")
-        
-        file_name += f"_u{UNITY_VERSION}.unity"
+            file_name += f"_u{UNITY_VERSION}.unity"
+        else:
+            file_name += ".unity"
         print("Attempting to write to", file_name)
         out = ["%YAML 1.1", "%TAG !u! tag:unity3d.com,2011:"]
         for entry in self.wrapped:

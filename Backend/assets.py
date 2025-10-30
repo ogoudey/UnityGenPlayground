@@ -51,26 +51,25 @@ def get_tree(file_type=".prefab", folder="../Assets"):
 
 
 
-def get_found(file_type=".prefab", asset_projects: Path, asset_project_path: Path | None = None) -> List[str]:
-    rel_path = asset_project_path.relative_to(asset_projects) # dodges OS difference
-    rel_directory = rel_path.resolve()
-    print(f"Looking in {rel_path} for {file_type}...")
+def get_found(file_type:str, asset_project_path: Path) -> List[str]:
+    
+    print(f"Looking in {asset_project_path} for {file_type}...")
     if os.name == 'nt':
         matches = []
-        for root, _, files in os.walk(rel_directory):
+        for root, _, files in os.walk(asset_project_path):
             for name in files:
                 if fnmatch.fnmatch(name, f"*{file_type}"):
                     matches.append(os.path.join(root, name))
     elif os.name == 'posix':
         result = subprocess.run(
-            ["find", rel_directory, "-type", "f", "-name", f"*{file_type}"],
+            ["find", asset_project_path.as_posix(), "-type", "f", "-name", f"*{file_type}"],
             capture_output=True,
             text=True
         )
 
         if result.returncode != 0 or not result.stdout.strip():
             # Either the command failed or no files found
-            print(f"!! {rel_directory} was not found. Consider adding to the file system.")
+            print(f"!! {asset_project_path} was not found. Consider adding to the file system.")
             return []
         
         # Split into list of file paths, strip whitespace
@@ -79,9 +78,9 @@ def get_found(file_type=".prefab", asset_projects: Path, asset_project_path: Pat
     # Normalize paths (optional, makes everything consistent)
     files = [Path(f).as_posix() for f in matches]
     if len(files) > 0:
-        print(f"The folder at {rel_path} has {len(files)} {file_type} assets.")
+        print(f"The folder at {asset_project_path} has {len(files)} {file_type} assets.")
     else:
-        print(f"\033[1m\033[31mThe folder at {rel_path} has no files of type {file_type}!\033[0m")
+        print(f"\033[1m\033[31mThe folder at {asset_project_path} has no files of type {file_type}!\033[0m")
     return files
 
 
@@ -114,13 +113,3 @@ def describe_obj_bounding_box(obj_path: str) -> str:
         f"  Y: {min_y:.3f} to {max_y:.3f}\n"
         f"  Z: {min_z:.3f} to {max_z:.3f}"
     )
-
-
-list_of_important_metadata_dicts = parse_assets()
-
-
-resources = str(list_of_important_metadata_dicts)
-
-
-
-

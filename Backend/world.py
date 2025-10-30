@@ -8,7 +8,8 @@ class World:
         pass
         
 class UnityWorld(World):
-    def __init__(self):
+    scene_name:str
+    def __init__(self, scene_name:str | None = None):
         super().__init__()
         self.unity_file = yamling.UnityFile()
         self.ground_matrix = []
@@ -17,6 +18,8 @@ class UnityWorld(World):
         self.contact_points = dict()
         self.objects = []
         self.ground = None
+        if scene_name is not None:
+            self.scene_name = scene_name
 
     def propose_object(self, name: str, asset_path: AssetPath | dict[str, AssetPath]):
         self.unity_file.propose_object(name, asset_path)
@@ -68,6 +71,7 @@ class UnityWorld(World):
         guid = uuid.uuid4().hex
         print("before writing meta")
         posix_path: AssetPath = self.unity_file.get_asset_path(ground_name)["Ground"]
+        print(posix_path)
         yamling.write_obj_meta(Path(posix_path), guid)
         print("meta written")
         self.unity_file.add_ground_prefab_instance(ground_name, guid, transform)
