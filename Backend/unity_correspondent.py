@@ -12,13 +12,12 @@ async def process(arg_tuple: List[str]):
     Class = Generator_Class_from_Asset_Project_Name[arg_tuple[0]]
     prompt = arg_tuple[1]
     scene_name = arg_tuple[2]
+    if len(arg_tuple) > 3:
+        if not strtobool(arg_tuple[3]):
+            Class = UnityWorldGen
     log("Beginning generation of Unity World...", scene_name)
-    if strtobool(arg_tuple[3]):
-        print(f"{Class} is generating scene {scene_name}")
-        world_gen = Class(asset_project, False, scene_name)
-    else:
-        print(f"{Class} is generating scene {scene_name}")
-        world_gen = UnityWorldGen(asset_project, scene_name)
+    print(f"{Class} is generating scene {scene_name}")
+    world_gen = Class(asset_project, scene_name)
     await world_gen.load()
     await world_gen.run(prompt)
     done(scene_name)
