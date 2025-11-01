@@ -85,7 +85,7 @@ def perlin_points_2d(x_range, y_range, n_points, scale=0.1, threshold=0.0, seed=
     for _ in range(n_points * 5):  # oversample and filter by threshold
         x = np.random.uniform(*x_range)
         y = np.random.uniform(*y_range)
-        n = pnoise2(x * scale, y * scale, octaves=4)
+        n = noise2d(x * scale, y * scale, octaves=4)
         if n > threshold:
             points.append([x, y])
         if len(points) >= n_points:

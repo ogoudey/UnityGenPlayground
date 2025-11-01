@@ -1,34 +1,41 @@
 import yaml as pyyaml
+from pathlib import Path
 from typing import List, Any
 import math
 import random
 import os
 import re
 import sys
-from subagents import AssetPath
+from logger import log
+from subagents import RelativePath
 from ruamel.yaml import YAML as ruamel_YAML
 from ruamel.yaml.nodes import ScalarNode, MappingNode, SequenceNode
 
 class Propositions:
-    assets: dict[str, AssetPath | dict[str, AssetPath]]
+    assets: dict[str, RelativePath | dict[str, RelativePath]]
     def __init__(self):
         self.assets = dict()
-    def add(self, name: str, asset_path: AssetPath | dict):
-        print("Adding", name)
-        if isinstance(asset_path, AssetPath):
-            self.assets[name] = asset_path
-        elif isinstance(asset_path, str):
-            self.assets[name] = AssetPath(asset_path=asset_path)
+    def add(self, name: str, asset: RelativePath | dict):
+        if isinstance(asset, RelativePath):
+            self.assets[name] = asset
+            return name, asset
         else:
             new_dict = dict()
-            for pair in asset_path.items():
-                new_dict[pair[0]] = AssetPath(asset_path=pair[1])
-            self.assets[name] = new_dict
+            for pair in asset.items():
+                new_dict[pair[0]] = pair[1]
+            asset = new_dict
+            self.assets[name] = asset
+            return name, asset
 
     def __getitem__(self, name: str):
         return self.assets[name]
+    
+    def __contains__(self, name: str) -> bool:
+        return name in self.assets 
 
 UNITY_VERSION = (os.getenv("UNITY_VERSION") or "6").strip() or "6"
+VR_HEADSET_TYPE = (os.getenv("VR_HEADSET_TYPE") or "Vive Pro 2").strip() or "Vive Pro 2"
+
 print(f"\nGenerating world for \033[1m\033[36mUnity {UNITY_VERSION}\033[0m. Use \033[1m\033[36mexport UNITY_VERSION='<5|6>'\033[0m")
 
 class UnityFile:
@@ -40,14 +47,12 @@ class UnityFile:
         self.proposed_objects: Propositions = Propositions()
         self.placed_assets = dict()
 
-    def propose_object(self, name: str, asset_path: AssetPath | dict[str, AssetPath]):
-        print(self.proposed_objects.assets)
-        self.proposed_objects.add(name, asset_path)
-        print(self.proposed_objects.assets)
+    def propose_object(self, name: str, asset: RelativePath | dict[str, RelativePath]):
+        return self.proposed_objects.add(name, asset)
 
-    def get_asset_path(self, name: str) -> AssetPath | dict:
-        if not isinstance(self.proposed_objects[name], AssetPath):
-            raise Exception(f"Looked for single AssetPath for {name}")
+    def get_asset(self, name: str) -> RelativePath | dict:
+        if not isinstance(self.proposed_objects[name], RelativePath):
+            return self.proposed_objects[name]
         else:
             return self.proposed_objects[name]
 
@@ -78,8 +83,8 @@ class UnityFile:
         
     def set_skybox(self, name):
         print("Setting skybox...")
-        mat_path = self.proposed_objects[name].asset_path
-        guid = get_guid(mat_path + ".meta")
+        mat_path = self.proposed_objects[name].path
+        guid = get_guid(mat_path)
         try:
             render_settings = self.get_doc("RenderSettings")
             render_settings["m_SkyboxMaterial"] = {"fileID": "2100000", "guid": guid, "type": 2}
@@ -93,20 +98,19 @@ class UnityFile:
         wrapped = node_to_python(node)
         wrapped, id_out = set_ID(wrapped) # to random ID
         try:
-            proposed_object = self.proposed_objects[name].asset_path
-            print("Found", name, "in proposed_objects w entry", proposed_object)
-            texture_path = proposed_object["Texture"]
-            if not texture_path == "None":
-                texture_metaguid = get_guid(texture_path + ".meta")
+            proposal = self.proposed_objects[name]
+            print("Found", name, "in proposed_objects w entry", self.proposed_objects[name])
+            texture_rel_path = proposal["Texture"].path
+            texture_metaguid = get_guid(texture_rel_path)
         except Exception:
-            print(name + " not in proposed_objects, or " + texture_path)
             print("Lookup in proposed_objects has failed.")
+            raise Exception(".meta lookup failed. File does not exist?")
         modifications = wrapped["PrefabInstance"]["m_Modification"]["m_Modifications"]
         for mod in modifications:
             if "target" in mod and "guid" in mod["target"]:
                 mod["target"]["guid"] = metaguid
                 if mod.get("propertyPath") == "m_Materials.Array.data[0]":
-                    if not texture_path == "None":
+                    if not texture_rel_path == "None":
                        mod["objectReference"]["guid"] = texture_metaguid
                 elif mod.get("propertyPath") == "m_Name":
                     mod["target"]["fileID"] = "-8679921383154817045"
@@ -159,7 +163,7 @@ class UnityFile:
         wrapped, id_out = set_ID(wrapped) # to random ID
         
         try:
-            prefab_path = self.proposed_objects[name].asset_path
+            prefab_path = self.proposed_objects[name].path
             print("Found", name, "in proposed_objects w path", prefab_path)
         except KeyError:
             print(name + " not in proposed_objects")
@@ -212,7 +216,7 @@ class UnityFile:
         audio_source = node_to_python(nodes[1])
         sound_transform = node_to_python(nodes[2])
         try:
-            sound_path = self.proposed_objects[name].asset_path
+            sound_path = self.proposed_objects[name].path
             print("Found", name, "in proposed_objects w path", sound_path)
         except KeyError:
             print(name + " not in proposed_objects")
@@ -227,7 +231,7 @@ class UnityFile:
         components.append(f"component: {{fileID: {audio_source_id}}}")
         sound_game_object["GameObject"]["m_Name"] = name
         audio_source["anchor"] = audio_source_id
-        metaguid = get_guid(sound_path + ".meta")
+        metaguid = get_guid(sound_path)
         print(f"New metaguid for sound: {metaguid}")
         sound_transform["anchor"] = transform_id
         sound_transform["Transform"]["m_GameObject"]["fileID"] = sound_game_object_id
@@ -248,10 +252,9 @@ class UnityFile:
         composed = compose(prefab_init_text)
         objects: str = node_to_python(composed[0])
         objects, id_out = set_ID(objects) # to random ID
-        print(name, "in", self.proposed_objects, "?")
+        print(name, "in", self.proposed_objects.assets, "?")
         try:
-            prefab_path = self.proposed_objects[name].asset_path
-            print("Found", name, "in proposed_objects w path", prefab_path)
+            prefab_path = self.proposed_objects[name].path
         except KeyError:
             print(name + " not in proposed_objects")
             print("Lookup in proposed_objects has failed.")
@@ -261,14 +264,13 @@ class UnityFile:
             print("Could not find fatherID of root transform for path {prefab_path}")
             raise FileNotFoundError(f"Could not find fatherID of root transform {prefab_path}")
         try:    
-            guid = get_guid(f"{prefab_path}.meta")
+            guid = get_guid(prefab_path)
         except Exception:
             print(f"Could not get guid from .meta file: {prefab_path}.meta")
             raise FileNotFoundError(f"Could not get guid from .meta file: {prefab_path}.meta")
         self.placed_assets[name] = {"transform": transform, "rotation": rotation}
         scale = 1.0
         quaternion = euler_to_xyzw_quaternion(rotation)
-        print("Parsing init YAML...")
         modifications = objects["PrefabInstance"]["m_Modification"]["m_Modifications"]
         for mod in modifications:
             if "target" in mod and "guid" in mod["target"]:
@@ -303,21 +305,21 @@ class UnityFile:
         if not UNITY_VERSION == "5":
             sceneroots = self.get_doc("SceneRoots")
             sceneroots["m_Roots"].append({"fileID": id_out})
-        print("\rInit YAML succcessfully updated.")
         self.wrapped.append(objects)
-        print("Asset added to YAML.")
-
-    def set_vr_player(self, transform: dict, rotation: dict):
+        return True
+    
+    def set_vr_player(self, transform: dict, rotation: dict, scene_name:str):
         """
         Dispatches to the various configurations of VR player. Either:
           a. VIVECameraRig/SteamVR: sufficient for Unity 6(+)
           b. SteamVRUnityPlugin/SteamVR + VIVESR: for data collection. Needs Unity 2019 (what I often refer to as Unity 5) Must consider movement (hopefully through SteamVR)
           c. SteamVRUnityPlugin/SteamVR: w/o data collection, Unity 5.    # Not needed I guess...
         """
-        dispatcher = {"6": self.setup_VIVE,
-                      "5": self.setup_data_collection}
-        dispatch = dispatcher[UNITY_VERSION]
-        print(f"Unity version set to {UNITY_VERSION}. Dispatching {dispatch.__name__}...")
+        dispatcher = {"6": {"Vive Pro 2": self.setup_VIVE},
+                      "5": {"Vive Pro 2": self.setup_data_collection}}
+        
+        dispatch = dispatcher[UNITY_VERSION][VR_HEADSET_TYPE]
+        log(f"Unity version {UNITY_VERSION} with {VR_HEADSET_TYPE} headset maps to low-level function `{dispatch.__name__}`", scene_name)
         dispatch(transform, rotation)
 
     def setup_data_collection(self, transform: dict, rotation: dict):
@@ -383,7 +385,7 @@ class UnityFile:
         self.wrapped.append(wrapped)
         print("VR Player successfully added to YAML.")
 
-    def get_father_id_of_root_transform_of_prefab(self, prefab_path):
+    def get_father_id_of_root_transform_of_prefab(self, prefab_path: str):
         with open(prefab_path, "r") as f:
             prefab_file = f.read()
         nodes = compose(prefab_file)
@@ -394,6 +396,7 @@ class UnityFile:
                     father_id = doc["anchor"]
         if not father_id:
             raise KeyError("The located prefab has no root transform")
+        print("Got ID of prefab root")
         return father_id
     
     def to_unity_yaml(self, file_name="minimal.unity"):
@@ -456,9 +459,9 @@ def node_to_python(node: MappingNode) -> Any:
         print(node)
         return None
 
-def write_obj_meta(obj_path, guid):
-    print("writing object meta for", obj_path)
-    if os.path.exists(obj_path / ".meta"):
+def write_obj_meta(rel_path: RelativePath, guid):
+    path = rel_path.path
+    if os.path.exists(path / ".meta"):
         print("Obj meta already exists, using existing one.")
         return
     node = compose(obj_meta_init_text)[0]
@@ -471,7 +474,7 @@ def write_obj_meta(obj_path, guid):
         sort_keys=False
     )
     print("Before meta write")
-    with open(obj_path.with_suffix(obj_path.suffix + ".meta"), "w") as f:
+    with open(path.with_name(path.name + ".meta"), "w") as f:
         f.write(yaml_str) 
     print("Meta file with updated GUID written")
 
@@ -510,10 +513,12 @@ def set_ID(text: MappingNode, new_id: str="") -> tuple[MappingNode, str]:
         raise ValueError("No anchor to be set!")
     return text, new_id
         
-def get_guid(meta_file: str) -> str:
-    """Returns the 'guid' property from a Unity .meta YAML file."""
+def get_guid(file: Path) -> str:
+    """Returns the 'guid' property from a file."""
+    meta_file = file.with_suffix(file.suffix + ".meta")
+    print(f"Converting {file} to {meta_file}")
     print(f"Getting GUID for {meta_file}")
-    with open(meta_file, "r") as f: # this should fail on Windows - path is from textureplanner -> WindowsPath ->getguid(Windowspath + .meta)
+    with open(meta_file, "r") as f:
         data = pyyaml.safe_load(f)
     print("found meta")
     # Ensure 'guid' exists

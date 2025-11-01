@@ -21,7 +21,8 @@ from world import UnityWorld
 
 
 MODEL = (os.getenv("MODEL") or "o3-mini").strip() or "o3-mini"
-ASSET_PROJECTS: Path = Path((os.getenv("ASSET_PROJECTS") or "../Resources/Asset Projects").strip() or "../Resources/Asset Projects")
+ASSET_PROJECTS: Path = Path("../Resources/Asset Projects")
+
 DRAWING = True
 if DRAWING:
     print(f"Will draw a graph for Conductor...")
@@ -38,20 +39,19 @@ class UnityWorldGen(WorldGen):
     asset_project_path: Path
     def __init__(self, asset_project_name: str, scene_name: str, preexisting_world: Any = None, restriction: str | None = None):
         super().__init__(preexisting_world)
-        asset_project_path = ASSET_PROJECTS / Path(asset_project_name)
-        self.asset_project_path = asset_project_path.resolve()
+        self.asset_project_path = ASSET_PROJECTS / Path(asset_project_name)
         instruments.asset_project = self.asset_project_path
 
         if self.asset_project_path.exists():
-            print(f"Asset Project is \033[1m\033[36m{asset_project_path}\033[0m")
+            print(f"Asset Project is \033[1m\033[36m{self.asset_project_path}\033[0m")
         else:
-            if asset_project_path:
-                print(f"Asset project with path {asset_project_path} does not exist.")
-                raise FileNotFoundError(f"Asset project with path {asset_project_path} does not exist.")
+            if self.asset_project_path:
+                print(f"Asset project with path {self.asset_project_path} does not exist.")
+                raise FileNotFoundError(f"Asset project with path {self.asset_project_path} does not exist.")
             else:
                 print("\033[1m\033[31mAsset project path does not exist or was not provided.\033[0m")
                 raise FileNotFoundError("Asset project path does not exist or was not provided.")
-        instruments.asset_project = asset_project_path
+        instruments.asset_project = self.asset_project_path
         if not scene_name:
             print(f"Scene name {scene_name} not given!")
             scene_name = f"scene_{MODEL}_{random.randint(100, 999)}"
@@ -64,16 +64,16 @@ class UnityWorldGen(WorldGen):
 
     async def load(self):
         print("\n  ___Asset Catalog___")
-        print("Catalog maps `path => object data`")
+        log("Catalog mapping local paths to annotations.", self.scene_name)
         instruments.asset_catalog = assets.load(self.asset_project_path)
         print("\n  ___Synopsis File___")
-        print("Maps `synopsis of object data => asset path`")
+        log("Synopses of annotations mapping to local paths.", self.scene_name)
         instruments.synopses = await synopsis_generator.load(instruments.asset_catalog)
         print("\n  ___Special Materials___")
         print("Curated collections of materials for special objects")
         instruments.skybox_material_leaves =  assets.get_found(".mat", asset_project_path=self.asset_project_path / "Assets"/"Skybox Materials")
         instruments.ground_material_leaves = assets.get_found(".mat", asset_project_path=self.asset_project_path / "Assets"/"Ground Materials")
-        instruments.sound_leaves = assets.get_found(".mp3", asset_project_path=self.asset_project_path / "Assets"/"Sounds")
+        instruments.sound_leaves = assets.get_found(".mp3", asset_project_path=self.asset_project_path / "Assets" / "Sounds")
         
     
     async def run(self, prompt):
@@ -90,7 +90,7 @@ class UnityWorldGen(WorldGen):
         log(result.final_output, self.scene_name, wait_time=len(result.final_output)/10)
 
         if DRAWING:
-            draw_graph(self.conductor, filename="conductor_graph")
+            draw_graph(self.conductor, filename=f"{self.conductor.name}_graph")
         return path
 
 
@@ -124,7 +124,7 @@ class AcrophobiaWorldGen(VRWorldGen):
     
     bridge_regime_prompt="Generate multiple stages of worlds that trigger acrophobia while crossing a bridge. Have the stages get progressively harder. Let there be three stages and let the heights of the bridges in each stage progress as 2m, 5m, 10m above ground or sea level."
 
-    def __init__(self, asset_project_name: str="acrophobia_u5", restricted: bool = False, scene_name: str | None = None):
+    def __init__(self, asset_project_name: str="acrophobia_u5", scene_name: str | None = None, restricted: bool = False):
         if scene_name is None:
             scene_name = f"acro_50_{MODEL}_{random.randint(100, 999)}"
         restriction = f"These are the assets the system is restricted to:\n{[key.split('/')[-1] for key in list(instruments.asset_catalog.keys())]}" if restricted else ""
@@ -146,7 +146,7 @@ class Acrophobia50mx50mWorldGen(VRWorldGen):
     
     bridge_regime_prompt="Generate multiple stages of worlds that trigger acrophobia while crossing a bridge. Have the stages get progressively harder. Let there be three stages and let the heights of the bridges in each stage progress as 2m, 5m, 10m above ground or sea level."
 
-    def __init__(self, asset_project_name: str="acrophobia_v1", restricted: bool = False, scene_name: str | None = None):
+    def __init__(self, asset_project_name: str="acrophobia_v1", scene_name: str | None = None, restricted: bool = False):
         restriction = f"These are the assets the system is restricted to:\n{[key.split('/')[-1] for key in list(instruments.asset_catalog.keys())]}" if restricted else ""
         if scene_name is None:
             scene_name = f"acro_50_{MODEL}_{random.randint(100, 999)}"        

@@ -4,30 +4,21 @@ import sys
 from pathlib import Path
 from agents import Agent
 from pydantic import BaseModel, field_validator
+from dataclasses import dataclass
 
 MODEL = (os.getenv("MODEL") or "o3-mini").strip() or "o3-mini"
 
 class GroundData(BaseModel):
     grid: str
-    texture_path: str
+    texture_path_str: str
     explanation_of_heights: str
 
-class AssetPath(BaseModel):
+@dataclass
+class RelativePath:
+    path: Path
     
-
-    asset_path: str
-    @field_validator("asset_path", mode="before")
-    @classmethod
-    def normalize_path(cls, v):
-        """Convert Path objects to POSIX strings and validate."""
-        if isinstance(v, Path):
-            return v.as_posix()
-        if "\\" in str(v):
-            raise ValueError(f"Cannot make AssetPath from {v}")
-        return str(v)
-
-    def __fspath__(self):
-        return self.asset_path
+class AssetsRelativePathStr(BaseModel):
+    path: str
 
 class SynopsisNote(BaseModel):
     synopsis: str
@@ -51,7 +42,7 @@ class SoundDesigner(Agent):
         super().__init__(
             name=name or f"SoundDesigner{random.randint(100,999)}",
             instructions=instructions or SoundDesigner.instructions,
-            output_type=AssetPath,
+            output_type=AssetsRelativePathStr,
             model=MODEL,
         )
 
@@ -75,7 +66,7 @@ class SkyboxPlanner(Agent):
         super().__init__(
             name=name or f"SkyboxPlanner{random.randint(100,999)}",
             instructions=instructions or SkyboxPlanner.instructions,
-            output_type=AssetPath,
+            output_type=AssetsRelativePathStr,
             model=MODEL,
         )
         
@@ -86,7 +77,7 @@ class TexturePlanner(Agent):
         super().__init__(
             name=name or f"TexturePlanner{random.randint(100,999)}",
             instructions=instructions or TexturePlanner.instructions,
-            output_type=AssetPath,
+            output_type=AssetsRelativePathStr,
             model=MODEL,
         )
 

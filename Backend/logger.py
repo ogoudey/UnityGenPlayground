@@ -6,7 +6,8 @@ import shutil
 def log(message: str, scene_name: str, wait_time:float=0.0):
     """
     Appends a timestamped message to logs/<scene_name>.log.
-    Creates the directory if it doesn't exist.
+
+    Also prints it
     """
     # Create logs directory (relative to current working directory)
     log_dir = os.path.join(os.getcwd(), "logs")
@@ -48,6 +49,6 @@ def done(scene_name: str):
 
     if os.path.exists(src):
         shutil.move(src, dst)
-        print(f"📦 Generation done. Moving log: {dst}")
+        print(f"Generation done. Moving log: {dst}")
     else:
         print(f"⚠️ Log file not found for scene '{scene_name}' — nothing to be moved.")

@@ -1,14 +1,27 @@
 import uuid
 from pathlib import Path
 import yamling
-from subagents import AssetPath
+from subagents import RelativePath, AssetsRelativePathStr
+from typing import List
+from logger import log
 
 class World:
+    scene_name:str
     def __init__(self):
         pass
+    def propose_object(self, name, asset):
+        print("Propose object called on underspecified world")
+        return name, asset
+    def get_path_relative_to_asset_project(self, name, asset_project_path):
+        return AssetsRelativePathStr()
+        
         
 class UnityWorld(World):
-    scene_name:str
+    
+    ground_matrix: List[List[float]]
+    current_texture: str
+    ground_scale: float
+
     def __init__(self, scene_name:str | None = None):
         super().__init__()
         self.unity_file = yamling.UnityFile()
@@ -21,16 +34,20 @@ class UnityWorld(World):
         if scene_name is not None:
             self.scene_name = scene_name
 
-    def propose_object(self, name: str, asset_path: AssetPath | dict[str, AssetPath]):
-        self.unity_file.propose_object(name, asset_path)
+    def propose_object(self, name: str, path_str: RelativePath | dict[str, RelativePath]):
+        return self.unity_file.propose_object(name, path_str)
 
-    def get_asset_path(self, name: str, asset_project_path: Path) -> AssetPath:
-        asset_path = self.unity_file.get_asset_path(name)
-        path = Path(asset_path)
-        print(path)      
-        relativized_path = path.relative_to(asset_project_path)
-        print(relativized_path)
-        return AssetPath(relativized_path)
+    def get_pathstr_relative_to_asset_project(self, name: str, asset_project_path: Path) -> str:
+        rel_path: RelativePath = self.unity_file.get_asset(name)
+        log(f"Got {rel_path} from proposed objects.", self.scene_name)
+        print(f"(propositions?)")
+        relative_path = rel_path.path
+        log(f"Converting {rel_path.path} to Path {relative_path}", self.scene_name)
+        assets_relative_path = relative_path.relative_to(asset_project_path)
+        log(f"Converted relative Path to a Path relative to {asset_project_path.name}", self.scene_name)
+        print(f"Converted {relative_path} to {assets_relative_path}.")
+        print(f"Converted {assets_relative_path} to {str(assets_relative_path)}.")
+        return str(assets_relative_path)
 
     
     def add_skybox(self, skybox_name):
@@ -46,8 +63,8 @@ class UnityWorld(World):
         self.unity_file.add_sound(sound_name)
 
     
-    def set_vr_player(self, location, rotation):\
-        self.unity_file.set_vr_player(location, rotation)
+    def set_vr_player(self, location, rotation):
+        self.unity_file.set_vr_player(location, rotation, self.scene_name)
 
            
     def add_prefab(self, name, location, rotation):
@@ -58,7 +75,8 @@ class UnityWorld(World):
     
     def add_orphan_prefab(self, name, location, rotation):
         guid = uuid.uuid4().hex
-        yamling.write_obj_meta(Path(self.unity_file.proposed_objects[name]), guid)     
+        asset = self.unity_file.get_asset(name)
+        yamling.write_obj_meta(asset, guid)
         self.unity_file.add_orphan_prefab_instance(name, guid, location, rotation)
 
     
@@ -69,13 +87,11 @@ class UnityWorld(World):
             else:
                 print("Ground exists in YAML - couldn't be removed.")
         guid = uuid.uuid4().hex
-        print("before writing meta")
-        posix_path: AssetPath = self.unity_file.get_asset_path(ground_name)["Ground"]
-        print(posix_path)
-        yamling.write_obj_meta(Path(posix_path), guid)
-        print("meta written")
+        ground_proposition = self.unity_file.get_asset(ground_name)
+        ground_OBJ_rel_path = ground_proposition["Ground"]
+        print("Groudn OBJ rel path:", ground_OBJ_rel_path)
+        yamling.write_obj_meta(ground_OBJ_rel_path, guid)
         self.unity_file.add_ground_prefab_instance(ground_name, guid, transform)
-        print("back from add_gnd_prefab_instance")
         self.ground = ground_name
 
     def add_data(self, object_data):
@@ -84,6 +100,7 @@ class UnityWorld(World):
         
     def done_and_write(self, file_name=None): # filename is always used
         print("\nObjects:\n", self.objects)
+        log(f"{len(self.objects)} generated.", self.scene_name)
         if not file_name:
             file_name = "Unknown"
         return self.unity_file.to_unity_yaml(file_name)
