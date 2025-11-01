@@ -26,20 +26,21 @@ This project introduces a menu to Unity that provides the ability to generate vi
 </div>
 
 ## Install
-Clone this repository
+
+First, open up a terminal/command prompt, then clone this repository:
 ```
 git clone https://github.com/ogoudey/AcroGen.git
 ```
 ### Install Asset Project (Unity Project)
-The install script will automatically clone the Asset Project of your choice, and set up the Python environment.
+This will automatically clone the Asset Project of your choice, and set up the Python environment.
 ```
-./install_asset_project.sh <asset project repo name>
+./install.sh <asset project repo name>
 # or, Windows
 .\install.ps1 <asset project repo name>
 ```
 The Asset Project specifies the assets that will be used to generate with. [`acrophobia_v1`](https://github.com/ogoudey/acrophobia_v1) is recommended.
 
-The Asset Project will be installed as `Resources/Asset Projects/X`. Open this folder as a new Unity Project.
+The Asset Project will be installed as `Resources/Asset Projects/X`. Open this folder as a new Unity Project. The menu should be at the top of the Unity Editor.
 
 ## VR Setup 
 
