@@ -65,26 +65,6 @@ if (Test-Path $Requirements) {
     pip install -r $Requirements
 }
 
-# -----------------------------
-# 4.1 Start Flask server
-# -----------------------------
-Write-Host "[INFO] Starting Flask server..."
-Start-Process -FilePath "python" -ArgumentList "flask_server.py" -WorkingDirectory $Backend -WindowStyle Hidden
-
-# -----------------------------
-# 5. Wait for Flask to be ready, then open browser
-# -----------------------------
-Write-Host "[INFO] Waiting for Flask server to be ready..."
-while ($true) {
-    try {
-        Invoke-WebRequest -Uri "http://127.0.0.1:5000" -UseBasicParsing -TimeoutSec 2 | Out-Null
-        break
-    } catch {
-        Start-Sleep -Milliseconds 200
-    }
-}
-Write-Host "[INFO] Flask server is ready!"
-
 Start-Process "http://127.0.0.1:5000"
 
 # -----------------------------

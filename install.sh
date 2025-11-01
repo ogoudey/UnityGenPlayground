@@ -78,35 +78,6 @@ else
     fi
 fi
 
-
-# -----------------------------
-# 4.1 Start Flask server
-# -----------------------------
-echo "[INFO] Starting Flask server..."
-(
-    cd "$BACKEND"
-    # Assumes your Flask app is called app.py and uses default port 5000
-    # Run in background so script continues
-    python3 flask_server.py &
-    FLASK_PID=$!
-    echo "[INFO] Flask server started with PID $FLASK_PID"
-)
-
-# -----------------------------
-# 5. Open browser GUI
-# -----------------------------
-
-# Wait until Flask responds
-echo "[INFO] Waiting for Flask server to be ready..."
-until curl -s http://127.0.0.1:5000 >/dev/null 2>&1; do
-    sleep 0.2
-done
-echo "[INFO] Flask server is ready!"
-
-echo "[INFO] Opening browser GUI..."
-# Adjust URL if your server is different
-xdg-open "http://127.0.0.1:5000" >/dev/null 2>&1 || open "http://127.0.0.1:5000"
-
 # -----------------------------
 # 6. Check for Unity
 # -----------------------------
