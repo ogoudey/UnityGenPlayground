@@ -5,7 +5,6 @@ import json
 from dataclasses import dataclass
 from pathlib import Path
 from agents import function_tool, Runner
-from agents.extensions.visualization import draw_graph
 from pydantic import BaseModel
 from subagents import AssetsRelativePathStr, RelativePath
 from subagents import ObjectPlanner, GroundCreator, SkyboxPlanner, TexturePlanner, SunPlanner, SoundDesigner
@@ -166,8 +165,6 @@ async def create_sound(sound_description: str):
     t = time.time()
     log(f"{agent.name} starting on {sound_description}", world.scene_name)
     result = await Runner.run(agent, json.dumps(prompt))
-    if DRAWING:
-        draw_graph(agent, filename=f"{agent.name}_graph")
     log(f"{agent.name} thought for {time.time() - t} seconds.", world.scene_name)
     path_str = result.final_output.path
     sound_name = path_str.split("/")[-1]
@@ -188,8 +185,7 @@ async def create_sun(description_of_sun_behavior: str) -> str:
     log("Creating sun...", world.scene_name)
     agent = SunPlanner(tools=[positionSun])
     prompt = {"Description of desired sun behavior": description_of_sun_behavior}
-    if DRAWING:
-        draw_graph(agent, filename=f"{agent.name}_graph")
+
     t = time.time()
     print(agent.name, "started")
     await Runner.run(agent, json.dumps(prompt))
@@ -248,8 +244,6 @@ async def create_ground(steps_to_ground_construction, resolution, scale, procedu
     t = time.time()
     log(f"{agent.name} starting to create ground.", world.scene_name)
     result = await Runner.run(agent, json.dumps(prompt))
-    if DRAWING:
-        draw_graph(agent, filename=f"{agent.name}_graph")
     log(f"{agent.name} finished in {time.time() - t} seconds.", world.scene_name)
     
     grid:str = result.final_output.grid
@@ -343,11 +337,8 @@ async def add_texture(material_of_object_description: str):
     prompt = {"Material description": material_of_object_description,
                 "Available assets": ground_material_leaves}
     t = time.time()
-
     print(agent.name, "started")
     result = await Runner.run(agent, json.dumps(prompt))
-    if DRAWING:
-        draw_graph(agent, filename=f"{agent.name}_graph")
     print(agent.name + ":", time.time() - t, "seconds.")
     
     mat_path = result.final_output.path
@@ -379,8 +370,6 @@ async def propose_object(description: str):
     t = time.time()
     log(f"{agent.name} starting to match '{description}'", world.scene_name)
     result = await Runner.run(agent, json.dumps(prompt))
-    if DRAWING:
-        draw_graph(agent, filename=f"{agent.name}_graph")
     log(f"{agent.name} matched synopsis '{result.final_output.synopsis}' to the description in {time.time() - t} seconds.", world.scene_name)
     synopsis: str = result.final_output.synopsis
     try:
