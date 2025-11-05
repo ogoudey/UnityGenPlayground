@@ -1,6 +1,6 @@
 from worldgen import UnityWorldGen
 from worldgen import Generator_Class_from_Asset_Project_Name
-
+import os
 from distutils.util import strtobool
 import asyncio
 from typing import List
@@ -15,8 +15,10 @@ async def process(arg_tuple: List[str]):
     if len(arg_tuple) > 3:
         if not strtobool(arg_tuple[3]):
             Class = UnityWorldGen
+    log(f"Arguments interpreted: {asset_project} {Class} {prompt} {scene_name}", scene_name)
+    log(f"Python user: {os.getlogin()}", scene_name)
+    log(f"CWD: {os.getcwd()}", scene_name)
     log("Beginning generation of Unity World...", scene_name)
-    print(f"{Class} is generating scene {scene_name}")
     world_gen = Class(asset_project, scene_name)
     await world_gen.load()
     await world_gen.run(prompt)

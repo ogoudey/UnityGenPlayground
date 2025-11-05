@@ -248,7 +248,7 @@ async def create_ground(steps_to_ground_construction, resolution, scale, procedu
     
     grid:str = result.final_output.grid
     if procedural:
-        object_path, ground_matrix = obj_building.obj_from_grid_procedural(asset_project / "Assets" / "Manifest", grid, scale)
+        object_path, ground_matrix = obj_building.obj_from_grid_procedural(asset_project / "Assets" / "Manifest", grid, scale, world.scene_name)
     else:
         object_path, ground_matrix = obj_building.obj_from_grid(asset_project / "Assets" / "Manifest", grid, scale)
     log(f"Ground OBJ written to {object_path}.", world.scene_name)

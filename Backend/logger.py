@@ -11,6 +11,7 @@ def log(message: str, scene_name: str, wait_time:float=0.0):
     """
     # Create logs directory (relative to current working directory)
     log_dir = os.path.join(os.getcwd(), "logs")
+    
     os.makedirs(log_dir, exist_ok=True)
 
     # Construct the file path

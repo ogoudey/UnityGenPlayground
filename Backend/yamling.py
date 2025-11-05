@@ -1287,7 +1287,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 1208686872}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ca551af608e77eb4ea4d24f6740e6044, type: 3}
+  m_Script: {fileID: 11500000, guid: 2b6bdcf96ce17a240b2c0f31a3e63091, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
 --- !u!1001 &1574576137
@@ -1299,7 +1299,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 146900, guid: 4d293c8e162f3874b982baadd71153d2, type: 3}
       propertyPath: m_Name
-      value: '[CameraRig]'
+      value: CameraRig
       objectReference: {fileID: 0}
     - target: {fileID: 146900, guid: 4d293c8e162f3874b982baadd71153d2, type: 3}
       propertyPath: m_TagString
