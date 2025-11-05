@@ -1,6 +1,5 @@
 #!/bin/bash
-# run_correspondent.sh
-# Usage: ./run_correspondent.sh arg1 arg2 arg3 arg4
+# Usage: ./generate.sh arg1 arg2 arg3 arg4
 
 PYTHON_SCRIPT="unity_correspondent.py"
 
