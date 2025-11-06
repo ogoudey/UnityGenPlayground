@@ -65,8 +65,6 @@ if (Test-Path $Requirements) {
     pip install -r $Requirements
 }
 
-Start-Process "http://127.0.0.1:5000"
-
 # -----------------------------
 # 6. Check for Unity installation
 # -----------------------------
@@ -90,7 +88,7 @@ foreach ($dir in $UNITY_HUB_DIRS) {
 }
 
 if (-not $UNITY_PATH) {
-    Write-Error "[ERROR] Unity Hub directory not found in expected locations."
+    Write-Error "[ERROR] Unity Hub directory not found in expected locations. Please open Unity manually and Add the installed asset project (which is at $ProjectDir)"
     exit 1
 }
 
