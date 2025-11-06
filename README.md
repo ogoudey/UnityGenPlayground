@@ -1,12 +1,46 @@
 # World Generator
+<div align="center">
+<img width="519" height="342" alt="image" src="https://github.com/user-attachments/assets/907b2cc2-a51d-44c6-b4e8-437526533501" />
+  <br/>
+  <span style="font-size: 0.9em; color: gray;">A world generated with something like "Generate me a world with a bridge"</span>
+</div>
 
-<img width="1038" height="684" alt="image" src="https://github.com/user-attachments/assets/907b2cc2-a51d-44c6-b4e8-437526533501" />
+<br>
 
-<img width="2195" height="271" alt="conductor_graph" src="https://github.com/user-attachments/assets/d3d6725e-9b18-4e86-94e0-9637a2871039" />
+<div align="center">
+  <img width="2195" height="271" alt="conductor_graph" src="https://github.com/user-attachments/assets/d3d6725e-9b18-4e86-94e0-9637a2871039" />
+  <br/>
+  <span style="font-size: 0.9em; color: gray;">The array of tools available for the Conductor agent to use, some of which run further agents.</span>
+</div>
+
+
+## Getting started
+```mermaid
+graph TD
+    A[Asset Projects] --> B[Acrophobia Asset Project]
+    C(World Generator) --> D(Acrophobia World Generator)
+    subgraph B[Acrophobia Asset Project]
+        D
+    end
+```
+
+#### 1. World Generator
+Clone this repository (anywhere)
+
+#### 2. Asset Project
+So far there is 
+- [`acrophobia_v1`](https://github.com/ogoudey/acrophobia_v1), a Unity 6 project that works with Vive Pro 2, and imports ViveInputUtility, a flexible VR package.
+- [`acrophobia_u5`](https://github.com/ogoudey/acrophobia_u5), a Unity 2019 project that also works with Vive Pro 2. This project is used for experiments at Tufts, and imports ViveSR, the eye-tracking package. It also has the official menu scripts for running a full experiment from within Unity - no command line needed.
+- Coming soon... `acrophobia_v2`, a Unity 6 project that works with [a new headset], and [the eye-tracking packages], [the movement packages]. Will also likely have the experiment menu scripts.
+
+Either clone the asset project into `Acrogen\Resources\Asset Projects\` manually, or use the `install.ps1` (which must be editted to point to the asset project repo).
+
+#### 3. Other tools
+For data analysis, you can use [`EyeDataAnalysis`](https://github.com/ogoudey/EyeDataAnalysis). It's not a fully developed UI, but use `python multiplotter.py <path-to-eye-data-for-subj1.csv> <path-to-eye-data-for-subj2.csv>`
 
 ## Usage
-This project introduces a menu to Unity that provides the ability to generate virtual reality scenes from language. At this stage, the project is intended as a tool to promote therapeutic intervention. This README is for researchers who will be using some aspect of the tool.
 
+<div align="center"><em>(These instructions are slightly outdated)</em></div>
 <div align="center">
   <img width="331" height="322" alt="Menu 1" src="https://github.com/user-attachments/assets/7721e80c-5b3d-41e1-a806-011628bc1e94" />
   <br/>
@@ -25,22 +59,12 @@ This project introduces a menu to Unity that provides the ability to generate vi
   <span style="font-size: 0.9em; color: gray;">Settings — Select the Asset Project you want to open (not recommended to change from `acrophobia_v1`).</span>
 </div>
 
-## Install
+## More info
 
-First, open up a terminal/command prompt, then clone this repository:
-```
-git clone https://github.com/ogoudey/AcroGen.git
-```
-### Install Asset Project (Unity Project)
-This will automatically clone the Asset Project of your choice, and set up the Python environment.
+(Lunix install)
 ```
 ./install.sh <asset project repo name>
-# or, Windows
-.\install.ps1 <asset project repo name>
 ```
-The Asset Project specifies the assets that will be used to generate with. [`acrophobia_v1`](https://github.com/ogoudey/acrophobia_v1) is recommended.
-
-The Asset Project will be installed as `Resources/Asset Projects/X`. Open this folder as a new Unity Project. The menu should be at the top of the Unity Editor.
 
 ## VR Setup 
 
