@@ -431,6 +431,7 @@ def position_object(object_name: str, position_of_object_origin: str, rotation: 
     except ValueError:
         print("Error loading given rotation into JSON")
         return f"Failed to add object '{object_name}' to rotation {rotation} in the scene (json.loads() error) Make sure to pass a correct something that can be loaded with json.loads() into JSON."
+    log(f"Positioning {object_name}. Arguments correct", world.scene_name)
     asset_path = world.get_pathstr_relative_to_asset_project(object_name, asset_project) # (logging in there)
     log(f"Is {asset_path} in the assest_catalog?", world.scene_name)
     if asset_path in list(asset_catalog.keys()):
