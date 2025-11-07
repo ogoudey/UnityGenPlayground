@@ -257,7 +257,7 @@ async def create_ground(steps_to_ground_construction, resolution, scale, procedu
         
     except AssertionError:
         log(f"Oops! Ground matrix was not square but {len(ground_matrix[0])} by {len(ground_matrix)}. Retrying...", world.scene_name)
-        raise AssertionError(f"Ground matrix is not square but {len(ground_matrix[0])} by {len(ground_matrix)}. Try a smaller resolution to increase performance.")
+        raise AssertionError(f"Ground matrix is not `square but {len(ground_matrix[0])} by {len(ground_matrix)}. Try a smaller resolution to increase performance.")
     ground_name = object_path.name
     world.ground_matrix = ground_matrix
     world.ground_scale = scale
@@ -274,7 +274,9 @@ async def create_ground(steps_to_ground_construction, resolution, scale, procedu
     print(ground_name, "added to proposed_objects w path", object_path.as_posix())
     
     json_location = {"x": 0, "y": 0, "z": 0}
+    log("Adding ground to YAML", world.scene_name)
     world.add_ground(ground_name, json_location)
+    log("Back from adding ground to YAML", world.scene_name)
     # Add new contact points under ground
     print("Back from adding ground to scene.")
     world.contact_points["Ground"] = []
