@@ -4,7 +4,6 @@ $PYTHON_SCRIPT = "unity_correspondent.py"
 Set-Location ..\..\..\Backend
 
 # Activate the Python virtual environment
-# (Assumes you are using the default Windows venv layout)
 $venvPath = ".\.venv\Scripts\Activate.ps1"
 if (Test-Path $venvPath) {
     & $venvPath
@@ -15,8 +14,9 @@ if (Test-Path $venvPath) {
 
 # Set environment variables
 $env:MODEL = "o4-mini"
+$env:UNITY_VERSION = "5"
 
-# ⚠️ Replace this with your actual key or load it securely
+# ⚠️ Replace this with your actual key, saves Olin $0.01
 $env:OPENAI_API_KEY = "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"
 
 Write-Host "$PYTHON_SCRIPT" $args "from" (Get-Location)

@@ -81,17 +81,25 @@ class UnityWorld(World):
 
     
     def add_ground(self, ground_name, transform={"x":0.0, "y":0.0, "z":0.0}, rotation={"x":0.0, "y":0.0, "z":0.0}):
+        log("Adding ground...", self.scene_name)
         if self.ground:
             if self.unity_file.remove_prefab_instance_if_exists(self.ground):
                 print(f"Removed existing ground {self.ground} from YAML")
             else:
                 print("Ground exists in YAML - couldn't be removed.")
         guid = uuid.uuid4().hex
+        log("Geting proposed asset...", self.scene_name)
         ground_proposition = self.unity_file.get_asset(ground_name)
+        log(f"PRoposition:  {ground_proposition}", self.scene_name)
         ground_OBJ_rel_path = ground_proposition["Ground"]
+        log(f"relative path:  {ground_OBJ_rel_path}", self.scene_name)
         print("Groudn OBJ rel path:", ground_OBJ_rel_path)
+        log(f"Writing meta file to relative path:  {ground_OBJ_rel_path}", self.scene_name)
         yamling.write_obj_meta(ground_OBJ_rel_path, guid)
-        self.unity_file.add_ground_prefab_instance(ground_name, guid, transform)
+        log(f"Done writing META {ground_OBJ_rel_path}.", self.scene_name)
+        log(f"Adding prefab instance to YAML", self.scene_name)
+        self.unity_file.add_ground_prefab_instance(ground_name, guid, transform, self.scene_name)
+        log(f"Done adding prefab instance", self.scene_name)
         self.ground = ground_name
 
     def add_data(self, object_data):

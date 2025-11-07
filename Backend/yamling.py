@@ -33,7 +33,7 @@ class Propositions:
     def __contains__(self, name: str) -> bool:
         return name in self.assets 
 
-UNITY_VERSION = (os.getenv("UNITY_VERSION") or "6").strip() or "6"
+UNITY_VERSION = (os.getenv("UNITY_VERSION") or "5").strip() or "5"
 VR_HEADSET_TYPE = (os.getenv("VR_HEADSET_TYPE") or "Vive Pro 2").strip() or "Vive Pro 2"
 
 print(f"\nGenerating world for \033[1m\033[36mUnity {UNITY_VERSION}\033[0m. Use \033[1m\033[36mexport UNITY_VERSION='<5|6>'\033[0m")
@@ -92,19 +92,24 @@ class UnityFile:
         except Exception:
             print("\rFailed to set skybox.")
             
-    def add_ground_prefab_instance(self, name, metaguid, transform):
+    def add_ground_prefab_instance(self, name, metaguid, transform, scene_name_for_logging):
         print("Adding ground to YAML...")
+        log(f"Adding prefab instance {name}", scene_name_for_logging)
         node = compose(prefab_init_text)[0]
         wrapped = node_to_python(node)
+        log("Got init text for prefab", scene_name_for_logging)
         wrapped, id_out = set_ID(wrapped) # to random ID
+
         try:
             proposal = self.proposed_objects[name]
             print("Found", name, "in proposed_objects w entry", self.proposed_objects[name])
+            log("Found proposed object", scene_name_for_logging)
             texture_rel_path = proposal["Texture"].path
             texture_metaguid = get_guid(texture_rel_path)
         except Exception:
             print("Lookup in proposed_objects has failed.")
             raise Exception(".meta lookup failed. File does not exist?")
+        log("Making modifications...", scene_name_for_logging)
         modifications = wrapped["PrefabInstance"]["m_Modification"]["m_Modifications"]
         for mod in modifications:
             if "target" in mod and "guid" in mod["target"]:
@@ -125,12 +130,11 @@ class UnityFile:
                         mod["value"] = transform["z"]
         wrapped["PrefabInstance"]["m_SourcePrefab"]["guid"] = metaguid
         self.wrapped.append(wrapped)
-        if UNITY_VERSION == "5":
-            print("Leaving before modifying sceneroots (Unity 5 thing). Ground added to YAML.")
-            return
-        sceneroots = self.get_doc("SceneRoots")
-        sceneroots["m_Roots"].append({"fileID": id_out})
-        print("Asset added to YAML.")            
+        log("Modifications made, added to YAML.", scene_name_for_logging)
+        if not UNITY_VERSION == "5":
+            sceneroots = self.get_doc("SceneRoots")
+            sceneroots["m_Roots"].append({"fileID": id_out})
+            print("Asset added to YAML.")        
     
     def remove_prefab_instance_if_exists(self, name):
         print("removing if exists")
