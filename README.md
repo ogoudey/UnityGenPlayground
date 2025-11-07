@@ -33,7 +33,9 @@ So far there is
 - [`acrophobia_u5`](https://github.com/ogoudey/acrophobia_u5), a Unity 2019 project that also works with Vive Pro 2. This project is used for experiments at Tufts, and imports ViveSR, the eye-tracking package. It also has the official menu scripts for running a full experiment from within Unity - no command line needed.
 - Coming soon... `acrophobia_v2`, a Unity 6 project that works with [a new headset], and [the eye-tracking packages], [the movement packages]. Will also likely have the experiment menu scripts.
 
-Either clone the asset project into `Acrogen\Resources\Asset Projects\` manually, or use the `install.ps1` (which must be editted to point to the asset project repo).
+Either clone the asset project into `Acrogen\Resources\Asset Projects\` manually, or use the `install.ps1` script, passing the name of the asset project.
+
+Each asset project may involve additional steps. Check the repo's readme for individual instructions.
 
 #### 3. Other tools
 For data analysis, you can use [`EyeDataAnalysis`](https://github.com/ogoudey/EyeDataAnalysis). It's not a fully developed UI, but use `python multiplotter.py <path-to-eye-data-for-subj1.csv> <path-to-eye-data-for-subj2.csv>`
