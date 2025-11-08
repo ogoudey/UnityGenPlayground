@@ -35,7 +35,7 @@ class UnityWorld(World):
             self.scene_name = scene_name
 
     def propose_object(self, name: str, path_str: RelativePath | dict[str, RelativePath]):
-        return self.unity_file.propose_object(name, path_str)
+        return self.unity_file.propose_object(name, path_str, self.scene_name)
 
     def get_pathstr_relative_to_asset_project(self, name: str, asset_project_path: Path) -> str:
         rel_path: RelativePath = self.unity_file.get_asset(name)
@@ -112,7 +112,7 @@ class UnityWorld(World):
         
     def done_and_write(self, file_name=None): # filename is always used
         print("\nObjects:\n", self.objects)
-        log(f"{len(self.objects)} generated.", self.scene_name)
+        log(f"{len(self.objects)} objects generated.", self.scene_name)
         if not file_name:
             file_name = "Unknown"
         return self.unity_file.to_unity_yaml(file_name)

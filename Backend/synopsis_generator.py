@@ -1,16 +1,18 @@
 import os
 import json
 
+from logger import log
+
 from agents import Agent, Runner
 import asyncio
 
 MODEL = (os.getenv("MODEL") or "o3-mini").strip() or "o3-mini"
 
-async def load(assets_info):
+async def load(assets_info, scene_name_for_logging):
     with open("../Resources/synopsis_file.json", "r") as s:
         v = s.read()
         synopses = json.loads(v)
-    print(f"Synopsis file loaded with {len(synopses)} entries")
+    log(f"Synopsis file loaded with {len(synopses)} entries", scene_name_for_logging)
     active_synopses = await update_synopsis_file(assets_info, synopses)
     return active_synopses
 

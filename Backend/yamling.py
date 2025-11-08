@@ -48,7 +48,7 @@ class UnityFile:
         self.placed_assets = dict()
 
     def propose_object(self, name: str, asset: RelativePath | dict[str, RelativePath], scene_name_for_logging):
-        log("Proposing {name} as {asset}", scene_name_for_logging)
+        log(f"Proposing {name} as {asset}", scene_name_for_logging)
         name, asset = self.proposed_objects.add(name, asset)
         log("Proposed {name} as {asset}", scene_name_for_logging)
         return name, asset
@@ -104,7 +104,7 @@ class UnityFile:
         try:
             proposal = self.proposed_objects[name]
             print("Found", name, "in proposed_objects w entry", self.proposed_objects[name])
-            log("Found proposed object", scene_name_for_logging)
+            log(f"Found proposed object {name} (keys: {list(proposal.keys())}", scene_name_for_logging)
             texture_path = proposal["Texture"].path
             log(f"Found proposal's path: {texture_path}", scene_name_for_logging)
             texture_metaguid = get_guid(texture_path, scene_name_for_logging)
@@ -522,10 +522,10 @@ def set_ID(text: MappingNode, new_id: str="") -> tuple[MappingNode, str]:
 def get_guid(file: Path, scene_name_for_logging:str="get_guid") -> str:
     """Returns the 'guid' property from a file."""
     meta_file = file.with_suffix(file.suffix + ".meta")
-    log(f"Converting {file} to {meta_file}. Opening META...", scene_name_for_logging)
+    #log(f"Converting {file} to {meta_file}. Opening META...", scene_name_for_logging)
     with open(meta_file, "r") as f:
         data = pyyaml.safe_load(f)
-    log(f"Opened {meta_file} and returning guid", scene_name_for_logging)    # Ensure 'guid' exists
+    #log(f"Opened {meta_file} and returning guid", scene_name_for_logging)    # Ensure 'guid' exists
     if "guid" not in data:
         raise KeyError(f"'guid' not found in {meta_file}")
     return data["guid"]

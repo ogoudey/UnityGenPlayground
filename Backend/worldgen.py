@@ -71,9 +71,9 @@ class UnityWorldGen(WorldGen):
         instruments.synopses = await synopsis_generator.load(instruments.asset_catalog,  self.scene_name)
         print("\n  ___Special Materials___")
         print("Curated collections of materials for special objects")
-        instruments.skybox_material_leaves =  assets.get_found(".mat", asset_project_path=self.asset_project_path / "Assets"/"Skybox Materials")
-        instruments.ground_material_leaves = assets.get_found(".mat", asset_project_path=self.asset_project_path / "Assets"/"Ground Materials")
-        instruments.sound_leaves = assets.get_found(".mp3", asset_project_path=self.asset_project_path / "Assets" / "Sounds")
+        instruments.skybox_material_leaves =  assets.get_found(".mat", asset_project_path=self.asset_project_path / "Assets"/"Skybox Materials",  scene_name_for_logging=self.scene_name)
+        instruments.ground_material_leaves = assets.get_found(".mat", asset_project_path=self.asset_project_path / "Assets"/"Ground Materials",  scene_name_for_logging=self.scene_name)
+        instruments.sound_leaves = assets.get_found(".mp3", asset_project_path=self.asset_project_path / "Assets" / "Sounds",  scene_name_for_logging=self.scene_name)
         
     
     async def run(self, prompt):

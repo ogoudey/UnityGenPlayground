@@ -380,7 +380,7 @@ async def propose_object(description: str):
     except KeyError:
         print(result.final_output, "is not in synopsis file. (Agent problem - the list of synopses were passed to it.)")
         return f"This agent failed to match the description to an object, maybe because the object does not exist in the available assets."
-    log("Looking up {object_path} in catalog...", world.scene_name)
+    log(f"Looking up {object_path} in catalog...", world.scene_name)
     object_data = asset_lookup(object_path)
     
     if object_data == None:
