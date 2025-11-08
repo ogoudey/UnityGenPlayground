@@ -10,7 +10,7 @@ cd ../../../Backend
 pip install requirements.txt
 
 export MODEL="o4-mini"
-
+export UNITY_VERSION="6"
 export OPENAI_API_KEY="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"
 
 echo "$PYTHON_SCRIPT" "$@" "from" "$(pwd)"

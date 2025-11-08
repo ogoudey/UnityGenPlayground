@@ -47,14 +47,15 @@ class UnityFile:
         self.proposed_objects: Propositions = Propositions()
         self.placed_assets = dict()
 
-    def propose_object(self, name: str, asset: RelativePath | dict[str, RelativePath]):
-        return self.proposed_objects.add(name, asset)
+    def propose_object(self, name: str, asset: RelativePath | dict[str, RelativePath], scene_name_for_logging):
+        log("Proposing {name} as {asset}", scene_name_for_logging)
+        name, asset = self.proposed_objects.add(name, asset)
+        log("Proposed {name} as {asset}", scene_name_for_logging)
+        return name, asset
 
     def get_asset(self, name: str) -> RelativePath | dict:
-        if not isinstance(self.proposed_objects[name], RelativePath):
-            return self.proposed_objects[name]
-        else:
-            return self.proposed_objects[name]
+
+        return self.proposed_objects[name]
 
     def set_sun(self, length_of_day: float, time_of_day: float, sun_brightness:float):
         rot = (time_of_day / length_of_day) * 360
@@ -104,8 +105,9 @@ class UnityFile:
             proposal = self.proposed_objects[name]
             print("Found", name, "in proposed_objects w entry", self.proposed_objects[name])
             log("Found proposed object", scene_name_for_logging)
-            texture_rel_path = proposal["Texture"].path
-            texture_metaguid = get_guid(texture_rel_path)
+            texture_path = proposal["Texture"].path
+            log(f"Found proposal's path: {texture_path}", scene_name_for_logging)
+            texture_metaguid = get_guid(texture_path, scene_name_for_logging)
         except Exception:
             print("Lookup in proposed_objects has failed.")
             raise Exception(".meta lookup failed. File does not exist?")
@@ -115,7 +117,7 @@ class UnityFile:
             if "target" in mod and "guid" in mod["target"]:
                 mod["target"]["guid"] = metaguid
                 if mod.get("propertyPath") == "m_Materials.Array.data[0]":
-                    if not texture_rel_path == "None":
+                    if not texture_path == "None":
                        mod["objectReference"]["guid"] = texture_metaguid
                 elif mod.get("propertyPath") == "m_Name":
                     mod["target"]["fileID"] = "-8679921383154817045"
@@ -134,7 +136,7 @@ class UnityFile:
         if not UNITY_VERSION == "5":
             sceneroots = self.get_doc("SceneRoots")
             sceneroots["m_Roots"].append({"fileID": id_out})
-            print("Asset added to YAML.")        
+            log("Scene roots modified.", scene_name_for_logging)        
     
     def remove_prefab_instance_if_exists(self, name):
         print("removing if exists")
@@ -160,7 +162,7 @@ class UnityFile:
         sceneroots["m_Roots"].remove({"fileID": prefab_id})
         return False
 
-    def add_orphan_prefab_instance(self, name, metaguid, transform, rotation):
+    def add_orphan_prefab_instance(self, name, metaguid, transform, rotation, scene_for_logging):
         print("Adding orphan prefab...")
         node = compose(prefab_init_text)[0]
         wrapped = node_to_python(node)
@@ -517,15 +519,13 @@ def set_ID(text: MappingNode, new_id: str="") -> tuple[MappingNode, str]:
         raise ValueError("No anchor to be set!")
     return text, new_id
         
-def get_guid(file: Path) -> str:
+def get_guid(file: Path, scene_name_for_logging:str="get_guid") -> str:
     """Returns the 'guid' property from a file."""
     meta_file = file.with_suffix(file.suffix + ".meta")
-    print(f"Converting {file} to {meta_file}")
-    print(f"Getting GUID for {meta_file}")
+    log(f"Converting {file} to {meta_file}. Opening META...", scene_name_for_logging)
     with open(meta_file, "r") as f:
         data = pyyaml.safe_load(f)
-    print("found meta")
-    # Ensure 'guid' exists
+    log(f"Opened {meta_file} and returning guid", scene_name_for_logging)    # Ensure 'guid' exists
     if "guid" not in data:
         raise KeyError(f"'guid' not found in {meta_file}")
     return data["guid"]

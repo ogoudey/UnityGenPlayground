@@ -6,9 +6,10 @@ from pathlib import Path
 from collections import defaultdict
 import json
 from typing import List
+from logger import log
 
 USE_EXPANDED = False
-def load(asset_project_path: Path) -> dict[str, str]:
+def load(asset_project_path: Path, scene_name_for_logging: str) -> dict[str, str]:
     try:
         name_of_asset_catalog = "asset_catalog_expanded.json" if USE_EXPANDED else "asset_catalog.json"
         with open(asset_project_path / name_of_asset_catalog, "r") as f:
@@ -18,8 +19,7 @@ def load(asset_project_path: Path) -> dict[str, str]:
         print(f"\033[1m\033[31mThe Asset Project {asset_project_path} has no asset catalog - you must put an `asset_catalog.json` in the Asset Project.\033[0m")
         raise FileNotFoundError("The Asset Project {asset_project_path} has no asset catalog - you must put an `asset_catalog.json` in the Asset Project.")
     print(f"In asset project folder {asset_project_path}")
-    print(f"Asset catalog loaded with {len(assets_info)} entries")
-    
+    log(f"In asset project folder {asset_project_path}, asset catalog loaded with {len(assets_info)} entries", scene_name_for_logging)
     
     removed_count = 0
     for key in list(assets_info.keys()):
@@ -29,7 +29,7 @@ def load(asset_project_path: Path) -> dict[str, str]:
             removed_count += 1
 
     if removed_count > 0:
-        print(f"Removed {removed_count} missing assets")
+        log(f"Removed {removed_count} missing assets", scene_name_for_logging)
     else:
         print("All asset catalog entries accounted for in folders.")
 
@@ -51,8 +51,7 @@ def get_tree(file_type=".prefab", folder="../Assets"):
 
 
 
-def get_found(file_type:str, asset_project_path: Path) -> List[str]:
-    
+def get_found(file_type:str, asset_project_path: Path, scene_name_for_logging: str) -> List[str]:
     print(f"Looking in {asset_project_path} for {file_type}...")
     if os.name == 'nt':
         matches = []
@@ -78,8 +77,9 @@ def get_found(file_type:str, asset_project_path: Path) -> List[str]:
     # Normalize paths (optional, makes everything consistent)
     files = [Path(f).as_posix() for f in matches]
     if len(files) > 0:
-        print(f"The folder at {asset_project_path} has {len(files)} {file_type} assets.")
+        log(f"The folder at {asset_project_path} has {len(files)} {file_type} assets.", scene_name_for_logging)
     else:
+        log(f"The folder at {asset_project_path} has no files of type {file_type}!", scene_name_for_logging)
         print(f"\033[1m\033[31mThe folder at {asset_project_path} has no files of type {file_type}!\033[0m")
     return files
 

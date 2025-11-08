@@ -226,7 +226,7 @@ def obj_from_grid_procedural(manifest_path: Path, grid: str = default_grid, scal
         print("Ground obj written to", out_path1)
         out_path = out_path1
     except Exception as e:
-        log(e, scene_name_for_logging)
+        log(str(e), scene_name_for_logging)
         log("Wjat else??", scene_name_for_logging)
-    
+        out_path = "BAd path"
     return out_path, small_world

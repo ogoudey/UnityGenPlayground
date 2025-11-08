@@ -9,11 +9,11 @@ class World:
     scene_name:str
     def __init__(self):
         pass
-    def propose_object(self, name, asset):
+    def propose_object(self, name, path_str):
         print("Propose object called on underspecified world")
-        return name, asset
+        return name, path_str
     def get_path_relative_to_asset_project(self, name, asset_project_path):
-        return AssetsRelativePathStr()
+        return AssetsRelativePathStr(path="unknown")
         
         
 class UnityWorld(World):
@@ -74,10 +74,14 @@ class UnityWorld(World):
 
     
     def add_orphan_prefab(self, name, location, rotation):
+        log("Writing meta (from world) for {name}", self.scene_name)
         guid = uuid.uuid4().hex
-        asset = self.unity_file.get_asset(name)
-        yamling.write_obj_meta(asset, guid)
-        self.unity_file.add_orphan_prefab_instance(name, guid, location, rotation)
+
+        rel_path = self.unity_file.get_asset(name)
+        log("Writing meta for {rel_path}", self.scene_name)
+        yamling.write_obj_meta(rel_path, guid)
+        log("Done writing meta for {rel_path}", self.scene_name)
+        self.unity_file.add_orphan_prefab_instance(name, guid, location, rotation, self.scene_name)
 
     
     def add_ground(self, ground_name, transform={"x":0.0, "y":0.0, "z":0.0}, rotation={"x":0.0, "y":0.0, "z":0.0}):

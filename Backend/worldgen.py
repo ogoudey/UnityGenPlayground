@@ -65,10 +65,10 @@ class UnityWorldGen(WorldGen):
     async def load(self):
         print("\n  ___Asset Catalog___")
         log("Catalog mapping local paths to annotations.", self.scene_name)
-        instruments.asset_catalog = assets.load(self.asset_project_path)
+        instruments.asset_catalog = assets.load(self.asset_project_path, self.scene_name)
         print("\n  ___Synopsis File___")
         log("Synopses of annotations mapping to local paths.", self.scene_name)
-        instruments.synopses = await synopsis_generator.load(instruments.asset_catalog)
+        instruments.synopses = await synopsis_generator.load(instruments.asset_catalog,  self.scene_name)
         print("\n  ___Special Materials___")
         print("Curated collections of materials for special objects")
         instruments.skybox_material_leaves =  assets.get_found(".mat", asset_project_path=self.asset_project_path / "Assets"/"Skybox Materials")
