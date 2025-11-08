@@ -164,7 +164,7 @@ class Acrophobia50mx50mWorldGen(VRWorldGen):
 Generator_Class_from_Asset_Project_Name = {
     "acrophobia_v1": AcrophobiaWorldGen,
     "acrophobia_u5": AcrophobiaWorldGen,
-    "Acrophobia_VR_AI": AcrophobiaWorldGen
+    "Acrophobia_VR_AI": AcrophobiaWorldGen,
     "acrophobia_u5_v1": AcrophobiaWorldGen,
 }
 
