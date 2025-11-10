@@ -67,7 +67,7 @@ class UnityWorld(World):
         self.unity_file.set_vr_player(location, rotation, self.scene_name)
 
            
-    def add_prefab(self, name, location, rotation):
+    def add_prefab(self, name, location: dict, rotation):
         #if self.unity_file.remove_prefab_instance_if_exists(name):
         #    print(f"Removed existing object {name} from YAML")
         self.unity_file.add_prefab_instance(name, location, rotation)

@@ -81,21 +81,17 @@ class UnityFile:
             return
         sceneroots = self.get_doc("SceneRoots")
         sceneroots["m_Roots"].append({"fileID": father_id})
-        print("\rSun added to YAML.")   
         
     def set_skybox(self, name):
-        print("Setting skybox...")
         mat_path = self.proposed_objects[name].path
         guid = get_guid(mat_path)
         try:
             render_settings = self.get_doc("RenderSettings")
             render_settings["m_SkyboxMaterial"] = {"fileID": "2100000", "guid": guid, "type": 2}
-            print("\rSkybox set in YAML.")
         except Exception:
             print("\rFailed to set skybox.")
             
     def add_ground_prefab_instance(self, name, metaguid, transform, scene_name_for_logging):
-        print("Adding ground to YAML...")
         log(f"Adding prefab instance {name}", scene_name_for_logging)
         node = compose(prefab_init_text)[0]
         wrapped = node_to_python(node)
@@ -105,14 +101,12 @@ class UnityFile:
         try:
             log(f"Getting proposal. (Is {name} in propositions?)", scene_name_for_logging)
             proposal = self.proposed_objects[name]
-            print(f"Found {name} in proposed_objects w entry {self.proposed_objects[name]}")
             log(f"Found proposed object {name} (keys: {list(proposal.keys())}", scene_name_for_logging)
             texture_path = proposal["Texture"].path
             log(f"Found proposal's path: {texture_path}", scene_name_for_logging)
             texture_metaguid = get_guid(texture_path, scene_name_for_logging)
         except Exception:
             log(f"Exception in getting texture GUID or getting proposal: {texture_path}", scene_name_for_logging)
-            print("Lookup in proposed_objects has failed.")
             raise Exception(".meta lookup failed. File does not exist?")
         log("Making modifications...", scene_name_for_logging)
         modifications = wrapped["PrefabInstance"]["m_Modification"]["m_Modifications"]
@@ -142,31 +136,25 @@ class UnityFile:
             log("Scene roots modified.", scene_name_for_logging)        
     
     def remove_prefab_instance_if_exists(self, name):
-        print("removing if exists")
         for doc in self.wrapped:
             if "PrefabInstance" in doc:
                 for mod in doc["PrefabInstance"]["m_Modification"]["m_Modifications"]:
                     if mod.get("propertyPath") == "m_Name":
                         if mod["target"]["value"] == name:
                             self.wrapped.remove(doc)
-                            print("Removed prefab!")
                             if UNITY_VERSION == "5":
-                                print("Leaving before modifying sceneroots (Unity 5 thing).")
                                 return True
                             sceneroots = self.get_doc("SceneRoots")
                             prefab_id = doc["anchor"]
                             sceneroots["m_Roots"].remove({"fileID": prefab_id})
-                            print("Removed prefabID from scene root.")
                             return True
         if UNITY_VERSION == "5":
-            print("Leaving before modifying sceneroots (Unity 5 thing).")
             return False
         sceneroots = self.get_doc("SceneRoots")
         sceneroots["m_Roots"].remove({"fileID": prefab_id})
         return False
 
     def add_orphan_prefab_instance(self, name, metaguid, transform, rotation, scene_for_logging):
-        print("Adding orphan prefab...")
         node = compose(prefab_init_text)[0]
         wrapped = node_to_python(node)
         wrapped, id_out = set_ID(wrapped) # to random ID
@@ -176,13 +164,12 @@ class UnityFile:
             print(f"Found {name} in proposed_objects w path {prefab_path}")
         except KeyError:
             print(name + " not in proposed_objects")
-            print("Lookup in proposed_objects has failed.")
+            raise KeyError
 
         self.placed_assets[name] = {"transform": transform, "rotation": rotation}
 
         quaternion = euler_to_xyzw_quaternion(rotation)
 
-        print("Parsing init YAML...")
         modifications = wrapped["PrefabInstance"]["m_Modification"]["m_Modifications"]
         for mod in modifications:
             if "target" in mod and "guid" in mod["target"]:
@@ -211,13 +198,9 @@ class UnityFile:
         wrapped["PrefabInstance"]["m_SourcePrefab"]["guid"] = metaguid
         self.wrapped.append(wrapped)
         if UNITY_VERSION == "5":
-            print("Leaving before modifying sceneroots (Unity 5 thing).")
             return
         sceneroots = self.get_doc("SceneRoots")
-        sceneroots["m_Roots"].append({"fileID": id_out})
-        print("\rInit YAML succcessfully updated.")
-        
-        print("Asset added to YAML.")
+        sceneroots["m_Roots"].append({"fileID": id_out})        
 
     def add_sound(self, name):
         nodes = compose(sound_init_text)
@@ -229,7 +212,6 @@ class UnityFile:
             print(f"Found {name} in proposed_objects w path {sound_path}")
         except KeyError:
             print(name + " not in proposed_objects")
-            print("Lookup in proposed_objects has failed.")
             raise KeyError
         sound_game_object_id = str(random.randint(100000000, 999999999))
         sound_game_object["anchor"] = sound_game_object_id
@@ -241,7 +223,6 @@ class UnityFile:
         sound_game_object["GameObject"]["m_Name"] = name
         audio_source["anchor"] = audio_source_id
         metaguid = get_guid(sound_path)
-        print(f"New metaguid for sound: {metaguid}")
         sound_transform["anchor"] = transform_id
         sound_transform["Transform"]["m_GameObject"]["fileID"] = sound_game_object_id
         # change position if sound is spatialized
@@ -254,14 +235,13 @@ class UnityFile:
         self.wrapped.append(sound_transform)
         self.wrapped.append(audio_source)
         self.wrapped.append(sound_game_object)
-        print("Sound added to YAML")
 
 
-    def add_prefab_instance(self, name, transform, rotation):
+    def add_prefab_instance(self, name, transform: dict, rotation, scene_name_for_logging="add_prefab_instance"):
         composed = compose(prefab_init_text)
         objects: str = node_to_python(composed[0])
         objects, id_out = set_ID(objects) # to random ID
-        print(f"{name} in {self.proposed_objects.assets}?")
+        log(f"{name} in {self.proposed_objects.assets}?", scene_name_for_logging)
         try:
             prefab_path = self.proposed_objects[name].path
         except KeyError:
@@ -282,6 +262,7 @@ class UnityFile:
         quaternion = euler_to_xyzw_quaternion(rotation)
         modifications = objects["PrefabInstance"]["m_Modification"]["m_Modifications"]
         x_position_has_been_changed = False # marker for whether the 
+        log("Making modifications to init_yaml", scene_name_for_logging)
         for mod in modifications:
             if "target" in mod and "guid" in mod["target"]:
                 mod["target"]["guid"] = guid
@@ -294,6 +275,7 @@ class UnityFile:
                     mod["target"]["fileID"] = father_ID
                     if mod.get("propertyPath") == "m_LocalPosition.x":
                         mod["value"] = transform["x"]
+                        log(f"x position set to {transform['x']}", scene_name_for_logging)
                     if mod.get("propertyPath") == "m_LocalPosition.y":
                         mod["value"] = transform["y"]
                     if mod.get("propertyPath") == "m_LocalPosition.z":
@@ -363,12 +345,10 @@ class UnityFile:
 
     def setup_VIVE(self, transform: dict, rotation: dict):
         yaml = ruamel_YAML(typ='rt')
-        print("In YAMLING")
         default = list(yaml.compose_all(preprocess_text(ViveCameraRig_setup_init_text)))[0]
         wrapped = node_to_python(default)
         
         quaternion = euler_to_xyzw_quaternion(rotation)
-        print("Parsing init YAML...")
         modifications = wrapped["PrefabInstance"]["m_Modification"]["m_Modifications"]
         for mod in modifications:
             if "target" in mod and "guid" in mod["target"]:
@@ -391,9 +371,7 @@ class UnityFile:
         
         sceneroots = self.get_doc("SceneRoots")
         sceneroots["m_Roots"].append({"fileID": prefab_id})
-        print("Init YAML succcessfully updated.")
         self.wrapped.append(wrapped)
-        print("VR Player successfully added to YAML.")
 
     def get_father_id_of_root_transform_of_prefab(self, prefab_path: str):
         with open(prefab_path, "r") as f:
@@ -406,7 +384,6 @@ class UnityFile:
                     father_id = doc["anchor"]
         if not father_id:
             raise KeyError("The located prefab has no root transform")
-        print("Got ID of prefab root")
         return father_id
     
     def to_unity_yaml(self, file_name="minimal.unity"):
@@ -415,7 +392,6 @@ class UnityFile:
             file_name += f"_u{UNITY_VERSION}.unity"
         else:
             file_name += ".unity"
-        print("Attempting to write to", file_name)
         out = ["%YAML 1.1", "%TAG !u! tag:unity3d.com,2011:"]
         for entry in self.wrapped:
             #tag = entry.pop("tag")
@@ -430,7 +406,6 @@ class UnityFile:
         out = "\n".join(out) + "\n"
         with open(file_name, "w") as f:
             f.write(out)   
-        print(f"YAML written to {file_name}")
         return file_name
 
     def get_doc(self, top_key):
@@ -485,7 +460,6 @@ def write_obj_meta(rel_path: RelativePath, guid, scene_for_logging: str = "writi
         sort_keys=False
     )
     log("YAML dumped", scene_for_logging)
-    print("Before meta write")
     log("Writing YAML...", scene_for_logging)
     new_path = path.with_name(path.name + ".meta")
     log(f"Writing YAML to {new_path}", scene_for_logging)
@@ -493,7 +467,6 @@ def write_obj_meta(rel_path: RelativePath, guid, scene_for_logging: str = "writi
     with open(new_path, "w") as f:
         f.write(yaml_str)
     log(f"YAML written {new_path}", scene_for_logging)
-    print("Meta file with updated GUID written")
 
 def euler_to_xyzw_quaternion(rotation: dict) -> tuple:
     x_deg, y_deg, z_deg = rotation["x"], rotation["y"], rotation["z"]

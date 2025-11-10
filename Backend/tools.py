@@ -141,7 +141,7 @@ async def create_skybox(skybox_description: str):
     t = time.time()
     log(f"{agent.name} started creating skybox", world.scene_name)
     result = await Runner.run(agent, json.dumps(prompt))
-    print(agent.name + ":", time.time() - t, "seconds.")
+    log(f"{agent.name}: {time.time() - t} seconds", world.scene_name)
     path_str = result.final_output.path
     skybox_name = path_str.split("/")[-1]
     print(f"Proposing relative path with Path {Path(path_str)} from {path_str}")
@@ -188,9 +188,9 @@ async def create_sun(description_of_sun_behavior: str) -> str:
     prompt = {"Description of desired sun behavior": description_of_sun_behavior}
 
     t = time.time()
-    print(agent.name, "started")
+    log(f"{agent.name} started", world.scene_name)
     await Runner.run(agent, json.dumps(prompt))
-    print(agent.name + ":", time.time() - t, "seconds.")    
+    log(f"{agent.name}: {time.time() - t} seconds", world.scene_name)    
     return f"Successfully placed the Sun in the scene"
 
 @function_tool
@@ -272,7 +272,6 @@ async def create_ground(steps_to_ground_construction, resolution, scale, procedu
     name, asset = world.propose_object(ground_name, {"Ground": RelativePath(object_path), "Texture": RelativePath(Path(texture_path_str))})
     log(f"Proposed object {name} as {asset}", world.scene_name)
 
-    print(ground_name, "added to proposed_objects w path", object_path.as_posix())
     
     json_location = {"x": 0, "y": 0, "z": 0}
     log("Adding ground to YAML", world.scene_name)
@@ -286,7 +285,7 @@ async def create_ground(steps_to_ground_construction, resolution, scale, procedu
             contact_point = (j * scale, world.ground_matrix[i][j] + float(json_location["y"]), (resolution*scale - scale) - i*scale)
             world.contact_points["Ground"].append(contact_point)    
     
-    print(world.ground_matrix, "\n...end ground_matrix.")
+    
 
     formatted_rows, decimal = [], 1
     for row in world.ground_matrix:
@@ -318,7 +317,7 @@ def populate_horizon(asset_name_list: str):
     except:
         print(f"Failed to load json from {asset_name_list}")
         return f"Failed to json.loads({asset_name_list})."
-    print("Assets to populate horizon with:", asset_name_list)
+    log(f"Assets to populate horizon with: {asset_name_list}", world.scene_name)
     procedural.populate(asset_name_list, world) # adds proposed objects to world randomly up to a limit (camera fov)
     return f"Successfully populated horizon."
 
@@ -340,9 +339,9 @@ async def add_texture(material_of_object_description: str):
     prompt = {"Material description": material_of_object_description,
                 "Available assets": ground_material_leaves}
     t = time.time()
-    print(agent.name, "started")
+    log(f"{agent.name} started", world.scene_name)
     result = await Runner.run(agent, json.dumps(prompt))
-    print(agent.name + ":", time.time() - t, "seconds.")
+    log(f"{agent.name}: {time.time() - t} seconds", world.scene_name)
     
     mat_path = result.final_output.path
     print("Found", mat_path, "for", material_of_object_description)
@@ -470,6 +469,7 @@ def position_object(object_name: str, position_of_object_origin: str, rotation: 
         print("Positioning...........")
         print(asset_path)       
         print("...........") 
+        log(f"Positioning {object_name} at {json.dumps(json_location)}", world.scene_name)
         if asset_path in list(asset_catalog.keys()):        
             world.add_prefab(object_name, json_location, json_rotation)
         else:

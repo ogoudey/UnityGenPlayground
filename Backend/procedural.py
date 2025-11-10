@@ -41,7 +41,6 @@ def populate(asset_path_list, unity):
             p_noise_list = perlin_points_2d(x_range, y_range, n_points=100, scale=0.1, threshold=0.0)
         for point in p_noise_list:
             if not in_no_pose_zone(point):
-                print("Adding prefab")
                 unity.add_prefab(asset, {"x": point[0], "y": 0.0, "z": point[1]}, {"x": 0.0, "y": random.random()*360, "z": 0.0})
     
 
