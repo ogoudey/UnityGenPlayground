@@ -99,7 +99,7 @@ class UnityWorld(World):
         log(f"relative path:  {ground_OBJ_rel_path}", self.scene_name)
         print("Groudn OBJ rel path:", ground_OBJ_rel_path)
         log(f"Writing meta file to relative path:  {ground_OBJ_rel_path}", self.scene_name)
-        yamling.write_obj_meta(ground_OBJ_rel_path, guid)
+        yamling.write_obj_meta(ground_OBJ_rel_path, guid, self.scene_name)
         log(f"Done writing META {ground_OBJ_rel_path}.", self.scene_name)
         log(f"Adding prefab instance to YAML", self.scene_name)
         self.unity_file.add_ground_prefab_instance(ground_name, guid, transform, self.scene_name)

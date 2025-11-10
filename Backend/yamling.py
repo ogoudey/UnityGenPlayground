@@ -50,7 +50,7 @@ class UnityFile:
     def propose_object(self, name: str, asset: RelativePath | dict[str, RelativePath], scene_name_for_logging):
         log(f"Proposing {name} as {asset}", scene_name_for_logging)
         name, asset = self.proposed_objects.add(name, asset)
-        log("Proposed {name} as {asset}", scene_name_for_logging)
+        log(f"Proposed {name} as {asset}", scene_name_for_logging)
         return name, asset
 
     def get_asset(self, name: str) -> RelativePath | dict:
@@ -100,8 +100,9 @@ class UnityFile:
         wrapped = node_to_python(node)
         log("Got init text for prefab", scene_name_for_logging)
         wrapped, id_out = set_ID(wrapped) # to random ID
-
+        log("Set ID", scene_name_for_logging)
         try:
+            log(f"Getting proposal. (Is {name} in propositions?)", scene_name_for_logging)
             proposal = self.proposed_objects[name]
             print("Found", name, "in proposed_objects w entry", self.proposed_objects[name])
             log(f"Found proposed object {name} (keys: {list(proposal.keys())}", scene_name_for_logging)
@@ -109,6 +110,7 @@ class UnityFile:
             log(f"Found proposal's path: {texture_path}", scene_name_for_logging)
             texture_metaguid = get_guid(texture_path, scene_name_for_logging)
         except Exception:
+            log(f"Exception in getting texture GUID or getting proposal: {texture_path}", scene_name_for_logging)
             print("Lookup in proposed_objects has failed.")
             raise Exception(".meta lookup failed. File does not exist?")
         log("Making modifications...", scene_name_for_logging)
@@ -465,23 +467,33 @@ def node_to_python(node: MappingNode) -> Any:
         print(node)
         return None
 
-def write_obj_meta(rel_path: RelativePath, guid):
+def write_obj_meta(rel_path: RelativePath, guid, scene_for_logging: str = "writing_meta"):
+    log("Writing OBJ meta at {rel_path / '.meta'}", scene_for_logging)
     path = rel_path.path
     if os.path.exists(path / ".meta"):
-        print("Obj meta already exists, using existing one.")
+
+        log("Obj meta already exists, using existing one.", scene_for_logging)
         return
     node = compose(obj_meta_init_text)[0]
     wrapped = node_to_python(node)
+    
     wrapped["guid"] = guid
+    log("GUID set", scene_for_logging)
     reformatted = convert_numbers(wrapped)
+    log("Dumping YAML...", scene_for_logging)
     yaml_str = pyyaml.dump(
         reformatted, 
         default_flow_style=False, 
         sort_keys=False
     )
+    log("YAML dumped", scene_for_logging)
     print("Before meta write")
-    with open(path.with_name(path.name + ".meta"), "w") as f:
-        f.write(yaml_str) 
+    log("Writing YAML...", scene_for_logging)
+    new_path = path.with_name(path.name + ".meta")
+    log(f"Writing YAML to {new_path}", scene_for_logging)
+    with open(new_path, "w") as f:
+        f.write(yaml_str)
+    log(f"YAML written {new_path}", scene_for_logging)
     print("Meta file with updated GUID written")
 
 def euler_to_xyzw_quaternion(rotation: dict) -> tuple:
