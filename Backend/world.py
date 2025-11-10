@@ -96,7 +96,7 @@ class UnityWorld(World):
         ground_proposition = self.unity_file.get_asset(ground_name)
         log(f"PRoposition:  {ground_proposition}", self.scene_name)
         ground_OBJ_rel_path = ground_proposition["Ground"]
-        log(f"relative path:  {ground_OBJ_rel_path}", self.scene_name)
+        log(f"GUID: {guid}", self.scene_name)
         print("Groudn OBJ rel path:", ground_OBJ_rel_path)
         log(f"Writing meta file to relative path:  {ground_OBJ_rel_path}", self.scene_name)
         yamling.write_obj_meta(ground_OBJ_rel_path, guid, self.scene_name)
@@ -111,7 +111,7 @@ class UnityWorld(World):
 
         
     def done_and_write(self, file_name=None): # filename is always used
-        print("\nObjects:\n", self.objects)
+        print("Objects:", self.objects)
         log(f"{len(self.objects)} objects generated.", self.scene_name)
         if not file_name:
             file_name = "Unknown"

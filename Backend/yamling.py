@@ -468,12 +468,8 @@ def node_to_python(node: MappingNode) -> Any:
         return None
 
 def write_obj_meta(rel_path: RelativePath, guid, scene_for_logging: str = "writing_meta"):
-    log("Writing OBJ meta at {rel_path / '.meta'}", scene_for_logging)
+    log(f"Writing OBJ meta", scene_for_logging)
     path = rel_path.path
-    if os.path.exists(path / ".meta"):
-
-        log("Obj meta already exists, using existing one.", scene_for_logging)
-        return
     node = compose(obj_meta_init_text)[0]
     wrapped = node_to_python(node)
     
@@ -489,8 +485,10 @@ def write_obj_meta(rel_path: RelativePath, guid, scene_for_logging: str = "writi
     log("YAML dumped", scene_for_logging)
     print("Before meta write")
     log("Writing YAML...", scene_for_logging)
+    log(yaml_str, scene_for_logging)
     new_path = path.with_name(path.name + ".meta")
     log(f"Writing YAML to {new_path}", scene_for_logging)
+    log(f"repr(path) {repr(new_path)}", scene_for_logging)
     with open(new_path, "w") as f:
         f.write(yaml_str)
     log(f"YAML written {new_path}", scene_for_logging)
@@ -534,7 +532,7 @@ def set_ID(text: MappingNode, new_id: str="") -> tuple[MappingNode, str]:
 def get_guid(file: Path, scene_name_for_logging:str="get_guid") -> str:
     """Returns the 'guid' property from a file."""
     meta_file = file.with_suffix(file.suffix + ".meta")
-    #log(f"Converting {file} to {meta_file}. Opening META...", scene_name_for_logging)
+    log(f"Converting {file} to {meta_file}. Opening META...", scene_name_for_logging)
     with open(meta_file, "r") as f:
         data = pyyaml.safe_load(f)
     #log(f"Opened {meta_file} and returning guid", scene_name_for_logging)    # Ensure 'guid' exists

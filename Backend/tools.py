@@ -520,7 +520,7 @@ async def getContactPoints() -> str:
         Returns the vertices of the ground. This is mainly useful for recalling whether the ground meets the positioned objects correctly.
     """
     global world
-    print(world.contact_points)
+    log("Getting contact points...", world.scene_name)
     print("...end contact points")
     return json.dumps(world.contact_points)
 

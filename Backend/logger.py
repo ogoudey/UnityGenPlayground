@@ -2,13 +2,17 @@ import time
 import os
 import datetime
 import shutil
+from threading import Lock
 
-def log(message: str, scene_name: str, wait_time:float=0.0):
+lock = Lock()
+
+def log(message: str, scene_name: str, wait_time:float=0.1):
     """
     Appends a timestamped message to logs/<scene_name>.log.
 
     Also prints it
     """
+    
     # Create logs directory (relative to current working directory)
     log_dir = os.path.join(os.getcwd(), "logs")
     
@@ -21,14 +25,16 @@ def log(message: str, scene_name: str, wait_time:float=0.0):
     now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     line = f"{now} {message}\n"
 
-    # Write (live append)
-    with open(log_path, "a", encoding="utf-8") as f:
-        f.write(line)
-        f.flush()
+    try:
+        with open(log_path, "a", encoding="utf-8") as f:
+            f.write(line)
+            f.flush()
+    except Exception as e:
+        print("log error")
 
     # Also print to console
     print(line, end="")
-    if wait_time > 0.1:
+    if wait_time > 0.05:
         time.sleep(wait_time)
 
 def done(scene_name: str):
