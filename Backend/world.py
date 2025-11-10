@@ -74,13 +74,13 @@ class UnityWorld(World):
 
     
     def add_orphan_prefab(self, name, location, rotation):
-        log("Writing meta (from world) for {name}", self.scene_name)
+        log(f"Writing meta (from world) for {name}", self.scene_name)
         guid = uuid.uuid4().hex
 
         rel_path = self.unity_file.get_asset(name)
-        log("Writing meta for {rel_path}", self.scene_name)
+        log(f"Writing meta for {rel_path}", self.scene_name)
         yamling.write_obj_meta(rel_path, guid)
-        log("Done writing meta for {rel_path}", self.scene_name)
+        log(f"Done writing meta for {rel_path}", self.scene_name)
         self.unity_file.add_orphan_prefab_instance(name, guid, location, rotation, self.scene_name)
 
     
@@ -97,7 +97,6 @@ class UnityWorld(World):
         log(f"PRoposition:  {ground_proposition}", self.scene_name)
         ground_OBJ_rel_path = ground_proposition["Ground"]
         log(f"GUID: {guid}", self.scene_name)
-        print("Groudn OBJ rel path:", ground_OBJ_rel_path)
         log(f"Writing meta file to relative path:  {ground_OBJ_rel_path}", self.scene_name)
         yamling.write_obj_meta(ground_OBJ_rel_path, guid, self.scene_name)
         log(f"Done writing META {ground_OBJ_rel_path}.", self.scene_name)

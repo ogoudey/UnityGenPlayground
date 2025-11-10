@@ -75,6 +75,7 @@ class UnityFile:
             self.wrapped.append(doc)
         if not father_id:
             print("Failed to find root transform of Sun stuff:\n", wrapped)
+            return
         if UNITY_VERSION == "5":
             print("Leaving before modifying sceneroots (Unity 5 thing).")
             return
@@ -104,7 +105,7 @@ class UnityFile:
         try:
             log(f"Getting proposal. (Is {name} in propositions?)", scene_name_for_logging)
             proposal = self.proposed_objects[name]
-            print("Found", name, "in proposed_objects w entry", self.proposed_objects[name])
+            print(f"Found {name} in proposed_objects w entry {self.proposed_objects[name]}")
             log(f"Found proposed object {name} (keys: {list(proposal.keys())}", scene_name_for_logging)
             texture_path = proposal["Texture"].path
             log(f"Found proposal's path: {texture_path}", scene_name_for_logging)
@@ -172,7 +173,7 @@ class UnityFile:
         
         try:
             prefab_path = self.proposed_objects[name].path
-            print("Found", name, "in proposed_objects w path", prefab_path)
+            print(f"Found {name} in proposed_objects w path {prefab_path}")
         except KeyError:
             print(name + " not in proposed_objects")
             print("Lookup in proposed_objects has failed.")
@@ -225,7 +226,7 @@ class UnityFile:
         sound_transform = node_to_python(nodes[2])
         try:
             sound_path = self.proposed_objects[name].path
-            print("Found", name, "in proposed_objects w path", sound_path)
+            print(f"Found {name} in proposed_objects w path {sound_path}")
         except KeyError:
             print(name + " not in proposed_objects")
             print("Lookup in proposed_objects has failed.")
@@ -260,7 +261,7 @@ class UnityFile:
         composed = compose(prefab_init_text)
         objects: str = node_to_python(composed[0])
         objects, id_out = set_ID(objects) # to random ID
-        print(name, "in", self.proposed_objects.assets, "?")
+        print(f"{name} in {self.proposed_objects.assets}?")
         try:
             prefab_path = self.proposed_objects[name].path
         except KeyError:
@@ -280,6 +281,7 @@ class UnityFile:
         scale = 1.0
         quaternion = euler_to_xyzw_quaternion(rotation)
         modifications = objects["PrefabInstance"]["m_Modification"]["m_Modifications"]
+        x_position_has_been_changed = False # marker for whether the 
         for mod in modifications:
             if "target" in mod and "guid" in mod["target"]:
                 mod["target"]["guid"] = guid
@@ -428,7 +430,7 @@ class UnityFile:
         out = "\n".join(out) + "\n"
         with open(file_name, "w") as f:
             f.write(out)   
-        print("YAML written to", file_name)
+        print(f"YAML written to {file_name}")
         return file_name
 
     def get_doc(self, top_key):
@@ -463,7 +465,7 @@ def node_to_python(node: MappingNode) -> Any:
             map_dict[node_to_python(mapping_duple[0])] = node_to_python(mapping_duple[1]) 
         return map_dict
     else:
-        print("Weird node detected:", type(node))
+        print(f"Weird node detected: {type(node)}")
         print(node)
         return None
 
@@ -485,7 +487,6 @@ def write_obj_meta(rel_path: RelativePath, guid, scene_for_logging: str = "writi
     log("YAML dumped", scene_for_logging)
     print("Before meta write")
     log("Writing YAML...", scene_for_logging)
-    log(yaml_str, scene_for_logging)
     new_path = path.with_name(path.name + ".meta")
     log(f"Writing YAML to {new_path}", scene_for_logging)
     log(f"repr(path) {repr(new_path)}", scene_for_logging)
@@ -495,7 +496,6 @@ def write_obj_meta(rel_path: RelativePath, guid, scene_for_logging: str = "writi
     print("Meta file with updated GUID written")
 
 def euler_to_xyzw_quaternion(rotation: dict) -> tuple:
-    print("Rotation:", rotation)
     x_deg, y_deg, z_deg = rotation["x"], rotation["y"], rotation["z"]
 
     # Convert degrees to radians
@@ -516,7 +516,7 @@ def euler_to_xyzw_quaternion(rotation: dict) -> tuple:
     qx = cz*sx*cy - sz*cx*sy
     qy = cz*cx*sy + sz*sx*cy
     qz = sz*cx*cy - cz*sx*sy
-    print("Calculation of quaternion done:", (qx, qy, qz, qw))
+    #print("Calculation of quaternion done:", (qx, qy, qz, qw))
     return (qx, qy, qz, qw)            
 
 def set_ID(text: MappingNode, new_id: str="") -> tuple[MappingNode, str]:

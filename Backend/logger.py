@@ -4,7 +4,7 @@ import datetime
 import shutil
 from threading import Lock
 
-lock = Lock()
+lock = Lock() # use a lock?
 
 def log(message: str, scene_name: str, wait_time:float=0.1):
     """
@@ -33,8 +33,9 @@ def log(message: str, scene_name: str, wait_time:float=0.1):
         print("log error")
 
     # Also print to console
-    print(line, end="")
-    if wait_time > 0.05:
+    #print(line, end="") # Removed because contributed to bug coming from Unity window
+
+    if wait_time > 0.05: # not great - kind of a waste of time
         time.sleep(wait_time)
 
 def done(scene_name: str):

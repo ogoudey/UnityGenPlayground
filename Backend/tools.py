@@ -48,7 +48,7 @@ world: World | UnityWorld
 ### Form of a Tool ###
 
 #@function_tool
-#async def toolNameInThisFormat(args: basic_types) -> basic_type:
+#(async) def toolNameInThisFormat(args: basic_types) -> basic_type:
 #    """docstring"""
 #    blah blan
 
@@ -57,40 +57,41 @@ world: World | UnityWorld
 ### 
 
 def error_reporter(func):
-    if inspect.iscoroutinefunction(func):
-        @functools.wraps(func)
-        async def async_wrapper(*args, **kwargs):
-            try:
-                return await func(*args, **kwargs)
-            except Exception as e:
-                exc_type, exc_obj, exc_tb = sys.exc_info()
-                fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
-                line_number = exc_tb.tb_lineno
-                print("=== Exception caught in inner function ===")
-                print(f"Function: {func.__name__}")
-                print(f"Error: {e}")
-                print(f"Type: {exc_type.__name__}")
-                print(f"File: {fname}")
-                print(f"Line Number: {line_number}")
-                traceback.print_exc()
-        return async_wrapper
-    else:
-        @functools.wraps(func)
-        def sync_wrapper(*args, **kwargs):
-            try:
-                return func(*args, **kwargs)
-            except Exception as e:
-                exc_type, exc_obj, exc_tb = sys.exc_info()
-                fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
-                line_number = exc_tb.tb_lineno
-                print("=== Exception caught in inner function ===")
-                print(f"Function: {func.__name__}")
-                print(f"Error: {e}")
-                print(f"Type: {exc_type.__name__}")
-                print(f"File: {fname}")
-                print(f"Line Number: {line_number}")
-                traceback.print_exc()
-        return sync_wrapper
+    async def handle_async(*args, **kwargs):
+        try:
+            return await func(*args, **kwargs)
+        except Exception as e:
+            return _format_error(func, e)
+
+    def handle_sync(*args, **kwargs):
+        try:
+            return func(*args, **kwargs)
+        except Exception as e:
+            return _format_error(func, e)
+
+    return handle_async if inspect.iscoroutinefunction(func) else handle_sync
+
+
+def _format_error(func, e):
+    exc_type, _, exc_tb = sys.exc_info()
+    fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
+    line_number = exc_tb.tb_lineno
+    tb = traceback.format_exc()
+
+    error_info = {
+        "error": f"{exc_type.__name__}: {e}",
+        "tool_name": func.__name__,
+        "file": fname,
+        "line": line_number,
+        "traceback": tb
+    }
+
+    print("=== Exception caught in inner function ===")
+    for k, v in error_info.items():
+        print(f"{k}: {v}")
+    print("=========================================")
+
+    return error_info
 
 @function_tool
 async def getGroundMatrix() -> dict:
@@ -431,7 +432,7 @@ def position_object(object_name: str, position_of_object_origin: str, rotation: 
     except ValueError:
         print("Error loading given rotation into JSON")
         return f"Failed to add object '{object_name}' to rotation {rotation} in the scene (json.loads() error) Make sure to pass a correct something that can be loaded with json.loads() into JSON."
-    log(f"Positioning {object_name}. Arguments correct", world.scene_name)
+    log(f"Positioning {object_name}. Arguments: {position_of_object_origin}, {rotation}", world.scene_name)
     asset_path = world.get_pathstr_relative_to_asset_project(object_name, asset_project) # (logging in there)
     log(f"Is {asset_path} in the assest_catalog?", world.scene_name)
     if asset_path in list(asset_catalog.keys()):
