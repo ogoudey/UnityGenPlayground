@@ -24,50 +24,6 @@ graph TD
     end
 ```
 
-#### 1. World Generator
-Clone this repository (anywhere)
-
-#### 2. Asset Project
-So far there is 
-- [`acrophobia_v1`](https://github.com/ogoudey/acrophobia_v1), a Unity 6 project that works with Vive Pro 2, and imports ViveInputUtility, a flexible VR package.
-- [`acrophobia_u5`](https://github.com/ogoudey/acrophobia_u5), a Unity 2019 project that also works with Vive Pro 2. This project is used for experiments at Tufts, and imports ViveSR, the eye-tracking package. It also has the official menu scripts for running a full experiment from within Unity - no command line needed.
-- Coming soon... `acrophobia_v2`, a Unity 6 project that works with [a new headset], and [the eye-tracking packages], [the movement packages]. Will also likely have the experiment menu scripts.
-
-Either clone the asset project into `Acrogen\Resources\Asset Projects\` manually, or use the `install.ps1` script, passing the name of the asset project.
-
-Each asset project may involve additional steps. Check the repo's readme for individual instructions.
-
-#### 3. Other tools
-For data analysis, you can use [`EyeDataAnalysis`](https://github.com/ogoudey/EyeDataAnalysis). It's not a fully developed UI, but use `python multiplotter.py <path-to-eye-data-for-subj1.csv> <path-to-eye-data-for-subj2.csv>`
-
-## Usage
-
-<div align="center"><em>(These instructions are slightly outdated)</em></div>
-<div align="center">
-  <img width="331" height="322" alt="Menu 1" src="https://github.com/user-attachments/assets/7721e80c-5b3d-41e1-a806-011628bc1e94" />
-  <br/>
-  <span style="font-size: 0.9em; color: gray;">Generate — Give a prompt or select from a list of premade prompts, and watch the scene get generated.</span>
-</div>
-
-<div align="center">
-  <img width="331" height="322" alt="Menu 2" src="https://github.com/user-attachments/assets/618405fd-a2fd-4cb1-82d8-ebcbf19732cd" />
-  <br/>
-  <span style="font-size: 0.9em; color: gray;">Generations — View past generations and enter them, providing a name of the subject for the trial.</span>
-</div>
-
-<div align="center">
-  <img width="331" height="322" alt="Menu 3" src="https://github.com/user-attachments/assets/60425251-cea9-4983-998f-7afaaa4f1f38" />
-  <br/>
-  <span style="font-size: 0.9em; color: gray;">Settings — Select the Asset Project you want to open (not recommended to change from `acrophobia_v1`).</span>
-</div>
-
-## More info
-
-(Lunix install)
-```
-./install.sh <asset project repo name>
-```
-
 ## VR Setup 
 
 ### VIVE Pro 2
