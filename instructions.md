@@ -20,9 +20,10 @@ The two projects must have a certain file structure relative to each other, for 
 │   │   ├── Asset Project - a Unity project with a certain structure
 ```
 
-Setup proceeds in two steps:
+Setup proceeds in two or three steps:
 1. Set up the World Generator
 2. Set up the Asset Project
+3. (Optional) Install data analysis tool
 
 ### 1. Set up the World Generator
 1. Make sure python is installed.
@@ -60,6 +61,15 @@ rmdir /S /Q Special-Unity-Assets
 
 6. Move a selection of ground materials (`.mat`) and skybox materials (`.mat`) from AllSky and Yughes'. Done! Go to the Generation Window to generate worlds.
 
+### 3. Setup Data Analysis Tool
+For data analysis, you can use [`EyeDataAnalysis`](https://github.com/ogoudey/EyeDataAnalysis). It's not a fully developed UI. Use `python multiplotter.py <path-to-eye-data-for-subj1.csv> <path-to-eye-data-for-subj2.csv>`
+1. Clone the repo
+2. Set up another Python virtual environment:
+```
+python -m venv .venv
+.venv\Scripts\activate
+pip install matplotlib pandas numpy
+```
 
 
 
