@@ -537,7 +537,7 @@ def asset_lookup(path: Path) -> dict:
         log(f"Oops! {path.as_posix()} not in {list(asset_catalog.keys())}", world.scene_name)
         return None
     
-### Tests ###
+### Testing grounds ###
 if __name__ == "__main__":
     import assets
     from world import UnityWorld
@@ -552,9 +552,3 @@ if __name__ == "__main__":
     #asyncio.run(create_ground("Just return a plain", 10, 1.0, False))
 
     u.done_and_write(str(asset_project / "Assets" / "Generations" / u.scene_name))
-
-
-
-
-
-
