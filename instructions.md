@@ -28,6 +28,13 @@ Setup proceeds in two or three steps:
 ### 1. Set up the World Generator
 1. Make sure python is installed.
 2. Clone this repository.
+3. Set up the python virtual environment:
+```
+cd Backend
+python3 -m venv .venv
+.venv\Scripts\activate
+pip install -r requirements.txt
+```
 
 ### 2. Set up the Asset Project
 1. Make a new Unity project in the `Asset Projects` directory of the World Generator.
