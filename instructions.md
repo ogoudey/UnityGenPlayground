@@ -59,7 +59,9 @@ xcopy Special-Unity-Assets\* Assets\ /E /I /H /Y
 rmdir /S /Q Special-Unity-Assets
 ```
 
-6. Move a selection of ground materials (`.mat`) and skybox materials (`.mat`) from AllSky and Yughes'. Done! Go to the Generation Window to generate worlds.
+6. Move a selection of ground materials (`.mat`) and skybox materials (`.mat`) from AllSky and Yughes'.
+7. Finally, register the Asset Project by adding the AcrophobiaWorldGen class to `worldgen.py`'s `Generator_Class_from_Asset_Project_Name`.
+8. Done! Go to the Generation Window to generate worlds.
 
 ### 3. Setup Data Analysis Tool
 For data analysis, you can use [`EyeDataAnalysis`](https://github.com/ogoudey/EyeDataAnalysis). It's not a fully developed UI. Use `python multiplotter.py <path-to-eye-data-for-subj1.csv> <path-to-eye-data-for-subj2.csv>`
