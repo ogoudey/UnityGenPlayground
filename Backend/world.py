@@ -47,7 +47,7 @@ class UnityWorld(World):
         log(f"Converted relative Path to a Path relative to {asset_project_path.name}", self.scene_name)
         print(f"Converted {relative_path} to {assets_relative_path}.")
         print(f"Converted {assets_relative_path} to {str(assets_relative_path)}.")
-        return str(assets_relative_path)
+        return assets_relative_path.as_posix()
 
     
     def add_skybox(self, skybox_name):

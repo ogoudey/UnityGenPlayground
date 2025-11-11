@@ -473,6 +473,7 @@ def position_object(object_name: str, position_of_object_origin: str, rotation: 
         if asset_path in list(asset_catalog.keys()):        
             world.add_prefab(object_name, json_location, json_rotation)
         else:
+            log(f"This asset {asset_path} is not in asset_catalog", world.scene_name)
             world.add_orphan_prefab(object_name, json_location, json_rotation)
         object_data["Position"] = json_location
         object_data["Rotation"] = json_rotation
@@ -540,15 +541,17 @@ def asset_lookup(path: Path) -> dict:
 if __name__ == "__main__":
     import assets
     from world import UnityWorld
-    u = UnityWorld("world")
+    u = UnityWorld("worlda")
     world = u
-    asset_project = Path("../Resources/Asset Projects/acrophobia_v1")
+    asset_project = Path("../Resources/Asset Projects/acrophobia_u5_v1")
     asset_catalog = {"Assets/Proxy Games/Stylized Nature Kit Lite/Prefabs/Water/Flat Water.prefab": {"Name": "water1"}}
     synopses = {"some flat water": "Assets/Proxy Games/Stylized Nature Kit Lite/Prefabs/Water/Flat Water.prefab"}
-    ground_material_leaves = ["grass"]
-    #asyncio.run(propose_object("water"))
-    #position_object("water1", json.dumps({"x":0.0, "y":0.0, "z":0.0}), json.dumps({"x":0.0, "y":0.0, "z":0.0}), "because it is")
-    asyncio.run(create_ground("Just return a plain", 10, 1.0, False))
+    #ground_material_leaves = ["grass"]
+    asyncio.run(propose_object("water1"))
+    position_object("water1", json.dumps({"x":1.0, "y":1.0, "z":1.0}), json.dumps({"x":0.0, "y":0.0, "z":0.0}), "because it is")
+    #asyncio.run(create_ground("Just return a plain", 10, 1.0, False))
+
+    u.done_and_write(str(asset_project / "Assets" / "Generations" / u.scene_name))
 
 
 
