@@ -241,7 +241,7 @@ class UnityFile:
         composed = compose(prefab_init_text)
         objects: str = node_to_python(composed[0])
         objects, id_out = set_ID(objects) # to random ID
-        log(f"{name} in {self.proposed_objects.assets}?", scene_name_for_logging)
+        #log(f"{name} in {self.proposed_objects.assets}?", scene_name_for_logging)
         try:
             prefab_path = self.proposed_objects[name].path
         except KeyError:
@@ -262,7 +262,7 @@ class UnityFile:
         quaternion = euler_to_xyzw_quaternion(rotation)
         modifications = objects["PrefabInstance"]["m_Modification"]["m_Modifications"]
         x_position_has_been_changed = False # marker for whether the 
-        log("Making modifications to init_yaml", scene_name_for_logging)
+        #log("Making modifications to init_yaml", scene_name_for_logging)
         for mod in modifications:
             if "target" in mod and "guid" in mod["target"]:
                 mod["target"]["guid"] = guid
@@ -275,7 +275,7 @@ class UnityFile:
                     mod["target"]["fileID"] = father_ID
                     if mod.get("propertyPath") == "m_LocalPosition.x":
                         mod["value"] = transform["x"]
-                        log(f"x position set to {transform['x']}", scene_name_for_logging)
+                        #log(f"x position set to {transform['x']}", scene_name_for_logging)
                     if mod.get("propertyPath") == "m_LocalPosition.y":
                         mod["value"] = transform["y"]
                     if mod.get("propertyPath") == "m_LocalPosition.z":
@@ -445,28 +445,28 @@ def node_to_python(node: MappingNode) -> Any:
         return None
 
 def write_obj_meta(rel_path: RelativePath, guid, scene_for_logging: str = "writing_meta"):
-    log(f"Writing OBJ meta", scene_for_logging)
+    #log(f"Writing OBJ meta", scene_for_logging)
     path = rel_path.path
     node = compose(obj_meta_init_text)[0]
     wrapped = node_to_python(node)
     
     wrapped["guid"] = guid
-    log("GUID set", scene_for_logging)
+    #log("GUID set", scene_for_logging)
     reformatted = convert_numbers(wrapped)
-    log("Dumping YAML...", scene_for_logging)
+    #log("Dumping YAML...", scene_for_logging)
     yaml_str = pyyaml.dump(
         reformatted, 
         default_flow_style=False, 
         sort_keys=False
     )
-    log("YAML dumped", scene_for_logging)
-    log("Writing YAML...", scene_for_logging)
+    #log("YAML dumped", scene_for_logging)
+    #log("Writing YAML...", scene_for_logging)
     new_path = path.with_name(path.name + ".meta")
-    log(f"Writing YAML to {new_path}", scene_for_logging)
-    log(f"repr(path) {repr(new_path)}", scene_for_logging)
+    #log(f"Writing YAML to {new_path}", scene_for_logging)
+    #log(f"repr(path) {repr(new_path)}", scene_for_logging)
     with open(new_path, "w") as f:
         f.write(yaml_str)
-    log(f"YAML written {new_path}", scene_for_logging)
+    #log(f"YAML written {new_path}", scene_for_logging)
 
 def euler_to_xyzw_quaternion(rotation: dict) -> tuple:
     x_deg, y_deg, z_deg = rotation["x"], rotation["y"], rotation["z"]
@@ -505,7 +505,7 @@ def set_ID(text: MappingNode, new_id: str="") -> tuple[MappingNode, str]:
 def get_guid(file: Path, scene_name_for_logging:str="get_guid") -> str:
     """Returns the 'guid' property from a file."""
     meta_file = file.with_suffix(file.suffix + ".meta")
-    log(f"Converting {file} to {meta_file}. Opening META...", scene_name_for_logging)
+    #log(f"Converting {file} to {meta_file}. Opening META...", scene_name_for_logging)
     with open(meta_file, "r") as f:
         data = pyyaml.safe_load(f)
     #log(f"Opened {meta_file} and returning guid", scene_name_for_logging)    # Ensure 'guid' exists
