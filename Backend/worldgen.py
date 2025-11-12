@@ -23,7 +23,7 @@ from world import UnityWorld
 MODEL = (os.getenv("MODEL") or "o3-mini").strip() or "o3-mini"
 ASSET_PROJECTS: Path = Path("../Resources/Asset Projects")
 
-DRAWING = True
+DRAWING = False
 if DRAWING:
     print(f"Will draw a graph for Conductor...")
 
