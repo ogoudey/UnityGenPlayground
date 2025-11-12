@@ -23,9 +23,6 @@ from world import UnityWorld
 MODEL = (os.getenv("MODEL") or "o3-mini").strip() or "o3-mini"
 ASSET_PROJECTS: Path = Path("../Resources/Asset Projects")
 
-DRAWING = False
-
-
 class WorldGen:
     def __init__(self, preexisting_world):
         if preexisting_world:
