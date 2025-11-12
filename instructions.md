@@ -66,7 +66,38 @@ xcopy Special-Unity-Assets\* Assets\ /E /I /H /Y
 rmdir /S /Q Special-Unity-Assets
 ```
 
-6. Move a selection of ground materials (`.mat`) and skybox materials (`.mat`) from AllSky and Yughes'.
+6. Move a selection of ground materials (`.mat`) and skybox materials (`.mat`) from AllSky and Yughes'. The folder structure should look like this:
+```
+└── Resources
+    ├── Asset Projects
+    │   ├── name_of_asset_project
+    │   │   ├── asset_catalog.json
+    │   │   ├── Assets
+    │   │   │   ├── AllSkyFree
+    │   │   │   ├── Blue Polygon
+    │   │   │   ├── CastlePack
+    │   │   │   ├── CastlePack.meta
+    │   │   │   ├── Generations
+    │   │   │   ├── Generations.json
+    │   │   │   ├── Ground Materials
+    │   │   │   ├── Manifest
+    │   │   │   ├── MaximeBrunoni
+    │   │   │   ├── Oode studios
+    │   │   │   ├── Oode studios.meta
+    │   │   │   ├── POLYGON city pack
+    │   │   │   ├── POLYGON city pack.meta
+    │   │   │   ├── Proxy Games
+    │   │   │   ├── Scenes
+    │   │   │   ├── Scripts
+    │   │   │   │   ├── gen_menu.cs
+    │   │   │   │   ├── PCPS.cs
+    │   │   │   │   └── EyeTrackingManager.cs
+    │   │   │   ├── Scripts.meta
+    │   │   │   ├── Skybox Materials
+    │   │   │   │   ├── ... a selection of skybox materials ...
+    │   │   │   ├── Sounds
+    │   │   │   └── YughuesFreeGroundMaterials
+```
 7. Finally, register the Asset Project by adding the AcrophobiaWorldGen class to `worldgen.py`'s `Generator_Class_from_Asset_Project_Name`.
 8. Done! Go to the Generation Window to generate worlds.
 
