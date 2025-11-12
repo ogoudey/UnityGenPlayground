@@ -2,7 +2,6 @@ from pathlib import Path
 import os
 import random
 from agents import Runner
-from agents.extensions.visualization import draw_graph
 from orchestra import instruments
 import time
 from typing import Any
