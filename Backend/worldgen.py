@@ -2,7 +2,6 @@ from pathlib import Path
 import os
 import random
 from agents import Runner
-from agents.extensions.visualization import draw_graph
 from orchestra import instruments
 import time
 from typing import Any
@@ -22,10 +21,6 @@ from world import UnityWorld
 
 MODEL = (os.getenv("MODEL") or "o3-mini").strip() or "o3-mini"
 ASSET_PROJECTS: Path = Path("../Resources/Asset Projects")
-
-DRAWING = True
-if DRAWING:
-    print(f"Will draw a graph for Conductor...")
 
 class WorldGen:
     def __init__(self, preexisting_world):
@@ -89,8 +84,7 @@ class UnityWorldGen(WorldGen):
         print(f"Conductor response: \n{result.final_output}")
         log(result.final_output, self.scene_name, wait_time=len(result.final_output)/10)
 
-        if DRAWING:
-            draw_graph(self.conductor, filename=f"{self.conductor.name}_graph")
+
         return path
 
 

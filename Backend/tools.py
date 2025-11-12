@@ -20,10 +20,7 @@ import os
 import traceback
 import asyncio
 
-DRAWING = True
 
-if DRAWING:
-    print(f"Drawing for orchestra")
 
 MODEL = (os.getenv("MODEL") or "o3-mini").strip() or "o3-mini"
 print(f"\nThe model running is {MODEL}. Use \033[1m\033[36mexport MODEL='<model_name>'\033[0m (Linux) or `setx MODEL '<model-name>'` (Windows) to change it.")
