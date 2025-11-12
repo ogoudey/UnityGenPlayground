@@ -28,6 +28,13 @@ Setup proceeds in two or three steps:
 ### 1. Set up the World Generator
 1. Make sure python is installed.
 2. Clone this repository.
+3. Set up the python virtual environment:
+```
+cd Backend
+python3 -m venv .venv
+.venv\Scripts\activate
+pip install -r requirements.txt
+```
 
 ### 2. Set up the Asset Project
 1. Make a new Unity project in the `Asset Projects` directory of the World Generator.
@@ -41,7 +48,7 @@ Setup proceeds in two or three steps:
 - [POLYGON City Pack](https://assetstore.unity.com/packages/3d/environments/urban/city-package-107224)
 - [Yughes Ground Materials](https://assetstore.unity.com/packages/2d/textures-materials/nature/yughues-free-ground-materials-13001)
 3. Download/import those Assets into the Unity project
-4. Now to the certain structure. Clone the [special assets](`[https://github.com/ogoudey/unity-eye-gen-scripts](https://github.com/ogoudey/Special-Unity-Scripts)`) into the Unity project's root directory:
+4. Now to the certain structure. Clone the [special assets](https://github.com/ogoudey/Special-Unity-Scripts) into the Unity project's root directory:
 ```
 Resources/Asset Projects/the new asset project
 ├── Special-Unity-Assets <- here
@@ -59,7 +66,38 @@ xcopy Special-Unity-Assets\* Assets\ /E /I /H /Y
 rmdir /S /Q Special-Unity-Assets
 ```
 
-6. Move a selection of ground materials (`.mat`) and skybox materials (`.mat`) from AllSky and Yughes'.
+6. Move a selection of ground materials (`.mat`) and skybox materials (`.mat`) from AllSky and Yughes'. The folder structure should look like this:
+```
+└── Resources
+    ├── Asset Projects
+    │   ├── name_of_asset_project
+    │   │   ├── asset_catalog.json
+    │   │   ├── Assets
+    │   │   │   ├── AllSkyFree
+    │   │   │   ├── Blue Polygon
+    │   │   │   ├── CastlePack
+    │   │   │   ├── CastlePack.meta
+    │   │   │   ├── Generations
+    │   │   │   ├── Generations.json
+    │   │   │   ├── Ground Materials
+    │   │   │   ├── Manifest
+    │   │   │   ├── MaximeBrunoni
+    │   │   │   ├── Oode studios
+    │   │   │   ├── Oode studios.meta
+    │   │   │   ├── POLYGON city pack
+    │   │   │   ├── POLYGON city pack.meta
+    │   │   │   ├── Proxy Games
+    │   │   │   ├── Scenes
+    │   │   │   ├── Scripts
+    │   │   │   │   ├── gen_menu.cs
+    │   │   │   │   ├── PCPS.cs
+    │   │   │   │   └── EyeTrackingManager.cs
+    │   │   │   ├── Scripts.meta
+    │   │   │   ├── Skybox Materials
+    │   │   │   │   ├── ... a selection of skybox materials ...
+    │   │   │   ├── Sounds
+    │   │   │   └── YughuesFreeGroundMaterials
+```
 7. Finally, register the Asset Project by adding the AcrophobiaWorldGen class to `worldgen.py`'s `Generator_Class_from_Asset_Project_Name`.
 8. Done! Go to the Generation Window to generate worlds.
 

@@ -20,10 +20,7 @@ import os
 import traceback
 import asyncio
 
-DRAWING = True
 
-if DRAWING:
-    print(f"Drawing for orchestra")
 
 MODEL = (os.getenv("MODEL") or "o3-mini").strip() or "o3-mini"
 print(f"\nThe model running is {MODEL}. Use \033[1m\033[36mexport MODEL='<model_name>'\033[0m (Linux) or `setx MODEL '<model-name>'` (Windows) to change it.")
@@ -537,7 +534,7 @@ def asset_lookup(path: Path) -> dict:
         log(f"Oops! {path.as_posix()} not in {list(asset_catalog.keys())}", world.scene_name)
         return None
     
-### Tests ###
+### Testing grounds ###
 if __name__ == "__main__":
     import assets
     from world import UnityWorld
@@ -552,9 +549,3 @@ if __name__ == "__main__":
     #asyncio.run(create_ground("Just return a plain", 10, 1.0, False))
 
     u.done_and_write(str(asset_project / "Assets" / "Generations" / u.scene_name))
-
-
-
-
-
-

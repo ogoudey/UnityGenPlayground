@@ -1,8 +1,6 @@
 openai-agents
 pyyaml
 ruamel.yaml
-flask
-flask[async]
 pydantic
 numpy
 setuptools
