@@ -104,10 +104,6 @@ class VRWorldGen(UnityWorldGen):
     def __init__(self, asset_project_name: str, scene_name: str, restriction: str):
         super().__init__(asset_project_name, scene_name, None, restriction)
         self.conductor.tools.extend([positionVRHumanPlayer, createGround, createSkybox, createSun, createSound, populateHorizon])
-        self.conductor.instructions = Conductor.phobia_v1[MODEL]
-        self.patient = Phobos() 
-
-    
         
 class AcrophobiaWorldGen(VRWorldGen):
     bridge_prompt="Generate a world that triggers acrophobia while crossing a bridge."
