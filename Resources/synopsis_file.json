@@ -18,5 +18,13 @@
   "a 36 m-high gray rectangular building with front-facing balconies at multiple levels and a flat rooftop": "Assets/POLYGON city pack/Prefabs/Buildings/Building_A_prefab.prefab",
   "a 28-meter-tall brown building with a roof": "Assets/POLYGON city pack/Prefabs/Buildings/Building_C1_prefab.prefab",
   "a green rectangular building prefab with a 12 m \u00d7 21.5 m footprint and an 18 m high roof": "Assets/POLYGON city pack/Prefabs/Buildings/Building_H_prefab.prefab",
-  "a squat gray building with a 10 \u00d7 10 m footprint": "Assets/POLYGON city pack/Prefabs/Buildings/Building_A1_prefab.prefab"
+  "a squat gray building with a 10 \u00d7 10 m footprint": "Assets/POLYGON city pack/Prefabs/Buildings/Building_A1_prefab.prefab",
+  "arched wooden footbridge, 5 m long\u00d72 m wide, supported by four pairs of legs, with a gentle 0.5 m rise at its center": "Assets/CastlePack/Prefabs/WoodenBridge.prefab",
+  "an arched wooden footbridge 5 m long and 2 m wide, supported by four pairs of legs, with one-meter-high handrails": "Assets/CastlePack/Prefabs/WoodenBridgeHanddrails.prefab",
+  "arched wooden footbridge with handrails and four pairs of twin legs, 10 m long, 5 m wide, 1.5 m high, walkway 0.7 m above base and 4 m wide": "Assets/CastlePack/Prefabs/StoneBridgeFlat.prefab",
+  "An 8 m-long, 3 m-wide weathered wooden pontoon bridge with three pairs of downward legs and uneven, cracked planks.": "Assets/MaximeBrunoni/BridgesPack/Prefabs/BridgePontoon.prefab",
+  "Rope suspension bridge with two wooden support posts and tension stakes, spanning 13 m by 4 m with 1 m-high rope handrails": "Assets/MaximeBrunoni/BridgesPack/Prefabs/BridgeHanging.prefab",
+  "a 3-meter-tall cylindrical well with a 1.5-meter radius base": "Assets/MaximeBrunoni/BridgesPack/Prefabs/Well.prefab",
+  "low-poly wooden footbridge, 6 m long, 2 m wide walkway, 1 m-high railings, with slight surface cracks": "Assets/Oode studios/Lowpoly nature/Prefabs/Bridges/Bridge.prefab",
+  "a slender gray building with an 18\u00d712 m footprint and 40 m height": "Assets/POLYGON city pack/Prefabs/Buildings/Building_A_slender_prefab.prefab"
 }
