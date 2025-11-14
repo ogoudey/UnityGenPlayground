@@ -56,6 +56,7 @@ class UnityWorldGen(WorldGen):
         if restriction:
             self.conductor.restriction = restriction
         self.conductor_runner = ConductorRunner(run_conductor_function=self.run)
+        log("Worldgen constructed.", scene_name)
 
     async def load(self):
         print("\n  ___Asset Catalog___")
