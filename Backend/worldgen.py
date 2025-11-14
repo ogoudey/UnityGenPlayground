@@ -39,7 +39,7 @@ class UnityWorldGen(WorldGen):
         if self.asset_project_path.exists():
             log(f"Asset Project is \033[1m\033[36m{self.asset_project_path}\033[0m", scene_name)
         else:
-            log(f"Could not find asset project!!", scene_name)
+            log(f"Could not find asset project {self.asset_project_path}!!", scene_name)
             if self.asset_project_path:
                 print(f"Asset project with path {self.asset_project_path} does not exist.")
                 raise FileNotFoundError(f"Asset project with path {self.asset_project_path} does not exist.")
