@@ -34,7 +34,7 @@ class Propositions:
         return name in self.assets 
 
 UNITY_VERSION = (os.getenv("UNITY_VERSION") or "5").strip() or "5"
-VR_HEADSET_TYPE = (os.getenv("VR_HEADSET_TYPE") or "Vive Pro 2").strip() or "Vive Pro 2"
+VR_HEADSET_TYPE = (os.getenv("VR_HEADSET_TYPE") or "Vive Focus 3").strip() or "Vive Focus 3"
 
 print(f"\nGenerating world for \033[1m\033[36mUnity {UNITY_VERSION}\033[0m. Use \033[1m\033[36mexport UNITY_VERSION='<5|6>'\033[0m")
 
@@ -308,14 +308,14 @@ class UnityFile:
           c. SteamVRUnityPlugin/SteamVR: w/o data collection, Unity 5.    # Not needed I guess...
         """
         dispatcher = {"6": {"Vive Pro 2": self.setup_VIVE},
-                      "6": {"Vision Pro 3 something something": self.setup_vision},
+                      "6": {"Vive Focus 3": self.setup_vive_focus},
                       "5": {"Vive Pro 2": self.setup_data_collection}}
         
         dispatch = dispatcher[UNITY_VERSION][VR_HEADSET_TYPE]
         log(f"Unity version {UNITY_VERSION} with {VR_HEADSET_TYPE} headset maps to low-level function `{dispatch.__name__}`", scene_name)
         dispatch(transform, rotation)
 
-    def setup_vision(self, transform: dict, rotation: dict):
+    def setup_vive_focus(self, transform: dict, rotation: dict):
         nodes = compose(Vision_and_Data_Collection_init_text)
         collection = [node_to_python(n) for n in nodes]
 
