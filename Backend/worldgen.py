@@ -7,7 +7,6 @@ import time
 from typing import Any
 import assets
 import synopsis_generator
-from enrichment import Phobos
 from orchestra import Checker, Reformer, Conductor
 from tools import getGroundMatrix, proposeObject, positionObject, positionVRHumanPlayer, createSkybox, createGround, getContactPoints, createSun, populateHorizon, createSound, create50mx50mGround
 
