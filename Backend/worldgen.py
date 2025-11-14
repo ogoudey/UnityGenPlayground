@@ -125,9 +125,10 @@ class AcrophobiaWorldGen(VRWorldGen):
         log("{AcrophobiaWorldGen} initialized.", scene_name)
 
     async def get_prompt(self):
+        # Deprecated.
         print("Getting prompt from patient...")
-        result = await Runner.run(self.patient, self.patient.acrophobia)
-        return result.final_output
+        result = "Deprecated"
+        return result
 
 class Acrophobia50mx50mWorldGen(VRWorldGen):
     bridge_prompt="Generate a world that triggers acrophobia while crossing a bridge."
