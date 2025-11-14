@@ -19,7 +19,7 @@ from world import UnityWorld
 
 
 
-MODEL = (os.getenv("MODEL") or "o3-mini").strip() or "o3-mini"
+MODEL = (os.getenv("MODEL") or "o4-mini").strip() or "o4-mini"
 ASSET_PROJECTS: Path = Path("../Resources/Asset Projects")
 
 class WorldGen:
@@ -36,7 +36,7 @@ class UnityWorldGen(WorldGen):
         super().__init__(preexisting_world)
         self.asset_project_path = ASSET_PROJECTS / Path(asset_project_name)
         instruments.asset_project = self.asset_project_path
-
+        log("Worldgen constructing...", scene_name)
         if self.asset_project_path.exists():
             print(f"Asset Project is \033[1m\033[36m{self.asset_project_path}\033[0m")
         else:
