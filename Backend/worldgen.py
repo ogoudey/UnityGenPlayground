@@ -120,9 +120,9 @@ class AcrophobiaWorldGen(VRWorldGen):
             scene_name = f"acro_50_{MODEL}_{random.randint(100, 999)}"
         restriction = f"These are the assets the system is restricted to:\n{[key.split('/')[-1] for key in list(instruments.asset_catalog.keys())]}" if restricted else ""
         super().__init__(asset_project_name, scene_name, restriction)
-        log("Setting MODEL for Conductor to {MODEL}", scene_name)
+        log(f"Setting MODEL for Conductor to {MODEL}", scene_name)
         self.conductor.instructions = Conductor.acrophobia_v1[MODEL]
-        log("{AcrophobiaWorldGen} initialized.", scene_name)
+        log(f"{AcrophobiaWorldGen} initialized.", scene_name)
 
     async def get_prompt(self):
         # Deprecated.

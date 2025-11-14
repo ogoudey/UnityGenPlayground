@@ -44,7 +44,7 @@ pip install -r requirements.txt
 - [CastlePack](https://assetstore.unity.com/packages/3d/environments/castle-pack-by-progru-185976)
 - [BridgesPack from MaximeBrunoni](https://assetstore.unity.com/packages/3d/props/bridges-pack-212950)
 - [Low Poly Nature from Oode Studios](https://assetstore.unity.com/packages/3d/environments/low-poly-nature-260306)
-- [Stylized Nature Pack from Proxy Games](https://assetstore.unity.com/packages/3d/environments/nature-starter-kit-2-52977)
+- [Stylized Nature Pack from Proxy Games](https://assetstore.unity.com/packages/3d/environments/unl-ultimate-nature-lite-176906)
 - [POLYGON City Pack](https://assetstore.unity.com/packages/3d/environments/urban/city-package-107224)
 - [Yughes Ground Materials](https://assetstore.unity.com/packages/2d/textures-materials/nature/yughues-free-ground-materials-13001)
 3. Download/import those Assets into the Unity project
