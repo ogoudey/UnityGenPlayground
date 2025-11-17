@@ -14,7 +14,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.14"
+          python-version: "3.11"
 
       - name: Install dependencies
         run: |
@@ -25,7 +25,7 @@ jobs:
       - name: Build EXE
         working-directory: Backend
         run: |
-          pyinstaller --onefile --name acrogen main.py
+          pyinstaller --onefile --name acrogen main.py --hidden-import=_sqlite3
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
