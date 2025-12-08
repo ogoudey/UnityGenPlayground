@@ -42,21 +42,3 @@ if __name__ == "__main__":
             asyncio.run(test_function())  # default per WorldGen subclass 
     except IndexError:
         print("Please include test from:", list(test_dispatcher.keys()))
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

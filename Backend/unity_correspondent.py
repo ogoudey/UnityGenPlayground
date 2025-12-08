@@ -20,7 +20,9 @@ async def process(arg_tuple: List[str]):
     log(f"CWD: {os.getcwd()}", scene_name)
     log("Beginning generation of Unity World...", scene_name)
     world_gen = Class(asset_project, scene_name)
+    log("Generator class recovered...", scene_name)
     await world_gen.load()
+    log("Assets loaded...", scene_name)
     await world_gen.run(prompt)
     done(scene_name)
 

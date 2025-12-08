@@ -1,0 +1,966 @@
+{
+  "summary": {
+    "fear_index": 0.5203105724198055,
+    "mean_power": 0.0534479485721651,
+    "std_power": 0.06358184837419871,
+    "max_fear": 0.9802456673292517,
+    "avg_fear": 0.48878745155385,
+    "samples_processed": 136
+  },
+  "timeline": [
+    {
+      "timestamp": 0,
+      "pupil_size": 5.224538,
+      "luminance": 0.3867604,
+      "fear_level": 0.7403107331165446,
+      "z_score": 1.0475842187678333
+    },
+    {
+      "timestamp": 1,
+      "pupil_size": 5.231998,
+      "luminance": 0.3865355,
+      "fear_level": 0.7396874379416142,
+      "z_score": 1.044344645049491
+    },
+    {
+      "timestamp": 2,
+      "pupil_size": 4.663625,
+      "luminance": 0.366628,
+      "fear_level": 0.21645406885262938,
+      "z_score": -1.2864513112828553
+    },
+    {
+      "timestamp": 3,
+      "pupil_size": 4.795875,
+      "luminance": 0.3644575,
+      "fear_level": 0.1949509080626948,
+      "z_score": -1.418155485988312
+    },
+    {
+      "timestamp": 4,
+      "pupil_size": 4.279881,
+      "luminance": 0.06575844,
+      "fear_level": 0.7294034095281016,
+      "z_score": 0.9915978370169021
+    },
+    {
+      "timestamp": 5,
+      "pupil_size": 4.910883,
+      "luminance": 0.1624946,
+      "fear_level": 0.26772511719206027,
+      "z_score": -1.0061951944120613
+    },
+    {
+      "timestamp": 6,
+      "pupil_size": 4.427962,
+      "luminance": 0.3779117,
+      "fear_level": 0.4550461963160994,
+      "z_score": -0.1803020830256867
+    },
+    {
+      "timestamp": 7,
+      "pupil_size": 4.274936,
+      "luminance": 0.3781222,
+      "fear_level": 0.772839717975966,
+      "z_score": 1.224415819944067
+    },
+    {
+      "timestamp": 8,
+      "pupil_size": 4.342466,
+      "luminance": 0.3778018,
+      "fear_level": 0.6462650211311348,
+      "z_score": 0.602661683587939
+    },
+    {
+      "timestamp": 9,
+      "pupil_size": 4.497551,
+      "luminance": 0.3775511,
+      "fear_level": 0.37008405546423695,
+      "z_score": -0.5318562323444818
+    },
+    {
+      "timestamp": 10,
+      "pupil_size": 4.277804,
+      "luminance": 0.3576676,
+      "fear_level": 0.7918204578897861,
+      "z_score": 1.3359337809366152
+    },
+    {
+      "timestamp": 11,
+      "pupil_size": 4.504221,
+      "luminance": 0.06814974,
+      "fear_level": 0.38510496926969573,
+      "z_score": -0.4679356269194127
+    },
+    {
+      "timestamp": 12,
+      "pupil_size": 4.318053,
+      "luminance": 0.06763703,
+      "fear_level": 0.7821412159686948,
+      "z_score": 1.2781882341060473
+    },
+    {
+      "timestamp": 13,
+      "pupil_size": 4.59408,
+      "luminance": 0.07259414,
+      "fear_level": 0.2864757847850507,
+      "z_score": -0.9125623632117733
+    },
+    {
+      "timestamp": 14,
+      "pupil_size": 4.533098,
+      "luminance": 0.07478129,
+      "fear_level": 0.32694871727092106,
+      "z_score": -0.7220181962526401
+    },
+    {
+      "timestamp": 15,
+      "pupil_size": 4.46058,
+      "luminance": 0.0750666,
+      "fear_level": 0.43593661185905785,
+      "z_score": -0.25766978836840515
+    },
+    {
+      "timestamp": 16,
+      "pupil_size": 4.449687,
+      "luminance": 0.1323232,
+      "fear_level": 0.4589708868433621,
+      "z_score": -0.1644863103043675
+    },
+    {
+      "timestamp": 17,
+      "pupil_size": 4.597099,
+      "luminance": 0.3319171,
+      "fear_level": 0.27219624591897773,
+      "z_score": -0.983508144791825
+    },
+    {
+      "timestamp": 18,
+      "pupil_size": 4.517208,
+      "luminance": 0.3286439,
+      "fear_level": 0.37854503991162053,
+      "z_score": -0.4957283770343073
+    },
+    {
+      "timestamp": 19,
+      "pupil_size": 4.404761,
+      "luminance": 0.3805552,
+      "fear_level": 0.5967087983143612,
+      "z_score": 0.3917703335380021
+    },
+    {
+      "timestamp": 20,
+      "pupil_size": 4.680714,
+      "luminance": 0.3505571,
+      "fear_level": 0.27779011806184506,
+      "z_score": -0.9554499342984093
+    },
+    {
+      "timestamp": 21,
+      "pupil_size": 4.665485,
+      "luminance": 0.4020702,
+      "fear_level": 0.30071582498435984,
+      "z_score": -0.8438914889425965
+    },
+    {
+      "timestamp": 22,
+      "pupil_size": 4.364098,
+      "luminance": 0.4427984,
+      "fear_level": 0.7255283793418196,
+      "z_score": 0.9720523184772157
+    },
+    {
+      "timestamp": 23,
+      "pupil_size": 4.20472,
+      "luminance": 0.309006,
+      "fear_level": 0.9563277794156692,
+      "z_score": 3.086388504384667
+    },
+    {
+      "timestamp": 24,
+      "pupil_size": 4.381008,
+      "luminance": 0.07480436,
+      "fear_level": 0.6904779559976966,
+      "z_score": 0.8023547334926754
+    },
+    {
+      "timestamp": 25,
+      "pupil_size": 4.664948,
+      "luminance": 0.07467493,
+      "fear_level": 0.2927763377255661,
+      "z_score": -0.8819380048194119
+    },
+    {
+      "timestamp": 26,
+      "pupil_size": 4.365,
+      "luminance": 0.0764613,
+      "fear_level": 0.5895596544604631,
+      "z_score": 0.36214531300152797
+    },
+    {
+      "timestamp": 27,
+      "pupil_size": 4.73212,
+      "luminance": 0.04688955,
+      "fear_level": 0.31502374646817316,
+      "z_score": -0.7767361496869087
+    },
+    {
+      "timestamp": 28,
+      "pupil_size": 4.828224,
+      "luminance": 0.3856368,
+      "fear_level": 0.32637010740254324,
+      "z_score": -0.724648803131789
+    },
+    {
+      "timestamp": 29,
+      "pupil_size": 4.903742,
+      "luminance": 0.06582987,
+      "fear_level": 0.34763124212556185,
+      "z_score": -0.6294677127238343
+    },
+    {
+      "timestamp": 30,
+      "pupil_size": 4.775818,
+      "luminance": 0.07219578,
+      "fear_level": 0.3206882662801643,
+      "z_score": -0.7506106111085421
+    },
+    {
+      "timestamp": 31,
+      "pupil_size": 4.801178,
+      "luminance": 0.07643592,
+      "fear_level": 0.3212797502976635,
+      "z_score": -0.7478967994260396
+    },
+    {
+      "timestamp": 32,
+      "pupil_size": 5.017701,
+      "luminance": 0.4244948,
+      "fear_level": 0.42996711836118573,
+      "z_score": -0.28198530941416344
+    },
+    {
+      "timestamp": 33,
+      "pupil_size": 5.161508,
+      "luminance": 0.3221797,
+      "fear_level": 0.6003211990258633,
+      "z_score": 0.4068036167189342
+    },
+    {
+      "timestamp": 34,
+      "pupil_size": 5.153968,
+      "luminance": 0.2936899,
+      "fear_level": 0.6157187666253016,
+      "z_score": 0.4714156484883442
+    },
+    {
+      "timestamp": 35,
+      "pupil_size": 5.467484,
+      "luminance": 0.3819048,
+      "fear_level": 0.9457934947076235,
+      "z_score": 2.859223327013663
+    },
+    {
+      "timestamp": 36,
+      "pupil_size": 5.432284,
+      "luminance": 0.3969884,
+      "fear_level": 0.9262167794737943,
+      "z_score": 2.5299769687400473
+    },
+    {
+      "timestamp": 37,
+      "pupil_size": 4.810162,
+      "luminance": 0.3039588,
+      "fear_level": 0.3730058316986151,
+      "z_score": -0.5193431855326032
+    },
+    {
+      "timestamp": 38,
+      "pupil_size": 4.408288,
+      "luminance": 0.07367769,
+      "fear_level": 0.5519042493639901,
+      "z_score": 0.2083676312574134
+    },
+    {
+      "timestamp": 39,
+      "pupil_size": 4.581614,
+      "luminance": 0.07481382,
+      "fear_level": 0.40947974704418133,
+      "z_score": -0.36611648872445096
+    },
+    {
+      "timestamp": 40,
+      "pupil_size": 4.581614,
+      "luminance": 0.08200836,
+      "fear_level": 0.4089955278401287,
+      "z_score": -0.3681193628770412
+    },
+    {
+      "timestamp": 41,
+      "pupil_size": 4.766391,
+      "luminance": 0.3335975,
+      "fear_level": 0.3668387493001368,
+      "z_score": -0.5458027538484456
+    },
+    {
+      "timestamp": 42,
+      "pupil_size": 4.766391,
+      "luminance": 0.3190054,
+      "fear_level": 0.36635127146655194,
+      "z_score": -0.5479021137172152
+    },
+    {
+      "timestamp": 43,
+      "pupil_size": 4.872193,
+      "luminance": 0.3559362,
+      "fear_level": 0.3967454164004155,
+      "z_score": -0.4190444961783442
+    },
+    {
+      "timestamp": 44,
+      "pupil_size": 4.872193,
+      "luminance": 0.3213469,
+      "fear_level": 0.4074237364388439,
+      "z_score": -0.3746258142745154
+    },
+    {
+      "timestamp": 45,
+      "pupil_size": 4.819024,
+      "luminance": 0.1727381,
+      "fear_level": 0.40288336234802535,
+      "z_score": -0.39346537065957315
+    },
+    {
+      "timestamp": 46,
+      "pupil_size": 4.692616,
+      "luminance": 0.06520195,
+      "fear_level": 0.41635969155793445,
+      "z_score": -0.33773535303487673
+    },
+    {
+      "timestamp": 47,
+      "pupil_size": 4.774363,
+      "luminance": 0.3338397,
+      "fear_level": 0.36715175571049796,
+      "z_score": -0.5444553870589147
+    },
+    {
+      "timestamp": 48,
+      "pupil_size": 4.691802,
+      "luminance": 0.2826466,
+      "fear_level": 0.38604179141978984,
+      "z_score": -0.4639812300978589
+    },
+    {
+      "timestamp": 49,
+      "pupil_size": 4.919776,
+      "luminance": 0.3370303,
+      "fear_level": 0.8767621163827982,
+      "z_score": 1.9621192078553016
+    },
+    {
+      "timestamp": 50,
+      "pupil_size": 4.808729,
+      "luminance": 0.3525334,
+      "fear_level": 0.3909371961837876,
+      "z_score": -0.4433744650146159
+    },
+    {
+      "timestamp": 51,
+      "pupil_size": 4.835166,
+      "luminance": 0.1986152,
+      "fear_level": 0.4516412544252734,
+      "z_score": -0.19404153817289055
+    },
+    {
+      "timestamp": 52,
+      "pupil_size": 4.801085,
+      "luminance": 0.05855284,
+      "fear_level": 0.39622022886444735,
+      "z_score": -0.421239323954874
+    },
+    {
+      "timestamp": 53,
+      "pupil_size": 4.914346,
+      "luminance": 0.3454642,
+      "fear_level": 0.585799129256605,
+      "z_score": 0.3466258967863685
+    },
+    {
+      "timestamp": 54,
+      "pupil_size": 4.810052,
+      "luminance": 0.06890395,
+      "fear_level": 0.4090713072203116,
+      "z_score": -0.3678058688031971
+    },
+    {
+      "timestamp": 55,
+      "pupil_size": 4.714616,
+      "luminance": 0.07124251,
+      "fear_level": 0.38809332158471843,
+      "z_score": -0.4553339543842487
+    },
+    {
+      "timestamp": 56,
+      "pupil_size": 4.756716,
+      "luminance": 0.06469502,
+      "fear_level": 0.3839301060343448,
+      "z_score": -0.47289990084157224
+    },
+    {
+      "timestamp": 57,
+      "pupil_size": 4.670845,
+      "luminance": 0.06646328,
+      "fear_level": 0.4245553753538779,
+      "z_score": -0.30410055657701907
+    },
+    {
+      "timestamp": 58,
+      "pupil_size": 4.670845,
+      "luminance": 0.1700347,
+      "fear_level": 0.4244677491136037,
+      "z_score": -0.30445923731391433
+    },
+    {
+      "timestamp": 59,
+      "pupil_size": 4.686675,
+      "luminance": 0.3942324,
+      "fear_level": 0.40840282480144846,
+      "z_score": -0.370571952956504
+    },
+    {
+      "timestamp": 60,
+      "pupil_size": 4.367014,
+      "luminance": 0.3760604,
+      "fear_level": 0.9802456673292517,
+      "z_score": 3.9044303781757277
+    },
+    {
+      "timestamp": 61,
+      "pupil_size": 4.508461,
+      "luminance": 0.3871217,
+      "fear_level": 0.7798371868080114,
+      "z_score": 1.2647178304273565
+    },
+    {
+      "timestamp": 62,
+      "pupil_size": 4.733954,
+      "luminance": 0.4182574,
+      "fear_level": 0.38601297887421543,
+      "z_score": -0.4641027967660851
+    },
+    {
+      "timestamp": 63,
+      "pupil_size": 4.688341,
+      "luminance": 0.06979932,
+      "fear_level": 0.39768817919471494,
+      "z_score": -0.41510705711390333
+    },
+    {
+      "timestamp": 64,
+      "pupil_size": 4.635971,
+      "luminance": 0.05216831,
+      "fear_level": 0.4498757796321807,
+      "z_score": -0.2011726085442462
+    },
+    {
+      "timestamp": 65,
+      "pupil_size": 4.730039,
+      "luminance": 0.06013997,
+      "fear_level": 0.35879982427278373,
+      "z_score": -0.5805770543744542
+    },
+    {
+      "timestamp": 66,
+      "pupil_size": 4.69997,
+      "luminance": 0.06218506,
+      "fear_level": 0.35157776418740594,
+      "z_score": -0.612111160607021
+    },
+    {
+      "timestamp": 67,
+      "pupil_size": 4.714476,
+      "luminance": 0.06208765,
+      "fear_level": 0.3293909561358755,
+      "z_score": -0.7109409583700824
+    },
+    {
+      "timestamp": 68,
+      "pupil_size": 4.809561,
+      "luminance": 0.06843908,
+      "fear_level": 0.32721323695031224,
+      "z_score": -0.7208163749069804
+    },
+    {
+      "timestamp": 69,
+      "pupil_size": 4.812912,
+      "luminance": 0.07494478,
+      "fear_level": 0.3275744748287256,
+      "z_score": -0.7191759288236674
+    },
+    {
+      "timestamp": 70,
+      "pupil_size": 4.8304,
+      "luminance": 0.0541233,
+      "fear_level": 0.33831070479480074,
+      "z_score": -0.670831384979814
+    },
+    {
+      "timestamp": 71,
+      "pupil_size": 4.899888,
+      "luminance": 0.06446487,
+      "fear_level": 0.43016293114809134,
+      "z_score": -0.28118642928171966
+    },
+    {
+      "timestamp": 72,
+      "pupil_size": 4.935491,
+      "luminance": 0.05567963,
+      "fear_level": 0.516346790104699,
+      "z_score": 0.06541047216642176
+    },
+    {
+      "timestamp": 73,
+      "pupil_size": 5.010984,
+      "luminance": 0.131145,
+      "fear_level": 0.7074596767146141,
+      "z_score": 0.8830781192938322
+    },
+    {
+      "timestamp": 74,
+      "pupil_size": 5.126595,
+      "luminance": 0.2959982,
+      "fear_level": 0.9354582470460958,
+      "z_score": 2.6737241660286553
+    },
+    {
+      "timestamp": 75,
+      "pupil_size": 5.031877,
+      "luminance": 0.3810377,
+      "fear_level": 0.7545149033675546,
+      "z_score": 1.1228387914433215
+    },
+    {
+      "timestamp": 76,
+      "pupil_size": 5.019925,
+      "luminance": 0.07057375,
+      "fear_level": 0.7101638740610069,
+      "z_score": 0.8961800716478209
+    },
+    {
+      "timestamp": 77,
+      "pupil_size": 5.065275,
+      "luminance": 0.06704395,
+      "fear_level": 0.8223758936772909,
+      "z_score": 1.5325280269623545
+    },
+    {
+      "timestamp": 78,
+      "pupil_size": 4.848528,
+      "luminance": 0.07036211,
+      "fear_level": 0.3148805826308825,
+      "z_score": -0.7773996908049878
+    },
+    {
+      "timestamp": 79,
+      "pupil_size": 4.834087,
+      "luminance": 0.07319859,
+      "fear_level": 0.28384282127945987,
+      "z_score": -0.9254790274673871
+    },
+    {
+      "timestamp": 80,
+      "pupil_size": 5.002756,
+      "luminance": 0.07649014,
+      "fear_level": 0.587062773879491,
+      "z_score": 0.35183616773684795
+    },
+    {
+      "timestamp": 81,
+      "pupil_size": 4.849805,
+      "luminance": 0.0594022,
+      "fear_level": 0.2805759696111453,
+      "z_score": -0.941606409383303
+    },
+    {
+      "timestamp": 82,
+      "pupil_size": 4.804854,
+      "luminance": 0.06950167,
+      "fear_level": 0.2512488777120304,
+      "z_score": -1.091962655765112
+    },
+    {
+      "timestamp": 83,
+      "pupil_size": 4.826335,
+      "luminance": 0.05673797,
+      "fear_level": 0.25977373978648244,
+      "z_score": -1.0471448759556048
+    },
+    {
+      "timestamp": 84,
+      "pupil_size": 4.961447,
+      "luminance": 0.06982373,
+      "fear_level": 0.4760904184272441,
+      "z_score": -0.09571132430998003
+    },
+    {
+      "timestamp": 85,
+      "pupil_size": 4.995275,
+      "luminance": 0.0709428,
+      "fear_level": 0.6225895741640792,
+      "z_score": 0.5005542542472963
+    },
+    {
+      "timestamp": 86,
+      "pupil_size": 4.958754,
+      "luminance": 0.06770804,
+      "fear_level": 0.5385982732138292,
+      "z_score": 0.15470088608273838
+    },
+    {
+      "timestamp": 87,
+      "pupil_size": 4.618349,
+      "luminance": 0.05415937,
+      "fear_level": 0.3721851506344588,
+      "z_score": -0.522853849934923
+    },
+    {
+      "timestamp": 88,
+      "pupil_size": 4.391375,
+      "luminance": 0.05002777,
+      "fear_level": 0.9402421896762555,
+      "z_score": 2.7558375916857876
+    },
+    {
+      "timestamp": 89,
+      "pupil_size": 4.462379,
+      "luminance": 0.06467916,
+      "fear_level": 0.8086162355355424,
+      "z_score": 1.441043785318425
+    },
+    {
+      "timestamp": 90,
+      "pupil_size": 4.724108,
+      "luminance": 0.05047853,
+      "fear_level": 0.30127916039847136,
+      "z_score": -0.841214013241082
+    },
+    {
+      "timestamp": 91,
+      "pupil_size": 4.863523,
+      "luminance": 0.05614228,
+      "fear_level": 0.3951106798864816,
+      "z_score": -0.42587957143773125
+    },
+    {
+      "timestamp": 92,
+      "pupil_size": 4.979524,
+      "luminance": 0.05674157,
+      "fear_level": 0.6843759358312981,
+      "z_score": 0.7739555454134832
+    },
+    {
+      "timestamp": 93,
+      "pupil_size": 4.981612,
+      "luminance": 0.4028453,
+      "fear_level": 0.6908847827233319,
+      "z_score": 0.8042589911126866
+    },
+    {
+      "timestamp": 94,
+      "pupil_size": 4.792631,
+      "luminance": 0.3753388,
+      "fear_level": 0.3215534056249068,
+      "z_score": -0.7466421210643224
+    },
+    {
+      "timestamp": 95,
+      "pupil_size": 4.680259,
+      "luminance": 0.06534404,
+      "fear_level": 0.3435767475103717,
+      "z_score": -0.6473952681728006
+    },
+    {
+      "timestamp": 96,
+      "pupil_size": 4.697467,
+      "luminance": 0.3430226,
+      "fear_level": 0.3320789269750557,
+      "z_score": -0.698797339886292
+    },
+    {
+      "timestamp": 97,
+      "pupil_size": 4.705929,
+      "luminance": 0.06461883,
+      "fear_level": 0.3244140930026382,
+      "z_score": -0.7335595601501909
+    },
+    {
+      "timestamp": 98,
+      "pupil_size": 4.79276,
+      "luminance": 0.06404331,
+      "fear_level": 0.32434119493824987,
+      "z_score": -0.7338921898864769
+    },
+    {
+      "timestamp": 99,
+      "pupil_size": 4.723353,
+      "luminance": 0.06481375,
+      "fear_level": 0.3204104004238462,
+      "z_score": -0.7518864105215721
+    },
+    {
+      "timestamp": 100,
+      "pupil_size": 4.568949,
+      "luminance": 0.07866335,
+      "fear_level": 0.5964839128920225,
+      "z_score": 0.39083591617534774
+    },
+    {
+      "timestamp": 101,
+      "pupil_size": 4.798733,
+      "luminance": 0.08006968,
+      "fear_level": 0.3460441381497554,
+      "z_score": -0.6364735258254925
+    },
+    {
+      "timestamp": 102,
+      "pupil_size": 4.749363,
+      "luminance": 0.06439871,
+      "fear_level": 0.3233912648625522,
+      "z_score": -0.7382302301469997
+    },
+    {
+      "timestamp": 103,
+      "pupil_size": 4.840691,
+      "luminance": 0.06609631,
+      "fear_level": 0.41523173352176845,
+      "z_score": -0.34237888465999516
+    },
+    {
+      "timestamp": 104,
+      "pupil_size": 4.883174,
+      "luminance": 0.06384377,
+      "fear_level": 0.514493339572913,
+      "z_score": 0.05798960342014839
+    },
+    {
+      "timestamp": 105,
+      "pupil_size": 5.063499,
+      "luminance": 0.07367691,
+      "fear_level": 0.9587381991409036,
+      "z_score": 3.1456808907175104
+    },
+    {
+      "timestamp": 106,
+      "pupil_size": 5.017424,
+      "luminance": 0.07237756,
+      "fear_level": 0.8913450141598799,
+      "z_score": 2.104553979147267
+    },
+    {
+      "timestamp": 107,
+      "pupil_size": 4.907198,
+      "luminance": 0.07756528,
+      "fear_level": 0.5162635122402608,
+      "z_score": 0.06507700608945799
+    },
+    {
+      "timestamp": 108,
+      "pupil_size": 4.79992,
+      "luminance": 0.06244725,
+      "fear_level": 0.3288875854338465,
+      "z_score": -0.713220649058956
+    },
+    {
+      "timestamp": 109,
+      "pupil_size": 4.737175,
+      "luminance": 0.0609578,
+      "fear_level": 0.29695361936165104,
+      "z_score": -0.8618469020954895
+    },
+    {
+      "timestamp": 110,
+      "pupil_size": 4.618418,
+      "luminance": 0.06958134,
+      "fear_level": 0.376125741284066,
+      "z_score": -0.5060253338025724
+    },
+    {
+      "timestamp": 111,
+      "pupil_size": 4.618418,
+      "luminance": 0.0656021,
+      "fear_level": 0.3866102988205111,
+      "z_score": -0.46158325591594046
+    },
+    {
+      "timestamp": 112,
+      "pupil_size": 4.788292,
+      "luminance": 0.06512216,
+      "fear_level": 0.30176778400052995,
+      "z_score": -0.8388939406642264
+    },
+    {
+      "timestamp": 113,
+      "pupil_size": 4.925264,
+      "luminance": 0.3576437,
+      "fear_level": 0.4809075524338813,
+      "z_score": -0.07640694068384464
+    },
+    {
+      "timestamp": 114,
+      "pupil_size": 4.888682,
+      "luminance": 0.3740669,
+      "fear_level": 0.3838203735598874,
+      "z_score": -0.47336385643187057
+    },
+    {
+      "timestamp": 115,
+      "pupil_size": 4.616726,
+      "luminance": 0.4581139,
+      "fear_level": 0.35884490908664407,
+      "z_score": -0.5803810921273297
+    },
+    {
+      "timestamp": 116,
+      "pupil_size": 4.423444,
+      "luminance": 0.4681319,
+      "fear_level": 0.8345297254530503,
+      "z_score": 1.618076794445111
+    },
+    {
+      "timestamp": 117,
+      "pupil_size": 4.408502,
+      "luminance": 0.0745638,
+      "fear_level": 0.8756211055816776,
+      "z_score": 1.9516009625997723
+    },
+    {
+      "timestamp": 118,
+      "pupil_size": 4.43291,
+      "luminance": 0.07631655,
+      "fear_level": 0.8286969350574759,
+      "z_score": 1.5764202119329094
+    },
+    {
+      "timestamp": 119,
+      "pupil_size": 4.559577,
+      "luminance": 0.06657901,
+      "fear_level": 0.5158785933469486,
+      "z_score": 0.06353573813280504
+    },
+    {
+      "timestamp": 120,
+      "pupil_size": 4.802331,
+      "luminance": 0.3193224,
+      "fear_level": 0.33288395149024175,
+      "z_score": -0.6951700813346142
+    },
+    {
+      "timestamp": 121,
+      "pupil_size": 4.831866,
+      "luminance": 0.3518634,
+      "fear_level": 0.34759093004776415,
+      "z_score": -0.6296454731131719
+    },
+    {
+      "timestamp": 122,
+      "pupil_size": 4.673124,
+      "luminance": 0.06455746,
+      "fear_level": 0.3254824489644491,
+      "z_score": -0.7286891561553291
+    },
+    {
+      "timestamp": 123,
+      "pupil_size": 4.393346,
+      "luminance": 0.05139592,
+      "fear_level": 0.8609295096461542,
+      "z_score": 1.8230317013123487
+    },
+    {
+      "timestamp": 124,
+      "pupil_size": 4.55391,
+      "luminance": 0.05125885,
+      "fear_level": 0.4751821817747469,
+      "z_score": -0.09935291838426397
+    },
+    {
+      "timestamp": 125,
+      "pupil_size": 4.708144,
+      "luminance": 0.3459005,
+      "fear_level": 0.28293712785841235,
+      "z_score": -0.9299388146230188
+    },
+    {
+      "timestamp": 126,
+      "pupil_size": 4.753274,
+      "luminance": 0.3681529,
+      "fear_level": 0.27969172558239425,
+      "z_score": -0.9459912627069684
+    },
+    {
+      "timestamp": 127,
+      "pupil_size": 4.668709,
+      "luminance": 0.385414,
+      "fear_level": 0.31754658943476066,
+      "z_score": -0.7650697158760995
+    },
+    {
+      "timestamp": 128,
+      "pupil_size": 4.686287,
+      "luminance": 0.3835161,
+      "fear_level": 0.31634980986156735,
+      "z_score": -0.7705977743230122
+    },
+    {
+      "timestamp": 129,
+      "pupil_size": 4.710769,
+      "luminance": 0.3848209,
+      "fear_level": 0.31635302932694026,
+      "z_score": -0.7705828882188205
+    },
+    {
+      "timestamp": 130,
+      "pupil_size": 4.956328,
+      "luminance": 0.3841684,
+      "fear_level": 0.5690524590808709,
+      "z_score": 0.27798625720673187
+    },
+    {
+      "timestamp": 131,
+      "pupil_size": 5.103387,
+      "luminance": 0.3842037,
+      "fear_level": 0.8983650849236348,
+      "z_score": 2.179189410612974
+    },
+    {
+      "timestamp": 132,
+      "pupil_size": 4.958883,
+      "luminance": 0.3841947,
+      "fear_level": 0.5506263999342969,
+      "z_score": 0.20320192595459385
+    },
+    {
+      "timestamp": 133,
+      "pupil_size": 4.933115,
+      "luminance": 0.372301,
+      "fear_level": 0.4786082681957751,
+      "z_score": -0.08561919257028743
+    },
+    {
+      "timestamp": 134,
+      "pupil_size": 5.009444,
+      "luminance": 0.4255086,
+      "fear_level": 0.7299604962369749,
+      "z_score": 0.9944221594048086
+    },
+    {
+      "timestamp": 135,
+      "pupil_size": 4.840219,
+      "luminance": 0.460561,
+      "fear_level": 0.3632934038329811,
+      "z_score": -0.561098164090176
+    }
+  ],
+  "file": "Pupil_log_Standard_11251608_001.csv",
+  "timestamp": "2025-11-27T16:29:17.121687"
+}

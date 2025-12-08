@@ -34,7 +34,7 @@ class Propositions:
         return name in self.assets 
 
 UNITY_VERSION = (os.getenv("UNITY_VERSION") or "5").strip() or "5"
-VR_HEADSET_TYPE = (os.getenv("VR_HEADSET_TYPE") or "Vive Pro 2").strip() or "Vive Pro 2"
+VR_HEADSET_TYPE = (os.getenv("VR_HEADSET_TYPE") or "Vive Focus 3").strip() or "Vive Focus 3"
 
 print(f"\nGenerating world for \033[1m\033[36mUnity {UNITY_VERSION}\033[0m. Use \033[1m\033[36mexport UNITY_VERSION='<5|6>'\033[0m")
 
@@ -308,11 +308,45 @@ class UnityFile:
           c. SteamVRUnityPlugin/SteamVR: w/o data collection, Unity 5.    # Not needed I guess...
         """
         dispatcher = {"6": {"Vive Pro 2": self.setup_VIVE},
+                      "6": {"Vive Focus 3": self.setup_vive_focus},
                       "5": {"Vive Pro 2": self.setup_data_collection}}
         
         dispatch = dispatcher[UNITY_VERSION][VR_HEADSET_TYPE]
         log(f"Unity version {UNITY_VERSION} with {VR_HEADSET_TYPE} headset maps to low-level function `{dispatch.__name__}`", scene_name)
         dispatch(transform, rotation)
+
+    def setup_vive_focus(self, transform: dict, rotation: dict):
+        nodes = compose(Vision_and_Data_Collection_init_text)
+        collection = [node_to_python(n) for n in nodes]
+
+        # get camera to set its orientation.
+        collection_root = collection[6] # its one of the members of the prefab collection
+
+        if collection_root is None:
+            print("Cannot find [what the root is] prefab in init text (??)")
+        quaternion = euler_to_xyzw_quaternion(rotation)
+
+        modifications = collection_root["PrefabInstance"]["m_Modification"]["m_Modifications"]
+        for mod in modifications:
+            if "target" in mod and "guid" in mod["target"]:
+                if mod.get("propertyPath") == "m_LocalPosition.x":
+                    mod["value"] = transform["x"]
+                if mod.get("propertyPath") == "m_LocalPosition.y":
+                    mod["value"] = transform["y"]
+                if mod.get("propertyPath") == "m_LocalPosition.z":
+                    mod["value"] = transform["z"]
+                if mod.get("propertyPath") == "m_LocalRotation.x":
+                    mod["value"] = quaternion[0]
+                if mod.get("propertyPath") == "m_LocalRotation.y":
+                    mod["value"] = quaternion[1]
+                if mod.get("propertyPath") == "m_LocalRotation.z":
+                    mod["value"] = quaternion[2]
+                if mod.get("propertyPath") == "m_LocalRotation.w":
+                    mod["value"] = quaternion[3]
+
+        # Append the edited collection
+        for doc in collection: # could also use .extend(coll)
+            self.wrapped.append(doc)
 
     def setup_data_collection(self, transform: dict, rotation: dict):
         nodes = compose(SRanipal_and_SteamVR_setup_init_text)
@@ -1004,6 +1038,15 @@ Transform:
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 """
+
+Vision_and_Data_Collection_init_text = """
+
+
+>>> PASTE HERE <<<
+
+
+"""
+
 SRanipal_and_SteamVR_setup_init_text = """
 --- !u!1001 &371934674
 PrefabInstance:

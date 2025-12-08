@@ -2,13 +2,11 @@ from pathlib import Path
 import os
 import random
 from agents import Runner
-from agents.extensions.visualization import draw_graph
 from orchestra import instruments
 import time
 from typing import Any
 import assets
 import synopsis_generator
-from enrichment import Phobos
 from orchestra import Checker, Reformer, Conductor
 from tools import getGroundMatrix, proposeObject, positionObject, positionVRHumanPlayer, createSkybox, createGround, getContactPoints, createSun, populateHorizon, createSound, create50mx50mGround
 
@@ -20,12 +18,8 @@ from world import UnityWorld
 
 
 
-MODEL = (os.getenv("MODEL") or "o3-mini").strip() or "o3-mini"
+MODEL = (os.getenv("MODEL") or "o4-mini").strip() or "o4-mini"
 ASSET_PROJECTS: Path = Path("../Resources/Asset Projects")
-
-DRAWING = True
-if DRAWING:
-    print(f"Will draw a graph for Conductor...")
 
 class WorldGen:
     def __init__(self, preexisting_world):
@@ -41,10 +35,11 @@ class UnityWorldGen(WorldGen):
         super().__init__(preexisting_world)
         self.asset_project_path = ASSET_PROJECTS / Path(asset_project_name)
         instruments.asset_project = self.asset_project_path
-
+        log("Worldgen constructing...", scene_name)
         if self.asset_project_path.exists():
-            print(f"Asset Project is \033[1m\033[36m{self.asset_project_path}\033[0m")
+            log(f"Asset Project is \033[1m\033[36m{self.asset_project_path}\033[0m", scene_name)
         else:
+            log(f"Could not find asset project {self.asset_project_path}!!", scene_name)
             if self.asset_project_path:
                 print(f"Asset project with path {self.asset_project_path} does not exist.")
                 raise FileNotFoundError(f"Asset project with path {self.asset_project_path} does not exist.")
@@ -61,6 +56,7 @@ class UnityWorldGen(WorldGen):
         if restriction:
             self.conductor.restriction = restriction
         self.conductor_runner = ConductorRunner(run_conductor_function=self.run)
+        log("Worldgen constructed.", scene_name)
 
     async def load(self):
         print("\n  ___Asset Catalog___")
@@ -89,8 +85,7 @@ class UnityWorldGen(WorldGen):
         print(f"Conductor response: \n{result.final_output}")
         log(result.final_output, self.scene_name, wait_time=len(result.final_output)/10)
 
-        if DRAWING:
-            draw_graph(self.conductor, filename=f"{self.conductor.name}_graph")
+
         return path
 
 
@@ -109,10 +104,6 @@ class VRWorldGen(UnityWorldGen):
     def __init__(self, asset_project_name: str, scene_name: str, restriction: str):
         super().__init__(asset_project_name, scene_name, None, restriction)
         self.conductor.tools.extend([positionVRHumanPlayer, createGround, createSkybox, createSun, createSound, populateHorizon])
-        self.conductor.instructions = Conductor.phobia_v1[MODEL]
-        self.patient = Phobos() 
-
-    
         
 class AcrophobiaWorldGen(VRWorldGen):
     bridge_prompt="Generate a world that triggers acrophobia while crossing a bridge."
@@ -129,12 +120,15 @@ class AcrophobiaWorldGen(VRWorldGen):
             scene_name = f"acro_50_{MODEL}_{random.randint(100, 999)}"
         restriction = f"These are the assets the system is restricted to:\n{[key.split('/')[-1] for key in list(instruments.asset_catalog.keys())]}" if restricted else ""
         super().__init__(asset_project_name, scene_name, restriction)
+        log(f"Setting MODEL for Conductor to {MODEL}", scene_name)
         self.conductor.instructions = Conductor.acrophobia_v1[MODEL]
+        log(f"{AcrophobiaWorldGen} initialized.", scene_name)
 
     async def get_prompt(self):
+        # Deprecated.
         print("Getting prompt from patient...")
-        result = await Runner.run(self.patient, self.patient.acrophobia)
-        return result.final_output
+        result = "Deprecated"
+        return result
 
 class Acrophobia50mx50mWorldGen(VRWorldGen):
     bridge_prompt="Generate a world that triggers acrophobia while crossing a bridge."
