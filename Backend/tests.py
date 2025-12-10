@@ -4,9 +4,6 @@ import time
 from threading import Thread
 from pathlib import Path
 
-#from flask import Flask, send_from_directory, jsonify, request
-#from flask_cors import CORS
-
 import json
 import random
 
@@ -39,6 +36,6 @@ if __name__ == "__main__":
             asset_project = sys.argv[2]
             asyncio.run(test_function(asset_project))
         else:
-            asyncio.run(test_function())  # default per WorldGen subclass 
+            asyncio.run(test_function())  # default per WorldGen subclass
     except IndexError:
         print("Please include test from:", list(test_dispatcher.keys()))

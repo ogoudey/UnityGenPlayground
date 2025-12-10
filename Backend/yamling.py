@@ -310,7 +310,6 @@ class UnityFile:
         dispatcher = {"6": {"Vive Pro 2": self.setup_VIVE},
                       "6": {"Vive Focus 3": self.setup_vive_focus},
                       "5": {"Vive Pro 2": self.setup_data_collection}}
-        
         dispatch = dispatcher[UNITY_VERSION][VR_HEADSET_TYPE]
         log(f"Unity version {UNITY_VERSION} with {VR_HEADSET_TYPE} headset maps to low-level function `{dispatch.__name__}`", scene_name)
         dispatch(transform, rotation)

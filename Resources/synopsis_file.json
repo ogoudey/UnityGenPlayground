@@ -1,4 +1,5 @@
 {
+
   "an evergreen spruce tree for natural ground scattering": "Assets/Proxy Games/Stylized Nature Kit Lite/Prefabs/Foliage/Trees/Spruce 1.prefab",
   "a 50x50 m square water surface plane prefab with its pivot at the top-right corner": "Assets/Proxy Games/Stylized Nature Kit Lite/Prefabs/Water/Detailed Water.prefab",
   "a 50 x 50 m square water plane prefab with its pivot at the top-right corner": "Assets/Proxy Games/Stylized Nature Kit Lite/Prefabs/Water/Flat Water.prefab",
@@ -26,5 +27,31 @@
   "a 13 m-long rope suspension bridge with two wooden posts 7 m apart, tension stakes at each end, and 1 m-high rope railings": "Assets/MaximeBrunoni/BridgesPack/Prefabs/BridgeHanging.prefab",
   "a circular water well with a 1.5 m radius base and 3 m height": "Assets/MaximeBrunoni/BridgesPack/Prefabs/Well.prefab",
   "a low-poly wooden footbridge with end posts, 6 m long, 2 m wide walkway, 1 m-high railings, and slight cracks": "Assets/Oode studios/Lowpoly nature/Prefabs/Bridges/Bridge.prefab",
-  "a slender gray building with an 18 m x 12 m footprint and 40 m height": "Assets/POLYGON city pack/Prefabs/Buildings/Building_A_slender_prefab.prefab"
+  "a slender gray building with an 18 m x 12 m footprint and 40 m height": "Assets/POLYGON city pack/Prefabs/Buildings/Building_A_slender_prefab.prefab",
+  "50m \u00d7 50m square water plane with top-right-corner pivot point": "Assets/Proxy Games/Stylized Nature Kit Lite/Prefabs/Water/Detailed Water.prefab",
+  "a 50\u00d750 m square water plane with its local origin at the top-right corner": "Assets/Proxy Games/Stylized Nature Kit Lite/Prefabs/Water/Flat Water.prefab",
+  "a 16 m-long suspension rope bridge, approx. 2.5 m wide, with two 2 m-high posts at each end, a 1 m center sag, and spaced wooden planks": "Assets/Blue Polygon/Rope Bridge 3D/Prefab/rope_bridge.prefab",
+  "a 3 m-wide, 6 m-tall moss-covered rock cliff with a flat base": "Assets/Proxy Games/Stylized Nature Kit Lite/Prefabs/Rocks/Rock Cliffs/Rock Cliff 1.prefab",
+  "a huge, flat-based moss-covered rock cliff, about 14 m long by 8 m wide by 6 m tall": "Assets/Proxy Games/Stylized Nature Kit Lite/Prefabs/Rocks/Rock Cliffs/Rock Cliff 4.prefab",
+  "a flat, straight branch roughly 2 m long and 1 m wide": "Assets/Proxy Games/Stylized Nature Kit Lite/Prefabs/Foliage/Branch/Branch.prefab",
+  "a large 1 m-radius bush with its pivot at the center of its base": "Assets/Proxy Games/Stylized Nature Kit Lite/Prefabs/Foliage/Bush/Bush.prefab",
+  "a slender 1-meter-tall flower": "Assets/Proxy Games/Stylized Nature Kit Lite/Prefabs/Foliage/Flower/Flower.prefab",
+  "2 m-square grass patch with flat base": "Assets/Proxy Games/Stylized Nature Kit Lite/Prefabs/Foliage/Grass/Grass.prefab",
+  "a slender 2 m-long log resting horizontally on the ground with its origin at its midpoint": "Assets/Proxy Games/Stylized Nature Kit Lite/Prefabs/Foliage/Log/Log.prefab",
+  "a small mushroom about 0.5 m wide and 0.3 m tall with origin at its base center": "Assets/Proxy Games/Stylized Nature Kit Lite/Prefabs/Foliage/Mushroom/Mushrooms Patch.prefab",
+  "an approximately 1 m cubic rock with its origin at the geometric center": "Assets/Proxy Games/Stylized Nature Kit Lite/Prefabs/Rocks/Standard Rocks/Standard Rock 1.prefab",
+  "a slab-like rock roughly 4 m long, 2 m wide and 1 m tall, centered at its midpoint": "Assets/Proxy Games/Stylized Nature Kit Lite/Prefabs/Rocks/Standard Rocks/Standard Rock 2.prefab",
+  "a low, broad rock approximately 4 m long, 3 m wide and 1 m tall centered on its midpoint": "Assets/Proxy Games/Stylized Nature Kit Lite/Prefabs/Rocks/Standard Rocks/Standard Rock 3.prefab",
+  "a slender rock roughly 3 m tall and 2 m wide (XZ), with a flat base": "Assets/Proxy Games/Stylized Nature Kit Lite/Prefabs/Rocks/Standard Rocks/Standard Rock 4.prefab",
+  "a gray rectangular building (31 m \u00d7 12 m \u00d7 36 m) with seven side balconies and a flat roof at z = 21 m": "Assets/POLYGON city pack/Prefabs/Buildings/Building_A_prefab.prefab",
+  "a 28 m-tall brown building prefab with a roof": "Assets/POLYGON city pack/Prefabs/Buildings/Building_C1_prefab.prefab",
+  "a green rectangular building prefab (12 m \u00d7 21.5 m footprint, 18 m tall) with flat roof": "Assets/POLYGON city pack/Prefabs/Buildings/Building_H_prefab.prefab",
+  "arched wooden bridge without handrails, supported by four pairs of legs, 5 m long, 2 m wide, rising from 1 m at ends to 1.5 m at center": "Assets/CastlePack/Prefabs/WoodenBridge.prefab",
+  "an arched 2 m-wide, 5 m-long wooden footbridge with 1 m-high handrails": "Assets/CastlePack/Prefabs/WoodenBridgeHanddrails.prefab",
+  "arched wooden footbridge (10 m long, 4 m wide, 1.5 m high) with a slight arc, handrails, and four paired legs": "Assets/CastlePack/Prefabs/StoneBridgeFlat.prefab",
+  "a worn wooden pontoon bridge 8 m long and 3 m wide, with uneven planks, visible cracks, and three pairs of long support legs": "Assets/MaximeBrunoni/BridgesPack/Prefabs/BridgePontoon.prefab",
+  "a 13 m-long, 4 m-wide rope suspension bridge with wooden support posts and tension stakes": "Assets/MaximeBrunoni/BridgesPack/Prefabs/BridgeHanging.prefab",
+  "a circular stone well, 3 m tall with a 1.5 m radius base": "Assets/MaximeBrunoni/BridgesPack/Prefabs/Well.prefab",
+  "a low-poly wooden footbridge spanning 6 m with a 2 m-wide walkway, 1 m-high railings and subtle surface cracks": "Assets/Oode studios/Lowpoly nature/Prefabs/Bridges/Bridge.prefab",
+  "slender gray building with an 18 m \u00d7 12 m footprint and 40 m height": "Assets/POLYGON city pack/Prefabs/Buildings/Building_A_slender_prefab.prefab"
 }
