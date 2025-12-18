@@ -1,3 +1,11 @@
+#############################################################################
+#
+#   Module that contains the class that stands for the Unity scene file.
+#
+#############################################################################
+
+
+
 import yaml as pyyaml
 from pathlib import Path
 from typing import List, Any
@@ -11,27 +19,7 @@ from subagents import RelativePath
 from ruamel.yaml import YAML as ruamel_YAML
 from ruamel.yaml.nodes import ScalarNode, MappingNode, SequenceNode
 
-class Propositions:
-    assets: dict[str, RelativePath | dict[str, RelativePath]]
-    def __init__(self):
-        self.assets = dict()
-    def add(self, name: str, asset: RelativePath | dict):
-        if isinstance(asset, RelativePath):
-            self.assets[name] = asset
-            return name, asset
-        else:
-            new_dict = dict()
-            for pair in asset.items():
-                new_dict[pair[0]] = pair[1]
-            asset = new_dict
-            self.assets[name] = asset
-            return name, asset
 
-    def __getitem__(self, name: str):
-        return self.assets[name]
-    
-    def __contains__(self, name: str) -> bool:
-        return name in self.assets 
 
 UNITY_VERSION = (os.getenv("UNITY_VERSION") or "5").strip() or "5"
 VR_HEADSET_TYPE = (os.getenv("VR_HEADSET_TYPE") or "Vive Focus 3").strip() or "Vive Focus 3"
@@ -44,18 +32,10 @@ class UnityFile:
         # self.level0 is a list of MappingNodes
         self.wrapped: List = [node_to_python(n) for n in nodes]
         
-        self.proposed_objects: Propositions = Propositions()
+        
         self.placed_assets = dict()
 
-    def propose_object(self, name: str, asset: RelativePath | dict[str, RelativePath], scene_name_for_logging):
-        log(f"Proposing {name} as {asset}", scene_name_for_logging)
-        name, asset = self.proposed_objects.add(name, asset)
-        log(f"Proposed {name} as {asset}", scene_name_for_logging)
-        return name, asset
-
-    def get_asset(self, name: str) -> RelativePath | dict:
-
-        return self.proposed_objects[name]
+    
 
     def set_sun(self, length_of_day: float, time_of_day: float, sun_brightness:float):
         rot = (time_of_day / length_of_day) * 360
@@ -419,7 +399,8 @@ class UnityFile:
             raise KeyError("The located prefab has no root transform")
         return father_id
     
-    def to_unity_yaml(self, file_name="minimal.unity"):
+    def to_unity_yaml(self, path_to_write: Path):
+        file_name = str(path_to_write)
         if file_name.endswith(".unity"):
             file_name = file_name.removesuffix(".unity")
             file_name += f"_u{UNITY_VERSION}.unity"

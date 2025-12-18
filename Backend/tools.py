@@ -1,3 +1,12 @@
+#############################################################################
+#
+#   Module containing all function tools for LLMs. Each is wrapped in an error reporter for debugging.
+#
+#############################################################################
+
+
+
+
 import os
 import sys
 import time
@@ -32,12 +41,14 @@ if USE_SHAP_E:
 else:
     print("Not using shap-e. (Normal)")
 
-asset_catalog: dict[str, dict] # and so on
+### Global variables accessible for tools ###
+
+asset_catalog: dict[str, dict]
 synopses: dict[str, str] # synopsis: relative_path
 skybox_material_leaves: List[str]
 ground_material_leaves: List[str]
 sound_leaves: List[str]
-asset_project: Path
+assets: Path # path to Assets/ in Unity
 world: World | UnityWorld
     
 
@@ -142,7 +153,7 @@ async def create_skybox(skybox_description: str):
     path_str = result.final_output.path
     skybox_name = path_str.split("/")[-1]
     print(f"Proposing relative path with Path {Path(path_str)} from {path_str}")
-    world.propose_object(skybox_name, RelativePath(path=Path(path_str)))
+    world.propose_object(skybox_name, RelativePath(path=Path(path_str)), world.scene_name)
     world.add_skybox(skybox_name)
     return f"Successfully added '{skybox_name}' to the scene."
 

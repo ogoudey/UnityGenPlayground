@@ -1,3 +1,13 @@
+#############################################################################
+#
+#   Module responsible for loading the synopses, the summaries of the asset catalog
+#
+#############################################################################
+
+
+
+
+
 import os
 import json
 
@@ -8,18 +18,18 @@ import asyncio
 
 MODEL = (os.getenv("MODEL") or "o3-mini").strip() or "o3-mini"
 
-async def load(assets_info, scene_name_for_logging):
-    with open("../Resources/synopsis_file.json", "r") as s:
+async def load(assets_folder, asset_catalog, scene_name_for_logging):
+    with open(assets_folder / "synopsis_file.json", "r") as s:
         v = s.read()
         synopses = json.loads(v)
     log(f"Synopsis file loaded with {len(synopses)} entries", scene_name_for_logging)
-    active_synopses = await update_synopsis_file(assets_info, synopses)
+    active_synopses = await update_synopsis_file(assets_folder, asset_catalog, synopses)
     return active_synopses
 
-async def update_synopsis_file(assets_info, synopses) -> dict[str, str]:
+async def update_synopsis_file(assets_folder, asset_catalog, synopses) -> dict[str, str]:
     i = 0
-    updates_needed = len(assets_info) - len(synopses)
-    for asset_path, asset_info in assets_info.items():
+    updates_needed = len(asset_catalog) - len(synopses)
+    for asset_path, asset_info in asset_catalog.items():
         found = False
         for synopsis, ante_asset_path in synopses.items():
             if ante_asset_path == asset_path:
@@ -37,7 +47,7 @@ async def update_synopsis_file(assets_info, synopses) -> dict[str, str]:
             print("------>", new_synopsis)
     print("Synopsis file up to date.")
     if updates_needed > 0:
-        with open("../Resources/synopsis_file.json", "w") as s:
+        with open(assets_folder / "synopsis_file.json", "w") as s:
             output_str = json.dumps(synopses, indent=2)
             s.write(output_str)
             print("Synopsis file updated.")
@@ -45,7 +55,7 @@ async def update_synopsis_file(assets_info, synopses) -> dict[str, str]:
     unrepresented_assets = []
     for synopsis, ante_asset_path in synopses.copy().items():
         found = False
-        for asset_path in list(assets_info.keys()):
+        for asset_path in list(asset_catalog.keys()):
             if ante_asset_path == asset_path:
                 found = True
                 represented_assets[synopsis] = ante_asset_path

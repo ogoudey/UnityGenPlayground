@@ -1,3 +1,9 @@
+#############################################################################
+#
+#   Module for the LLM orchestration. The conductor is at the head.
+#
+#############################################################################
+
 import os
 import random
 
@@ -8,31 +14,6 @@ import tools as instruments
 from tools import getGroundMatrix, proposeObject, positionObject, positionVRHumanPlayer, createSkybox, createGround, getContactPoints, createSun, populateHorizon
 
 MODEL = (os.getenv("MODEL") or "o4-mini").strip() or "o4-mini"
-
-class Check(BaseModel):
-    #object_name: str
-    check_status: bool
-    reason: str
-
-class Checker(Agent):
-    instructions= """
-You are responsible for checking the placed assets in a Unity scene. You will be given an object, and the ability to get the ground matrix (which is scaled by x5). Essentially you must ask:
-    Given the
-        1. Ground heightmap (matrix),
-        2. Reference info about the object,
-        3. Actual placement of the object in the scene...
-    Is the placement good or bad? Well positioned or somehow off - either in the ground or floating, offset or wrong in some other way?
-    If there's not enough information to deduce the correctness of placement, be sure to explain that.
-    Keep your answer brief and to the point. It is recommended to use get_ground_matrix for all checks. 
-"""
-    def __init__(self, name=None, instructions=None):
-        super().__init__(
-            name=name or f"Checker{random.randint(100,999)}",
-            instructions=instructions or Checker.instructions,
-            tools=[getGroundMatrix],
-            output_type=Check,
-            model=MODEL,
-        )
 
 class Conductor(Agent):
     phobia_v1={"o4-mini":"""Whatever a universal scarer might be"""}
@@ -71,13 +52,14 @@ Once you have an objects information, you may instace the object in the world yo
    If something is vague (e.g. "foliage"), interpret it reasonably and cover the intent. 
 
 General rules:
-- Always PLAN before PLACE.
+- Always PROPOSE before POSITION.
 - Use get_contact_points to get an estimate of exact (x, y, z) coordinates available for placing objects on.
 - Use all other tools at least once when appropriate.
-- Use planGround/placeGround multiple times if need be.
+- Use planGround multiple times if need be.
 - Stop once the world clearly reflects the prompt, and don't stop until you are done.
 
 Your role is to reliably build a coherent, grounded Unity world from the description."""}
+    
     def __init__(self, name=None, instructions=None, tools=None):
         super().__init__(
             name=name or f"Coordinator{random.randint(100,999)}",
@@ -89,7 +71,36 @@ Your role is to reliably build a coherent, grounded Unity world from the descrip
             #),
         )
         self.restriction = None
-        
+
+#########################################3
+# Unused roles:
+
+class Check(BaseModel):
+    #object_name: str
+    check_status: bool
+    reason: str
+
+class Checker(Agent):
+    instructions= """
+You are responsible for checking the placed assets in a Unity scene. You will be given an object, and the ability to get the ground matrix (which is scaled by x5). Essentially you must ask:
+    Given the
+        1. Ground heightmap (matrix),
+        2. Reference info about the object,
+        3. Actual placement of the object in the scene...
+    Is the placement good or bad? Well positioned or somehow off - either in the ground or floating, offset or wrong in some other way?
+    If there's not enough information to deduce the correctness of placement, be sure to explain that.
+    Keep your answer brief and to the point. It is recommended to use get_ground_matrix for all checks. 
+"""
+    def __init__(self, name=None, instructions=None):
+        super().__init__(
+            name=name or f"Checker{random.randint(100,999)}",
+            instructions=instructions or Checker.instructions,
+            tools=[getGroundMatrix],
+            output_type=Check,
+            model=MODEL,
+        )
+
+
 class Reformer(Agent):
     instructions_v1 = """
 Suppose you have already built a Unity scene. Now it is your job to incorporate the feedback of an agent who has provided feedback on misplaced objects. Place again, more precisely, the objects that are said to be in the wrong location. You can do this with placeObject. Another approach to correct the misplaced objects is to change the ground. Do this by (for example) changing the ground heightmap with planGround, then replace the ground in the scene with placeGround. Some objects (e.g. a long bridge), may require the ground to have a certain shape to make sense in, forcing you to reconsider the heightmap in this manner.

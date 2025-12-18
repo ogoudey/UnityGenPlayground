@@ -1,3 +1,11 @@
+#############################################################################
+#
+#   Module for the API-like thing that the tools use. Interacts with the class stands for the unity file. Also stores propositions of objects (objects not yet positioned).
+#
+#############################################################################
+
+
+
 import uuid
 from pathlib import Path
 import yamling
@@ -5,48 +13,70 @@ from subagents import RelativePath, AssetsRelativePathStr
 from typing import List
 from logger import log
 
+class Propositions:
+    assets: dict[str, RelativePath | dict[str, RelativePath]]
+    def __init__(self):
+        self.assets = dict()
+    def add(self, name: str, asset: RelativePath | dict):
+        if isinstance(asset, RelativePath):
+            self.assets[name] = asset
+            return name, asset
+        else:
+            new_dict = dict()
+            for pair in asset.items():
+                new_dict[pair[0]] = pair[1]
+            asset = new_dict
+            self.assets[name] = asset
+            return name, asset
+
+    def __getitem__(self, name: str):
+        return self.assets[name]
+    
+    def __contains__(self, name: str) -> bool:
+        return name in self.assets 
+
+
 class World:
     scene_name:str
-    def __init__(self):
+    def __init__(self, scene_name):
+        self.scene_name = scene_name
+        self.objects = []
+        self.proposed_objects: Propositions = Propositions()
+        self.contact_points = dict()
         pass
-    def propose_object(self, name, path_str):
-        print("Propose object called on underspecified world")
-        return name, path_str
-    def get_path_relative_to_asset_project(self, name, asset_project_path):
-        return AssetsRelativePathStr(path="unknown")
-        
         
 class UnityWorld(World):
+    unity_file: yamling.UnityFile
     
+    ground_name: str
     ground_matrix: List[List[float]]
-    current_texture: str
     ground_scale: float
+    current_texture: str
 
     def __init__(self, scene_name:str | None = None):
-        super().__init__()
+        super().__init__(scene_name)
         self.unity_file = yamling.UnityFile()
+        self.ground_name = ""
         self.ground_matrix = []
         self.ground_scale = 5.0
-        self.current_texture = ""
-        self.contact_points = dict()
-        self.objects = []
-        self.ground = None
-        if scene_name is not None:
-            self.scene_name = scene_name
+        self.texture = ""
 
-    def propose_object(self, name: str, path_str: RelativePath | dict[str, RelativePath]):
-        return self.unity_file.propose_object(name, path_str, self.scene_name)
+    def propose_object(self, name: str, asset: RelativePath | dict[str, RelativePath], scene_name_for_logging):
+        log(f"Proposing {name} as {asset}", scene_name_for_logging)
+        name, asset = self.proposed_objects.add(name, asset)
+        log(f"Proposed {name} as {asset}", scene_name_for_logging)
+        return name, asset
+
+    def get_asset(self, name: str) -> RelativePath | dict:
+        return self.proposed_objects[name]
 
     def get_pathstr_relative_to_asset_project(self, name: str, asset_project_path: Path) -> str:
-        rel_path: RelativePath = self.unity_file.get_asset(name)
+        rel_path: RelativePath = self.get_asset(name)
         log(f"Got {rel_path} from proposed objects.", self.scene_name)
-        print(f"(propositions?)")
         relative_path = rel_path.path
         log(f"Converting {rel_path.path} to Path {relative_path}", self.scene_name)
         assets_relative_path = relative_path.relative_to(asset_project_path)
         log(f"Converted relative Path to a Path relative to {asset_project_path.name}", self.scene_name)
-        print(f"Converted {relative_path} to {assets_relative_path}.")
-        print(f"Converted {assets_relative_path} to {str(assets_relative_path)}.")
         return assets_relative_path.as_posix()
 
     
@@ -77,7 +107,7 @@ class UnityWorld(World):
         log(f"Writing meta (from world) for {name}", self.scene_name)
         guid = uuid.uuid4().hex
 
-        rel_path = self.unity_file.get_asset(name)
+        rel_path = self.get_asset(name)
         log(f"Writing meta for {rel_path}", self.scene_name)
         yamling.write_obj_meta(rel_path, guid)
         log(f"Done writing meta for {rel_path}", self.scene_name)
@@ -86,14 +116,14 @@ class UnityWorld(World):
     
     def add_ground(self, ground_name, transform={"x":0.0, "y":0.0, "z":0.0}, rotation={"x":0.0, "y":0.0, "z":0.0}):
         log("Adding ground...", self.scene_name)
-        if self.ground:
-            if self.unity_file.remove_prefab_instance_if_exists(self.ground):
-                print(f"Removed existing ground {self.ground} from YAML")
+        if not self.ground_name == "":
+            if self.unity_file.remove_prefab_instance_if_exists(self.ground_name):
+                print(f"Removed existing ground {self.ground_name} from YAML")
             else:
                 print("Ground exists in YAML - couldn't be removed.")
         guid = uuid.uuid4().hex
         log("Geting proposed asset...", self.scene_name)
-        ground_proposition = self.unity_file.get_asset(ground_name)
+        ground_proposition = self.get_asset(ground_name)
         log(f"PRoposition:  {ground_proposition}", self.scene_name)
         ground_OBJ_rel_path = ground_proposition["Ground"]
         log(f"GUID: {guid}", self.scene_name)
@@ -103,15 +133,15 @@ class UnityWorld(World):
         log(f"Adding prefab instance to YAML", self.scene_name)
         self.unity_file.add_ground_prefab_instance(ground_name, guid, transform, self.scene_name)
         log(f"Done adding prefab instance", self.scene_name)
-        self.ground = ground_name
+        self.ground_name = ground_name
 
     def add_data(self, object_data):
         self.objects.append(object_data)
 
         
-    def done_and_write(self, file_name=None): # filename is always used
-        print("Objects:", self.objects)
+    def done_and_write(self, path_to_write: Path): 
         log(f"{len(self.objects)} objects generated.", self.scene_name)
-        if not file_name:
-            file_name = "Unknown"
-        return self.unity_file.to_unity_yaml(file_name)
+        if path_to_write.exists():
+            return self.unity_file.to_unity_yaml(path_to_write)
+        else:
+            log(f"Path {path_to_write} does not exist!", self.scene_name)
