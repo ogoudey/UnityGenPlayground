@@ -1,11 +1,3 @@
-#############################################################################
-#
-#   Module containing all function tools for LLMs. Each is wrapped in an error reporter for debugging.
-#
-#############################################################################
-
-
-
 
 import os
 import sys
@@ -15,12 +7,12 @@ from dataclasses import dataclass
 from pathlib import Path
 from agents import function_tool, Runner
 from pydantic import BaseModel
-from subagents import AssetsRelativePathStr, RelativePath
-from subagents import ObjectPlanner, GroundCreator, SkyboxPlanner, TexturePlanner, SunPlanner, SoundDesigner
-from world import World, UnityWorld
+from agents.subagents import AssetsRelativePathStr, RelativePath
+from agents.subagents import ObjectPlanner, GroundCreator, SkyboxPlanner, TexturePlanner, SunPlanner, SoundDesigner
+from generating.world import World, UnityScene
 from logger import log
-import obj_building
-import procedural
+import Backend.tools.unity.surface_construction as surface_construction
+import Backend.tools.unity.procedural as procedural
 from typing import List
 import functools
 import inspect
@@ -28,6 +20,14 @@ import sys
 import os
 import traceback
 import asyncio
+
+asset_catalog: dict[str, dict]
+synopses: dict[str, str] # synopsis: relative_path
+skybox_material_leaves: List[str]
+ground_material_leaves: List[str]
+sound_leaves: List[str]
+assets: Path # path to Assets/ in Unity
+world: World | UnityScene
 
 
 
@@ -41,28 +41,6 @@ if USE_SHAP_E:
 else:
     print("Not using shap-e. (Normal)")
 
-### Global variables accessible for tools ###
-
-asset_catalog: dict[str, dict]
-synopses: dict[str, str] # synopsis: relative_path
-skybox_material_leaves: List[str]
-ground_material_leaves: List[str]
-sound_leaves: List[str]
-assets: Path # path to Assets/ in Unity
-world: World | UnityWorld
-    
-
-
-### Form of a Tool ###
-
-#@function_tool
-#(async) def toolNameInThisFormat(args: basic_types) -> basic_type:
-#    """docstring"""
-#    blah blan
-
-#Try making parameters Pydantic Models
-
-### 
 
 def error_reporter(func):
     async def handle_async(*args, **kwargs):
@@ -101,10 +79,30 @@ def _format_error(func, e):
 
     return error_info
 
-@function_tool
-async def getGroundMatrix() -> dict:
-    """docstring"""
-    return get_ground_matrix()
+@error_reporter
+def position_vr_player(transform: str, rotation: str, explanation: str):
+    try:
+        json_location = json.loads(transform)
+    except ValueError:
+        print("Error loading given placement_of_centerpoint into JSON")
+        return f"Failed to add player to location {transform} in the scene (json.loads() error). Make sure to pass a correct something that can be loaded with json.loads() into JSON."
+    try:
+        json_rotation = json.loads(rotation)
+    except ValueError:
+        print("Error loading given rotation into JSON")
+        return f"Failed to add object player to rotation {rotation} in the scene (json.loads() error) Make sure to pass a correct something that can be loaded with json.loads() into JSON."
+    
+    global world
+    log(f"Positioning VR experience at {transform} with rotation {rotation}", world.scene_name)
+    log(explanation, world.scene_name)
+    world.set_vr_player(json_location, json_rotation)
+
+@error_reporter
+def get_contact_points():
+    global world
+    log("Getting contact points...", world.scene_name)
+    print("...end contact points")
+    return json.dumps(world.contact_points)
 
 @error_reporter
 def get_ground_matrix():
@@ -113,16 +111,6 @@ def get_ground_matrix():
     log("Recalling ground heightmap...", world.scene_name)
     return {"Grid": world.ground_matrix, "Information": "The ground goes from (0,0) to (-50, 50). That is, the top left of the matrix is -50, 50. All objects should be on over the ground."}   
 
-@function_tool
-async def positionSun(length_of_day: float, time_of_day: float, sun_brightness: float) -> str:
-    """
-        Args:
-            length_of_day: It is like the planet rotation - how many hours in a day? In Earth-hours (example 18.0). 
-            time_of_day: It is like the scene's position on the planet's latitude. Falls between 0.0 and `length_of_day`.
-            sun_brightness: It is like the planet's distance from the sun, or like sun's luminosity, etc. Keep it from 0.0 to 1000.0. (0.01 is Earthlike)
-    """
-    return position_sun(length_of_day, time_of_day, sun_brightness)
-
 @error_reporter
 def position_sun(length_of_day: float, time_of_day: float, sun_brightness: float):
     global world
@@ -130,13 +118,6 @@ def position_sun(length_of_day: float, time_of_day: float, sun_brightness: float
     
     world.add_sun(length_of_day, time_of_day, sun_brightness)
     return f"Successfully added the Sun"
-
-@function_tool
-async def createSkybox(skybox_description: str) -> str:
-    """
-    Adds a skybox to the world...
-    """
-    return await create_skybox(skybox_description)
 
 @error_reporter
 async def create_skybox(skybox_description: str):
@@ -157,13 +138,6 @@ async def create_skybox(skybox_description: str):
     world.add_skybox(skybox_name)
     return f"Successfully added '{skybox_name}' to the scene."
 
-@function_tool
-async def createSound(sound_description: str) -> str:
-    """
-    Creates a sound in the scene that matches your description. (Limited to static wind sounds currently)
-    """
-    return await create_sound(sound_description)
-
 @error_reporter
 async def create_sound(sound_description: str):
     global world
@@ -181,13 +155,6 @@ async def create_sound(sound_description: str):
     world.add_sound(sound_name)
     return f"Successfully added '{sound_name}' to the scene."
 
-@function_tool
-async def createSun(description_of_sun_behavior: str) -> str:
-    """
-        Plan and place the Sun in the scene. Call this once and only once for each scene. Just describe the Sun and its thematic context briefly. You are effectively prompting another sub-agent to actually deal with positioning the Sun.
-    """
-    return await create_sun(description_of_sun_behavior)
-
 @error_reporter
 async def create_sun(description_of_sun_behavior: str) -> str:
     global world
@@ -200,44 +167,6 @@ async def create_sun(description_of_sun_behavior: str) -> str:
     await Runner.run(agent, json.dumps(prompt))
     log(f"{agent.name}: {time.time() - t} seconds", world.scene_name)    
     return f"Successfully placed the Sun in the scene"
-
-@function_tool
-async def create50mx50mGround(steps_to_ground_construction: str):
-    """ 
-        Calls an agent to construct the ground you give a plan for. The agent can only generate a heightmap in the +X, +Z plane. Be general and let the planner get creative. Clarify the requirements of the ground, but don't micromanage. It will literally generate a 26 by 26 grid (the vertices), scaled up by 2.0 to be a 50 meters by 50 meters topology. The perimeter of the grid must be at height 0.
-        steps_to_ground_construction: a plan of how the ground creator should construct the ground. (0, 0, 0) is 0m, 0m, 0m. Example (a string):
-            To make a volcano:
-                1. Form the mountain
-                2. Make the crater in the top.
-            Another example involving remaking:
-            Make room for a house with a flat 4mx4m base at (4, 2.5, 4) - a "remaking ground" call.
-                1. Since the horizonal scale is 2.0, turn the 4, 4 into coordinates 2,2. Make this coordinate have height 2.5
-                2. Make in the +X, +Z direction the base of the house. 4m / scale of 2.0 is 2.0 or 2 grid cells. So make (2, 2), (4, 4), and (2, 2) all height 2.5 too.
-                3. Make the points surrounding the indent a sort of gradient. Have them all close to 2.5, and spread that out, without affecting other landmarks.
-                
-    This Tool should be called multiple times to reshape the ground in order to fit the objects that are static or immalleable.
-    """
-    return await create_ground(steps_to_ground_construction, 11, 5.0, procedural=False)
-
-@function_tool
-async def createGround(steps_to_ground_construction: str, resolution: int, scale: float):
-    """ 
-        Calls an agent to construct the ground you give a plan for. The agent can only generate a heightmap in the +X, +Z plane. Be general and let the planner get creative. Clarify the requirements of the ground, but don't micromanage. It will literally generate a <resolution> by <resolution> grid (the vertices), scaled up by <scale> to be a (<resolution> * <scale> - <scale>) meters by (<resolution> * <scale> - <scale>) meters topology. The perimeter of the grid must be at height 0. Finer resolution compromises performance, while scale compromises realism - keep this in mind. The ground must be square - N by N.
-        steps_to_ground_construction: a plan of how the ground creator should construct the ground. (0, 0, 0) is 0m, 0m, 0m. Example (a string):
-            To make a volcano:
-                1. Form the mountain
-                2. Make the crater in the top.
-            Another example involving remaking:
-            Make room for a house with a flat 4mx4m base at (5, 2.5, 5) - a "remaking ground" call.
-                1. Since the horizonal scale is 5.0, turn the 5, 5 into coordinates 1,1. Make this coordinate have height 2.5
-                2. Make in the -X, +Z direction the base of the house. 4m / scale of 5.0 is .8 or 1 grid cell. So make (1, 2), (2, 2), and (2, 1) all height 2.5 too.
-                3. Make the points surrounding the indent a sort of gradient. Have them all close to 2.5, and spread that out, without affecting other landmarks.
-        resolution: an integer < 20 that is the number of vertices along one edge of the ground mesh. The ground must be a square. For performance reasons, keep the resolution under 20. (Example: 11)
-        scale: a float that is the number of meters between each vertex. (Example: 5.0)
-                
-    This Tool can be called multiple times to reshape the ground, in order to fit the objects that are static or immalleable.
-    """
-    return await create_ground(steps_to_ground_construction, resolution, scale, procedural=True)
 
 @error_reporter
 async def create_ground(steps_to_ground_construction, resolution, scale, procedural):
@@ -257,9 +186,9 @@ async def create_ground(steps_to_ground_construction, resolution, scale, procedu
     
     grid:str = result.final_output.grid
     if procedural:
-        object_path, ground_matrix = obj_building.obj_from_grid_procedural(asset_project / "Assets" / "Manifest", grid, scale, world.scene_name)
+        object_path, ground_matrix = surface_construction.obj_from_grid_procedural(asset_project / "Assets" / "Manifest", grid, scale, world.scene_name)
     else:
-        object_path, ground_matrix = obj_building.obj_from_grid(asset_project / "Assets" / "Manifest", grid, scale)
+        object_path, ground_matrix = surface_construction.obj_from_grid(asset_project / "Assets" / "Manifest", grid, scale)
     log(f"Ground OBJ written to {object_path}.", world.scene_name)
     try:
         assert len(ground_matrix[0]) == len(ground_matrix)
@@ -274,12 +203,9 @@ async def create_ground(steps_to_ground_construction, resolution, scale, procedu
     texture_path_str:str = result.final_output.texture_path_str
     explanation = result.final_output.explanation_of_heights
     world.current_texture = texture_path_str
-    
-    
         
     name, asset = world.propose_object(ground_name, {"Ground": RelativePath(object_path), "Texture": RelativePath(Path(texture_path_str))})
     log(f"Proposed object {name} as {asset}", world.scene_name)
-
     
     json_location = {"x": 0, "y": 0, "z": 0}
     log("Adding ground to YAML", world.scene_name)
@@ -292,8 +218,6 @@ async def create_ground(steps_to_ground_construction, resolution, scale, procedu
         for j in range(0, len(world.ground_matrix[i])):
             contact_point = (j * scale, world.ground_matrix[i][j] + float(json_location["y"]), (resolution*scale - scale) - i*scale)
             world.contact_points["Ground"].append(contact_point)    
-    
-    
 
     formatted_rows, decimal = [], 1
     for row in world.ground_matrix:
@@ -305,15 +229,6 @@ async def create_ground(steps_to_ground_construction, resolution, scale, procedu
     legible_result = "\n[\n" + ",\n".join(formatted_rows) + "\n]"
     log(explanation, world.scene_name)
     return f"Successfully placed a ground with heightmap {legible_result} in the +X +Z quadrant (these coordinates correspond to the vertices of the ground mesh). The scale of the Xs and Zs is x5. There is no vertical scaling.\n{explanation}"
-
-@function_tool
-def populateHorizon(asset_name_list: str) -> str:
-    """
-        Beyond the heightmap and region that you've added objects to, there is a background world that extends to the horizon. You are not required to position objects in this zone. Rather, pass a list of objects that you've already proposed to this tool, and some procedure will automatically populate this zone outside of the important region you've designed. Therefore, pass objects that would realistically be 'randomly' generated.
-        asset_name_list: A stringified list of proposed object names. Make sure the names match exactly the Name field of a proposed object returned from proposeObject(). Example: "[\"a house\", \"tree 2\", \"Grass1\"]". All objects are scattered according to Perlin Noise.
-
-    """
-    return populate_horizon(asset_name_list)
 
 @error_reporter
 def populate_horizon(asset_name_list: str):
@@ -328,13 +243,6 @@ def populate_horizon(asset_name_list: str):
     log(f"Assets to populate horizon with: {asset_name_list}", world.scene_name)
     procedural.populate(asset_name_list, world) # adds proposed objects to world randomly up to a limit (camera fov)
     return f"Successfully populated horizon."
-
-@function_tool
-async def addTexture(material_of_object_description: str) -> str:
-    """
-        Returns the path to a material asset that matches the description. May return "None" if there's no match, in which case use that as the texture_path.
-    """
-    return await add_texture(material_of_object_description)
 
 @error_reporter
 async def add_texture(material_of_object_description: str):
@@ -355,15 +263,6 @@ async def add_texture(material_of_object_description: str):
     print("Found", mat_path, "for", material_of_object_description)
     return mat_path
 
-@function_tool
-async def proposeObject(description: str):
-    """ 
-        Args:
-            description: Some text describing that the object should be like, refering to a singular object that's likely to be selected from a common asset library. For example, "water", "a rock", "a house", etc.
-        If you don't get an object you want, its because there's nothing like the desired asset in the library of available assets. In this case, get creative and find a new solution. You don't NEED to place the object returned, which is the object-planner's best guess.
-        By the way, water is one of the objects.
-    """
-    return await propose_object(description)
 
 @error_reporter
 async def propose_object(description: str):
@@ -407,19 +306,7 @@ async def propose_object(description: str):
     log(f"Matcher to conductor: {json_blob["Note"]}", world.scene_name)
     return json_blob
 
-@function_tool
-async def positionObject(object_name: str, position_of_object_origin: str, rotation: str, explanation: str) -> str:
-    """
-        This function permits you to place a proposed object in the scene. You may place a single instance of the object or multiple ones, but always refer to the object you've planned. You cannot scale the object. Pay close attention to how the object will be positioned in the world, given that you are positioning its local origin.
-        Args:
-            object_name: The name of the object you have proposed. (Must match exactly that name.)
-            position_of_object_origin: Must be a JSON-encoded string. OPTIONALLY, can be a list of such strings in order to place a sequence objects or scatter them. Remember, Y is up! Examples:
-                "{\"x\": 75, \"y\": 2.8, \"z\": 70}", OR "[{\"x\": 73, \"y\": 10, \"z\": 20}, {\"x\": 50, \"y\": 1.2, \"z\": 72}, ...]"
-            rotation: Must be a JSON-encoded string. OPTIONALLY, can be a list of such strings in order to place a sequence objects. Example:
-                "{\"x\": 90, \"y\": 0, \"z\": 45}", "[{\"x\": 90, \"y\": 0, \"z\": 45}, {\"x\": 0, \"y\": 0, \"z\": 270}]"
-            explanation: A human-readable explanation of the placement(s). Include in your explanation the specific shape of the object, as contained in the PlaceableObject that you've planned. For most placements, its good practice to refer to a contact point from get_contact_points. If the object can't be placed on the ground, edit the ground with planandplaceGround."
-    """
-    return position_object(object_name, position_of_object_origin, rotation, explanation)
+
 
 @error_reporter
 def position_object(object_name: str, position_of_object_origin: str, rotation: str, explanation: str) -> str:
@@ -495,44 +382,9 @@ def position_object(object_name: str, position_of_object_origin: str, rotation: 
         response = f"Added {object_name} to the scene. Recall the information of {object_name} at the placed position."
     return response
     
-@function_tool
-def positionVRHumanPlayer(transform: str, rotation: str = "{\"x\": 75, \"y\": 10, \"z\": 70}", explanation: str=""):
-    """
-    This function places the VR headset of the human player in the scene. It places the camera/head, so make it 2m above the ground below them. The player can walk around 1m from where they are placed.
-    transform: Must be a JSON-encoded string. Example:
-        "{\"x\": 75, \"y\": 10, \"z\": 70}"
-    rotation: Must be a JSON-encoded string (only use \" around the variables). All axes at 0 means the player faces dead ahead in the +X direction. Example:
-        "{\"x\": 90, \"y\": 0, \"z\": 45}" 
-    explanation: A human-readable explanation of the placement(s). Example: "I put the water here to be above the height y=0.5 along the riverbed", or "I put a patch of trees in this section". Be sure to explain the height with regard to the contact points and the open spaces of the heightmap."
 
-    Only call this function once, and remember to be careful not to make them floating. Use what you know about the objects and their positionings.
-    """
-    try:
-        json_location = json.loads(transform)
-    except ValueError:
-        print("Error loading given placement_of_centerpoint into JSON")
-        return f"Failed to add player to location {transform} in the scene (json.loads() error). Make sure to pass a correct something that can be loaded with json.loads() into JSON."
-    try:
-        json_rotation = json.loads(rotation)
-    except ValueError:
-        print("Error loading given rotation into JSON")
-        return f"Failed to add object player to rotation {rotation} in the scene (json.loads() error) Make sure to pass a correct something that can be loaded with json.loads() into JSON."
     
-    global world
-    log(f"Positioning VR experience at {transform} with rotation {rotation}", world.scene_name)
-    log(explanation, world.scene_name)
-    world.set_vr_player(json_location, json_rotation)
-    return f"Successfully added player to the scene at {json_location}."
-    
-@function_tool
-async def getContactPoints() -> str:
-    """
-        Returns the vertices of the ground. This is mainly useful for recalling whether the ground meets the positioned objects correctly.
-    """
-    global world
-    log("Getting contact points...", world.scene_name)
-    print("...end contact points")
-    return json.dumps(world.contact_points)
+
 
 """ Helpers """
 def asset_lookup(path: Path) -> dict:
@@ -544,19 +396,3 @@ def asset_lookup(path: Path) -> dict:
         #return {"Name": "unknown_object"+str(random.randint(100, 999)), "Importances": None}
         log(f"Oops! {path.as_posix()} not in {list(asset_catalog.keys())}", world.scene_name)
         return None
-    
-### Testing grounds ###
-if __name__ == "__main__":
-    import assets
-    from world import UnityWorld
-    u = UnityWorld("worlda")
-    world = u
-    asset_project = Path("../Resources/Asset Projects/acrophobia_u5_v1")
-    asset_catalog = {"Assets/Proxy Games/Stylized Nature Kit Lite/Prefabs/Water/Flat Water.prefab": {"Name": "water1"}}
-    synopses = {"some flat water": "Assets/Proxy Games/Stylized Nature Kit Lite/Prefabs/Water/Flat Water.prefab"}
-    #ground_material_leaves = ["grass"]
-    asyncio.run(propose_object("water1"))
-    position_object("water1", json.dumps({"x":1.0, "y":1.0, "z":1.0}), json.dumps({"x":0.0, "y":0.0, "z":0.0}), "because it is")
-    #asyncio.run(create_ground("Just return a plain", 10, 1.0, False))
-
-    u.done_and_write(str(asset_project / "Assets" / "Generations" / u.scene_name))

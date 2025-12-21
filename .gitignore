@@ -5,8 +5,7 @@ Resources/Asset Projects/*
 Backend/logs/*
 Backend/done_logs/*
 Backend/archived_logs/*
-Backend/shap_e
-Backend/shap_e_model_cache
+Backend/local
 
 !Resources/Asset Projects/.gitkeep
 !Backend/logs/.gitkeep

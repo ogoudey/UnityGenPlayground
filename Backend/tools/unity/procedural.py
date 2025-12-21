@@ -14,7 +14,7 @@ else:
 
 import numpy as np
 
-import obj_building
+import Backend.tools.unity.surface_construction as surface_construction
 
 def populate(asset_path_list, unity):
     ground_matrix, ground_scale = unity.ground_matrix, unity.ground_scale
@@ -30,7 +30,7 @@ def populate(asset_path_list, unity):
                 return True
             
     for asset in asset_path_list:
-        world_pad = obj_building.pad
+        world_pad = surface_construction.pad
         x_range = (int(-world_pad), int(world_pad + dimension))
         y_range = (int(-world_pad), int(world_pad + dimension))
         # noise

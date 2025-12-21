@@ -1,7 +1,7 @@
 import random
 import os
 
-from orchestra import Checker, Reformer, Conductor
+from Backend.agents.orchestra import Checker, Reformer, Conductor
 
 from logger import log
 

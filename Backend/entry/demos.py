@@ -12,9 +12,9 @@ import random
 
 import asyncio
 
-import orchestra as agents
+import Backend.agents.orchestra as agents
 
-from worldgen import AcrophobiaWorldGen, VRWorldGen, Acrophobia50mx50mWorldGen
+from Backend.generating.worldgen import AcrophobiaWorldGen, VRWorldGen, Acrophobia50mx50mWorldGen
 
 MODEL = (os.getenv("MODEL") or "o3-mini").strip() or "o3-mini"  
 

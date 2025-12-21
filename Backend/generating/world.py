@@ -8,12 +8,26 @@
 
 import uuid
 from pathlib import Path
-import yamling
-from subagents import RelativePath, AssetsRelativePathStr
+import Backend.tools.unity.yamling as yamling
+from Backend.agents.subagents import RelativePath, AssetsRelativePathStr
 from typing import List
 from logger import log
 
+
+
+
+class World:
+    scene_name:str
+    def __init__(self, scene_name):
+        self.scene_name = scene_name
+        self.objects = []
+        self.proposed_objects: Propositions = Propositions()
+        self.contact_points = dict()
+        pass
+    
+
 class Propositions:
+    """ A Unity-related class that's storage for objects not yet placed in the scene. """
     assets: dict[str, RelativePath | dict[str, RelativePath]]
     def __init__(self):
         self.assets = dict()
@@ -34,18 +48,8 @@ class Propositions:
     
     def __contains__(self, name: str) -> bool:
         return name in self.assets 
-
-
-class World:
-    scene_name:str
-    def __init__(self, scene_name):
-        self.scene_name = scene_name
-        self.objects = []
-        self.proposed_objects: Propositions = Propositions()
-        self.contact_points = dict()
-        pass
         
-class UnityWorld(World):
+class UnityScene(World):
     unity_file: yamling.UnityFile
     
     ground_name: str

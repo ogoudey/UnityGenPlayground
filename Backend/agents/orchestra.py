@@ -1,17 +1,19 @@
 #############################################################################
 #
-#   Module for the LLM orchestration. The conductor is at the head.
+#   Module for the LLM orchestration. The conductor agent is a combination of tools and system prompt. 
+#   For example, a combination of Unity scene-building tools and a Unity-acrophobia system prompt.
 #
 #############################################################################
 
 import os
 import random
 
-from agents import Agent, ModelSettings
+from agents import Agent, ModelSettings, function_tool
+from typing import List
 from pydantic import BaseModel
 
-import tools as instruments
-from tools import getGroundMatrix, proposeObject, positionObject, positionVRHumanPlayer, createSkybox, createGround, getContactPoints, createSun, populateHorizon
+import Backend.tools.tools as instruments
+from Backend.tools.tools import getGroundMatrix, proposeObject, positionObject, positionVRHumanPlayer, createSkybox, createGround, getContactPoints, createSun, populateHorizon
 
 MODEL = (os.getenv("MODEL") or "o4-mini").strip() or "o4-mini"
 
@@ -60,11 +62,11 @@ General rules:
 
 Your role is to reliably build a coherent, grounded Unity world from the description."""}
     
-    def __init__(self, name=None, instructions=None, tools=None):
+    def __init__(self, name: str, instructions: str, tools: List[function_tool]):
         super().__init__(
             name=name or f"Coordinator{random.randint(100,999)}",
             instructions=instructions or Conductor.acrophobia_v1[MODEL],
-            tools=tools or [getContactPoints, proposeObject, positionObject],
+            tools=tools,
             model=MODEL,
             #model_settings=ModelSettings(
             #    reasoning=Reasoning(effort="high", summary="detailed")

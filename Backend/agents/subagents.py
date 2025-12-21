@@ -8,10 +8,7 @@ from dataclasses import dataclass
 
 MODEL = (os.getenv("MODEL") or "o3-mini").strip() or "o3-mini"
 
-class GroundData(BaseModel):
-    grid: str
-    texture_path_str: str
-    explanation_of_heights: str
+
 
 @dataclass
 class RelativePath:
@@ -24,6 +21,11 @@ class SynopsisNote(BaseModel):
     synopsis: str
     note: str
 
+class GroundData(BaseModel):
+    grid: str
+    texture_path_str: str
+    explanation_of_heights: str
+
 class SunPlanner(Agent):
     instructions= "It is your job to place the sun in the sky according to the descriptive prompt by fixing certain parameters. Simply return Success, unless something has failed."
     
@@ -32,17 +34,6 @@ class SunPlanner(Agent):
             name=name or f"SunPlanner{random.randint(100,999)}",
             instructions=instructions or SunPlanner.instructions,
             tools=tools,
-            model=MODEL,
-        )
-
-class SoundDesigner(Agent):
-    instructions = "Given the directory structure (asset tree), return the path to the file of the asset that best fits the desired description of a sound."
-
-    def __init__(self, name=None, instructions=None, ):
-        super().__init__(
-            name=name or f"SoundDesigner{random.randint(100,999)}",
-            instructions=instructions or SoundDesigner.instructions,
-            output_type=AssetsRelativePathStr,
             model=MODEL,
         )
 
@@ -69,7 +60,18 @@ class SkyboxPlanner(Agent):
             output_type=AssetsRelativePathStr,
             model=MODEL,
         )
-        
+
+class SoundDesigner(Agent):
+    instructions = "Given the directory structure (asset tree), return the path to the file of the asset that best fits the desired description of a sound."
+
+    def __init__(self, name=None, instructions=None, ):
+        super().__init__(
+            name=name or f"SoundDesigner{random.randint(100,999)}",
+            instructions=instructions or SoundDesigner.instructions,
+            output_type=AssetsRelativePathStr,
+            model=MODEL,
+        )
+
 class TexturePlanner(Agent):
     instructions= "Given the directory structure (asset tree), return the path of a material asset that matches the description."
     
@@ -81,24 +83,6 @@ class TexturePlanner(Agent):
             model=MODEL,
         )
 
-class GroundImprinter(Agent):
-    instructions="""You have the very specialized job of taking a perimeter of a heightmap and wrapping it in a 'backdrop' heightmap that goes to 0. The problem is that the current heightmap has a perimeter that varies. But we need the outside of this middle heightmap to go off to (practically) infinite. So, you need to develop the ground around the input ground that gradually comes to height Y=0.
-    - Write the grid directly as {resolution} rows of {resolution} numbers each, separated by spaces. Do not add code, JSON, or extra symbols.  Think of the lower-left cell as 0,0
-    
-    """
-    # Incomplete - can't we just force the GroundPlanner to make perimeter 0?
-# Ground planner's example input:
-#
-#        Example (a string):
-#            To make a volcano:
-#                1. Form the mountain
-#                2. Make the crater in the top.
-#        Another example:
-#            Make room for a house with a flat 4mx4m base at (-5, 2.5, 5)
-#                1. Since the horizonal scale is 5, turn the -5, 5 into coordinates 1,1. Make this coordinate have height 2.5
-#                2. Make in the -X, +Z direction the base of the house. 4m / scale of 5 is .8 or 1 grid cell. So make (1, 2), (2, 2), and (2, 1) all height 2.5 too.
-#                3. Make the points surrounding the indent a sort of gradient. Have them all close to 2.5, and spread that out, without affecting other landmarks. 
-  
 class GroundCreator(Agent):
     instructions_v3={"o4-mini":"""Return a heightmap for the ground as an grid of floats, given the input plan, resolution, and scale. 
 Rules:
