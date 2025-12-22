@@ -1,5 +1,5 @@
-from Backend.generating.worldgen import UnityWorldGen
-from Backend.generating.worldgen import Generator_Class_from_Asset_Project_Name
+from generating.worldgen import UnityWorldGen
+from generating.worldgen import Generator_Class_from_Asset_Project_Name
 import os
 from distutils.util import strtobool
 import asyncio

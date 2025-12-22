@@ -5,16 +5,40 @@
 #############################################################################
 
 
-
+import sys
 import uuid
 from pathlib import Path
-import Backend.tools.unity.yamling as yamling
-from Backend.agents.subagents import RelativePath, AssetsRelativePathStr
+import tools.unity.yamling as yamling
+
 from typing import List
 from logger import log
 
+from utils.paths import RelativePath, AssetsRelativePathStr
+    
 
+class Propositions:
+    """ A class that's storage for objects not yet placed in the scene. """
+    propositions: dict[str, RelativePath | dict[str, RelativePath]]
+    def __init__(self):
+        self.propositions = dict()
+        
+    def add(self, name: str, proposition: RelativePath | dict):
+        if isinstance(proposition, RelativePath):
+            self.propositions[name] = proposition
+            return name, proposition
+        else:
+            new_dict = dict()
+            for pair in proposition.items():
+                new_dict[pair[0]] = pair[1]
+            proposition = new_dict
+            self.propositions[name] = proposition
+            return name, proposition
 
+    def __getitem__(self, name: str):
+        return self.propositions[name]
+    
+    def __contains__(self, name: str) -> bool:
+        return name in self.propositions
 
 class World:
     scene_name:str
@@ -24,34 +48,11 @@ class World:
         self.proposed_objects: Propositions = Propositions()
         self.contact_points = dict()
         pass
-    
 
-class Propositions:
-    """ A Unity-related class that's storage for objects not yet placed in the scene. """
-    assets: dict[str, RelativePath | dict[str, RelativePath]]
-    def __init__(self):
-        self.assets = dict()
-    def add(self, name: str, asset: RelativePath | dict):
-        if isinstance(asset, RelativePath):
-            self.assets[name] = asset
-            return name, asset
-        else:
-            new_dict = dict()
-            for pair in asset.items():
-                new_dict[pair[0]] = pair[1]
-            asset = new_dict
-            self.assets[name] = asset
-            return name, asset
-
-    def __getitem__(self, name: str):
-        return self.assets[name]
-    
-    def __contains__(self, name: str) -> bool:
-        return name in self.assets 
         
 class UnityScene(World):
+    """ Provides the "API" for the tools """
     unity_file: yamling.UnityFile
-    
     ground_name: str
     ground_matrix: List[List[float]]
     ground_scale: float
@@ -149,3 +150,4 @@ class UnityScene(World):
             return self.unity_file.to_unity_yaml(path_to_write)
         else:
             log(f"Path {path_to_write} does not exist!", self.scene_name)
+            raise Exception(f"Path {path_to_write} does not exist!")

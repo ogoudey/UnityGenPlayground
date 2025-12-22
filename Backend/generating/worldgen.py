@@ -28,25 +28,24 @@
 # 
 #
 #############################################################################
-
-
+import sys
 from pathlib import Path
 import os
 import random
 from agents import Runner, function_tool
-from Backend.agents.orchestra import instruments
+from tools import tools as instruments
 import time
 from typing import Any, Optional, List
-import Backend.load.assets as assets
-import Backend.load.synopsis_generator as synopsis_generator
-from Backend.agents.orchestra import Checker, Reformer, Conductor
-from Backend.tools.tools import getGroundMatrix, proposeObject, positionObject, positionVRHumanPlayer, createSkybox, createGround, getContactPoints, createSun, populateHorizon, createSound, create50mx50mGround
+import load.assets as assets
+import load.synopsis_generator as synopsis_generator
+from llms.orchestra import Conductor
+from tools.tools import getGroundMatrix, proposeObject, positionObject, positionVRHumanPlayer, createSkybox, createGround, getContactPoints, createSun, populateHorizon, createSound, create50mx50mGround
 
 from logger import log
 
-from Backend.agents.supertools import ConductorRunner
+from llms.supertools import ConductorRunner
 
-from Backend.generating.world import UnityScene
+from generating.world import UnityScene
 
 class EnvironmentError(Exception):
     pass
@@ -93,11 +92,11 @@ class UnityWorldGen(WorldGen):
 
         # Unity specific stuff below
         self.scene_name = scene_name
-        instruments.world = UnityScene(scene_name)  
+        instruments.core.world = UnityScene(scene_name)  
 
         if assets_folder is None:
             if ASSETS is None:
-                raise EnvironmentError(f"Cannot locate Assets folder. Is {assets_folder} or {ASSETS}. Please set the ASSETS environment variable, or pass the Path as args.")
+                raise EnvironmentError(f"Cannot locate Assets folder. Is {assets_folder} or {ASSETS}. Please set the ASSETS environment variable, or pass an existent Path as args.")
             assets_folder = ASSETS
 
         
@@ -111,27 +110,41 @@ class UnityWorldGen(WorldGen):
             else:
                 print("\033[1m\033[31mAsset project path does not exist or was not provided.\033[0m")
                 raise FileNotFoundError("Asset project path does not exist or was not provided.")
-        instruments.assets = assets_folder
+        instruments.core.assets = assets_folder
         
         self.conductor_runner = ConductorRunner(run_conductor_function=self.run)
 
     async def load(self):
-        instruments.asset_catalog = assets.load(instruments.assets, self.scene_name)
-        instruments.synopses = await synopsis_generator.load(instruments.assets, instruments.asset_catalog,  self.scene_name)
-        instruments.skybox_material_leaves =  assets.get_found(".mat", instruments.assets /"Skybox Materials",  scene_name_for_logging=self.scene_name)
-        instruments.ground_material_leaves = assets.get_found(".mat", instruments.assets /"Ground Materials",  scene_name_for_logging=self.scene_name)
-        instruments.sound_leaves = assets.get_found(".mp3", instruments.assets/ "Sounds",  scene_name_for_logging=self.scene_name)
+        instruments.core.asset_catalog = assets.load(instruments.core.assets, self.scene_name)
+        instruments.core.synopses = await synopsis_generator.load(instruments.core.assets, instruments.core.asset_catalog,  self.scene_name)
+        instruments.core.skybox_material_leaves =  assets.get_found(".mat", instruments.core.assets /"Skybox Materials",  scene_name_for_logging=self.scene_name)
+        instruments.core.ground_material_leaves = assets.get_found(".mat", instruments.core.assets /"Ground Materials",  scene_name_for_logging=self.scene_name)
+        instruments.core.sound_leaves = assets.get_found(".mp3", instruments.core.assets/ "Sounds",  scene_name_for_logging=self.scene_name)
         
+    async def dummy_run(self, prompt):
+        print(f"Thinking on {prompt}")
+        time.sleep(5)
+        return "Done"
     
     async def run(self, prompt):
         """
             prompt: prompt for Conductor agent to generate world. Example: Generate a fish tank.
         """
         result = await Runner.run(self.conductor, prompt, max_turns=20)
-        scene_path = instruments.world.done_and_write(instruments.assets / "Generations" / self.scene_name)
+        try:
+            scene_path = instruments.core.world.done_and_write(instruments.core.assets / "Generations" / self.scene_name)
+            return scene_path
+        except Exception:
+            print(f"Did not write scene:\n{result.final_output}")
+            return "Failed."
+        
 
+    @classmethod
+    async def generate(cls, scene_name: str, assets_folder: Optional[Path], prompt: str):
+        wg = cls(scene_name, assets_folder)
+        await wg.load()
+        scene_path = await wg.run(prompt)
         return scene_path
-
 
     async def regime(self, regime_prompt):
         log("Starting regime", self.scene_name)

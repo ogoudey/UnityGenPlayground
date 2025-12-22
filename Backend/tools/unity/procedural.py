@@ -14,7 +14,7 @@ else:
 
 import numpy as np
 
-import Backend.tools.unity.surface_construction as surface_construction
+import tools.unity.surface_construction as surface_construction
 
 def populate(asset_path_list, unity):
     ground_matrix, ground_scale = unity.ground_matrix, unity.ground_scale

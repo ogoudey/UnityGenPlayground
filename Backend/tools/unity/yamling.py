@@ -15,11 +15,10 @@ import os
 import re
 import sys
 from logger import log
-from Backend.agents.subagents import RelativePath
 from ruamel.yaml import YAML as ruamel_YAML
 from ruamel.yaml.nodes import ScalarNode, MappingNode, SequenceNode
 
-
+from utils.paths import RelativePath
 
 UNITY_VERSION = (os.getenv("UNITY_VERSION") or "5").strip() or "5"
 VR_HEADSET_TYPE = (os.getenv("VR_HEADSET_TYPE") or "Vive Focus 3").strip() or "Vive Focus 3"

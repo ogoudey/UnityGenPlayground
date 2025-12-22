@@ -15,13 +15,13 @@ from dataclasses import dataclass
 from pathlib import Path
 from agents import function_tool, Runner
 from pydantic import BaseModel
-from agents.subagents import AssetsRelativePathStr, RelativePath
-from agents.subagents import ObjectPlanner, GroundCreator, SkyboxPlanner, TexturePlanner, SunPlanner, SoundDesigner
-from generating.world import World, UnityWorld
+from utils.paths import AssetsRelativePathStr, RelativePath
+from generating.world import World, UnityScene
 from logger import log
-import Backend.tools.unity.surface_construction as surface_construction
-import Backend.tools.unity.procedural as procedural
+import tools.unity.surface_construction as surface_construction
+import tools.unity.procedural as procedural
 from typing import List
+from llms.subagents import ObjectPlanner, GroundCreator, SkyboxPlanner, TexturePlanner, SunPlanner, SoundDesigner
 import functools
 import inspect
 import sys
@@ -33,12 +33,6 @@ import asyncio
 # then
 
 from tools.unity import core
-
-
-### Global variables accessible for tools ###
-
-
-
 
 ### Form of a Tool ###
 

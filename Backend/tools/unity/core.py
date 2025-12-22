@@ -5,14 +5,14 @@ import time
 import json
 from dataclasses import dataclass
 from pathlib import Path
-from agents import function_tool, Runner
+from agents import Runner
 from pydantic import BaseModel
-from agents.subagents import AssetsRelativePathStr, RelativePath
-from agents.subagents import ObjectPlanner, GroundCreator, SkyboxPlanner, TexturePlanner, SunPlanner, SoundDesigner
+from utils.paths import AssetsRelativePathStr, RelativePath
+from llms.subagents import ObjectPlanner, GroundCreator, SkyboxPlanner, TexturePlanner, SunPlanner, SoundDesigner
 from generating.world import World, UnityScene
 from logger import log
-import Backend.tools.unity.surface_construction as surface_construction
-import Backend.tools.unity.procedural as procedural
+import tools.unity.surface_construction as surface_construction
+import tools.unity.procedural as procedural
 from typing import List
 import functools
 import inspect

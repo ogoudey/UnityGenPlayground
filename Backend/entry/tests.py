@@ -9,10 +9,10 @@ import random
 
 import asyncio
 from logger import log
-from world import UnityWorld
-from worldgen import AcrophobiaWorldGen, VRWorldGen, Acrophobia50mx50mWorldGen
-from orchestra import Conductor
-from orchestra import instruments
+from generating.world import UnityWorld
+from generating.worldgen import AcrophobiaWorldGen, VRWorldGen, Acrophobia50mx50mWorldGen
+from llms.orchestra import Conductor
+from llms.orchestra import instruments
 from agents import Runner
 
 MODEL = (os.getenv("MODEL") or "o3-mini").strip() or "o3-mini"  

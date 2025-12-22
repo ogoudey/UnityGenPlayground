@@ -1,21 +1,13 @@
 import random
 import os
-import sys
-from pathlib import Path
 from agents import Agent
-from pydantic import BaseModel, field_validator
-from dataclasses import dataclass
+from pydantic import BaseModel
+from utils.paths import AssetsRelativePathStr 
 
 MODEL = (os.getenv("MODEL") or "o3-mini").strip() or "o3-mini"
 
 
 
-@dataclass
-class RelativePath:
-    path: Path
-    
-class AssetsRelativePathStr(BaseModel):
-    path: str
 
 class SynopsisNote(BaseModel):
     synopsis: str
