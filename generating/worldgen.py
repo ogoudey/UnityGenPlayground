@@ -45,7 +45,7 @@ from logger import log
 
 from llms.supertools import ConductorRunner
 
-from generating.world import UnityScene
+from generating.world import UnityWorld
 
 class EnvironmentError(Exception):
     pass
@@ -53,25 +53,22 @@ class EnvironmentError(Exception):
 try:
     val = os.getenv("ASSETS")
     ASSETS: Path = Path(val) if not val is None else None
-
-    WORLDGEN_CLASS = "AcrophobiaWorldGen"
     MODEL = (os.getenv("MODEL") or "o4-mini").strip() or "o4-mini"
+    SKYBOX = os.environ.get("SKYBOX_MATERIALS", "Skybox Materials")
+    GROUND = os.environ.get("GROUND_MATERIALS", "Ground Materials")
+    SOUNDS = os.environ.get("SOUNDS", "Sounds")
 except Exception as e:
     raise EnvironmentError("Could not establish environment variables: {e}")
 
 
 
-def log_env_vars():
-    print(f"ASSETS: {ASSETS}")
-    print(f"WORLDGEN_CLASS: {WORLDGEN_CLASS}")
-    print(f"MODEL: {MODEL}")
 
 class WorldGen:
-    def __init__(self, preexisting_world: Optional[Any]=None, conductor_name: str="WorldConductor", conductor_system_prompt: str = "", conductor_tools: List[function_tool]=[]):
-        if preexisting_world:
+    def __init__(self, world_name: Optional[Any]=None, conductor_name: str="WorldConductor", conductor_system_prompt: str = "", conductor_tools: List[function_tool]=[]):
+        if world_name:
             # load preexising world or something - not really used yet
             pass
-        self.preexisting_world = preexisting_world
+        self.world_name = world_name
 
         self.conductor = Conductor(name="Default", system_prompt=conductor_system_prompt, tools=conductor_tools + [getGroundMatrix, proposeObject, positionObject])
     
@@ -84,26 +81,28 @@ class WorldGen:
         return result.final_output
     
 class UnityWorldGen(WorldGen):
-    scene_name: str
-    def __init__(self, scene_name: str, assets_folder: Optional[Path]=None, conductor_name: str="UnityWorldConductor", conductor_system_prompt: str="", conductor_tools: List[function_tool]=[]):
+    scene: str
+    def __init__(self, world_name: str, scene_name: str, assets_folder: Optional[Path]=None, conductor_name: str="UnityWorldConductor", conductor_system_prompt: str="", conductor_tools: List[function_tool]=[]):
         super().__init__(None, conductor_name, conductor_system_prompt, conductor_tools + [createGround, createSkybox, createSun, createSound, populateHorizon])
 
         
 
         # Unity specific stuff below
-        self.scene_name = scene_name
-        instruments.core.world = UnityScene(scene_name)  
+        
+        self.scene_0 = scene_name
+        
+        instruments.core.world = UnityWorld(world_name, self.scene_0)  
 
         if assets_folder is None:
             if ASSETS is None:
-                raise EnvironmentError(f"Cannot locate Assets folder. Is {assets_folder} or {ASSETS}. Please set the ASSETS environment variable, or pass an existent Path as args.")
+                raise EnvironmentError(f"\nCannot locate Assets folder. Tried:\n\tUnityWorldGen arg: {assets_folder}\n\tASSETS env variable: {ASSETS}.\nPlease set at least one to a Unity Project/Assets folder.")
             assets_folder = ASSETS
 
         
         if assets_folder.exists():
-            log(f"Asset Project is \033[1m\033[36m{assets_folder}\033[0m", scene_name)
+            log(f"Asset Project is \033[1m\033[36m{assets_folder}\033[0m")
         else:
-            log(f"Could not find asset project {assets_folder}!!", scene_name)
+            log(f"Could not find asset project {assets_folder}!!")
             if assets_folder:
                 print(f"Asset project with path {assets_folder} does not exist.")
                 raise FileNotFoundError(f"Asset project with path {assets_folder} does not exist.")
@@ -115,11 +114,11 @@ class UnityWorldGen(WorldGen):
         self.conductor_runner = ConductorRunner(run_conductor_function=self.run)
 
     async def load(self):
-        instruments.core.asset_catalog = assets.load(instruments.core.assets, self.scene_name)
-        instruments.core.synopses = await synopsis_generator.load(instruments.core.assets, instruments.core.asset_catalog,  self.scene_name)
-        instruments.core.skybox_material_leaves =  assets.get_found(".mat", instruments.core.assets /"Skybox Materials",  scene_name_for_logging=self.scene_name)
-        instruments.core.ground_material_leaves = assets.get_found(".mat", instruments.core.assets /"Ground Materials",  scene_name_for_logging=self.scene_name)
-        instruments.core.sound_leaves = assets.get_found(".mp3", instruments.core.assets/ "Sounds",  scene_name_for_logging=self.scene_name)
+        instruments.core.asset_catalog = assets.load(instruments.core.assets)
+        instruments.core.synopses = await synopsis_generator.load(instruments.core.assets, instruments.core.asset_catalog)
+        instruments.core.skybox_material_leaves =  assets.get_found(".mat", instruments.core.assets / SKYBOX)
+        instruments.core.ground_material_leaves = assets.get_found(".mat", instruments.core.assets / GROUND)
+        instruments.core.sound_leaves = assets.get_found(".mp3", instruments.core.assets / SOUNDS)
         
     async def dummy_run(self, prompt):
         print(f"Thinking on {prompt}")
@@ -132,31 +131,30 @@ class UnityWorldGen(WorldGen):
         """
         result = await Runner.run(self.conductor, prompt, max_turns=20)
         try:
-            scene_path = instruments.core.world.done_and_write(instruments.core.assets / "Generations" / self.scene_name)
+            scene_path = instruments.core.world.done_and_write(instruments.core.assets / "Generations" / self.scene_0)
             return scene_path
         except Exception:
             print(f"Did not write scene:\n{result.final_output}")
-            return "Failed."
-        
+            return f"Did not write scene:\n{result.final_output}."
 
     @classmethod
-    async def generate(cls, scene_name: str, assets_folder: Optional[Path], prompt: str):
-        wg = cls(scene_name, assets_folder)
+    async def generate(cls, world_name: str, assets_folder: Optional[Path], prompt: str):
+        wg = cls(world_name, f"{world_name}_0", assets_folder)
         await wg.load()
         scene_path = await wg.run(prompt)
         return scene_path
 
     async def regime(self, regime_prompt):
-        log("Starting regime", self.scene_name)
+        log("Starting regime", self.scene_0)
         result = await Runner.run(self.conductor_runner, regime_prompt)
-        log(result.final_output, self.scene_name)
-        log("Done", self.scene_name)
+        log(result.final_output, self.scene_0)
+        log("Done", self.scene_0)
         
 
 class VRWorldGen(UnityWorldGen):
     
-    def __init__(self, scene_name: str, assets_folder: Optional[Path]=None, conductor_name: str="VRExperienceConductor", conductor_system_prompt: str="...", conductor_tools: List[function_tool]=[], ):
-        super().__init__(scene_name, assets_folder, conductor_name, conductor_system_prompt, conductor_tools + [positionVRHumanPlayer])
+    def __init__(self, world_name: str, scene_name: str, assets_folder: Optional[Path]=None, conductor_name: str="VRExperienceConductor", conductor_system_prompt: str="...", conductor_tools: List[function_tool]=[], ):
+        super().__init__(world_name, scene_name, assets_folder, conductor_name, conductor_system_prompt, conductor_tools + [positionVRHumanPlayer])
                 
 class AcrophobiaWorldGen(VRWorldGen):
     bridge_prompt="Generate a world that triggers acrophobia while crossing a bridge."
@@ -167,5 +165,5 @@ class AcrophobiaWorldGen(VRWorldGen):
     platform_prompt="Generate a world that triggers a very sensitive acrophobia by placing a player on a platform."
     bridge_regime_prompt="Generate multiple stages of worlds that trigger acrophobia while crossing a bridge. Have the stages get progressively harder. Let there be three stages and let the heights of the bridges in each stage progress as 2m, 5m, 10m above ground or sea level."
 
-    def __init__(self, scene_name: str, assets_folder: Optional[Path]=None, conductor_name: str="AcrophobiaConductor", conductor_system_prompt: str=Conductor.acrophobia_v1[MODEL], conductor_tools: List[function_tool]=[]):
-        super().__init__(scene_name, assets_folder, conductor_name, conductor_system_prompt, conductor_tools)
+    def __init__(self, world_name: str, scene_name: str, assets_folder: Optional[Path]=None, conductor_name: str="AcrophobiaConductor", conductor_system_prompt: str=Conductor.acrophobia_v1[MODEL], conductor_tools: List[function_tool]=[]):
+        super().__init__(world_name, scene_name, assets_folder, conductor_name, conductor_system_prompt, conductor_tools)

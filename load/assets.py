@@ -14,33 +14,36 @@ import json
 from typing import List
 from logger import log
 
-def load(assets_folder: Path, scene_name_for_logging: str) -> dict[str, str]:
+def load(assets_folder: Path) -> dict[str, str]:
     try:
         name_of_asset_catalog = "asset_catalog.json"
         with open(assets_folder / name_of_asset_catalog, "r") as f:
             j = f.read()
             asset_catalog = json.loads(j)
-    except FileNotFoundError: 
-        print(f"\033[1m\033[31mThe Asset Project {assets_folder} has no asset catalog - you must put an `asset_catalog.json` in the Asset Project.\033[0m")
-        raise FileNotFoundError(f"The Asset Project {assets_folder} has no asset catalog - you must put an `asset_catalog.json` in the Asset Project.")
+    except FileNotFoundError:
+        found = ""
+        for name in os.listdir(assets_folder):
+            if not name.endswith(".meta"):
+                found += f"\n\t{name}"
+        raise FileNotFoundError(f"The specified Assets folder ({assets_folder}) has no asset catalog:{found}\n\nYou must provide an `asset_catalog.json` there.")
     print(f"In asset project folder {assets_folder}")
-    log(f"In asset project folder {assets_folder}, asset catalog loaded with {len(asset_catalog)} entries", scene_name_for_logging)
+    log(f"In asset project folder {assets_folder}, asset catalog loaded with {len(asset_catalog)} entries")
     
     removed_count = 0
     for assets_relative_str_path in list(asset_catalog.keys()):
         if not os.path.exists(assets_folder / assets_relative_str_path):
-            log(f"Removing {assets_relative_str_path} because {assets_folder / assets_relative_str_path} does not exist", scene_name_for_logging)
+            print(f"Removing {assets_relative_str_path} because {assets_folder / assets_relative_str_path} does not exist")
             del asset_catalog[assets_relative_str_path]
             removed_count += 1
 
     if removed_count > 0:
-        log(f"Removed {removed_count} missing assets", scene_name_for_logging)
+        print(f"Removed {removed_count} missing assets")
     else:
         print("All asset catalog entries accounted for in folders.")
 
     return asset_catalog
 
-def get_found(file_type:str, assets: Path, scene_name_for_logging: str) -> List[str]:
+def get_found(file_type:str, assets: Path) -> List[str]:
     print(f"Looking in {assets} for {file_type}...")
     if os.name == 'nt':
         matches = []
@@ -57,8 +60,8 @@ def get_found(file_type:str, assets: Path, scene_name_for_logging: str) -> List[
 
         if result.returncode != 0 or not result.stdout.strip():
             # Either the command failed or no files found
-            print(f"!! {assets} was not found. Consider adding to the file system.")
-            return []
+            #print(f"!! {assets} was not found. Consider adding to the file system.")
+            raise FileNotFoundError(f"\nThe world generator has requested a special folder, but the specified folder ({assets}) could not be found, OR no {file_type}-s could be found in them.\nYou must add this folder to Assets, and add at least one {file_type} to the folder, or change the environment variables or use another generator class.\nNote: if the materials are pink, go to Window>Rendering>Render Pipeline Converter>Material Upgrade>Initialize and Convert.")
         
         # Split into list of file paths, strip whitespace
         matches = [line.strip() for line in result.stdout.splitlines() if line.strip()]
@@ -66,14 +69,15 @@ def get_found(file_type:str, assets: Path, scene_name_for_logging: str) -> List[
     # Normalize paths (optional, makes everything consistent)
     files = [Path(f).as_posix() for f in matches]
     if len(files) > 0:
-        log(f"The folder at {assets} has {len(files)} {file_type} assets.", scene_name_for_logging)
+        log(f"The folder at {assets} has {len(files)} {file_type} assets.")
     else:
-        log(f"The folder at {assets} has no files of type {file_type}!", scene_name_for_logging)
+        log(f"The folder at {assets} has no files of type {file_type}!")
         print(f"\033[1m\033[31mThe folder at {assets} has no files of type {file_type}!\033[0m")
     return files
 
 def get_tree(file_type=".prefab", folder="../Assets"):
-    """ Not used """
+    if os.name == 'nt':
+        return "..."
     result = subprocess.run(
         ["tree", "-P", "*" + file_type, folder],
         capture_output=True,

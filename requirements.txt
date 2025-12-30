@@ -5,3 +5,5 @@ pydantic
 numpy
 setuptools
 perlin-noise
+noise
+flask

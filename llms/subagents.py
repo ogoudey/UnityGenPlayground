@@ -6,7 +6,7 @@ from utils.paths import AssetsRelativePathStr
 
 MODEL = (os.getenv("MODEL") or "o3-mini").strip() or "o3-mini"
 
-
+print(f"\n[Subagents] Subagents all using {MODEL} (set as env variable).")
 
 
 class SynopsisNote(BaseModel):

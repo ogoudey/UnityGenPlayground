@@ -9,17 +9,16 @@ from agents import Runner
 from pydantic import BaseModel
 from utils.paths import AssetsRelativePathStr, RelativePath
 from llms.subagents import ObjectPlanner, GroundCreator, SkyboxPlanner, TexturePlanner, SunPlanner, SoundDesigner
-from generating.world import World, UnityScene
+from generating.world import World, UnityWorld
 from logger import log
 import tools.unity.surface_construction as surface_construction
 import tools.unity.procedural as procedural
 from typing import List
-import functools
-import inspect
-import sys
-import os
-import traceback
-import asyncio
+
+from tools.wrapped_utils import error_reporter
+
+#from tools.unity.subtool_imports import getGroundMatrix, proposeObject, positionObject, positionVRHumanPlayer, createSkybox, createGround, getContactPoints, createSun, populateHorizon, createSound, create50mx50mGround
+
 
 asset_catalog: dict[str, dict]
 synopses: dict[str, str] # synopsis: relative_path
@@ -27,57 +26,22 @@ skybox_material_leaves: List[str]
 ground_material_leaves: List[str]
 sound_leaves: List[str]
 assets: Path # path to Assets/ in Unity
-world: World | UnityScene
+world: World | UnityWorld
 
 
 
-MODEL = (os.getenv("MODEL") or "o3-mini").strip() or "o3-mini"
-print(f"\nThe model running is {MODEL}. Use \033[1m\033[36mexport MODEL='<model_name>'\033[0m (Linux) or `setx MODEL '<model-name>'` (Windows) to change it.")
+
+
 
 USE_SHAP_E = bool((os.getenv("SHAP_E") or "").strip() or "")
 if USE_SHAP_E:
     print("Importing Shap-E")
     from shap_e import shap_e_test
 else:
-    print("Not using shap-e. (Normal)")
+    print("\n[Unity core] Not using shap-e. (Normal)\n")
 
 
-def error_reporter(func):
-    async def handle_async(*args, **kwargs):
-        try:
-            return await func(*args, **kwargs)
-        except Exception as e:
-            return _format_error(func, e)
 
-    def handle_sync(*args, **kwargs):
-        try:
-            return func(*args, **kwargs)
-        except Exception as e:
-            return _format_error(func, e)
-
-    return handle_async if inspect.iscoroutinefunction(func) else handle_sync
-
-
-def _format_error(func, e):
-    exc_type, _, exc_tb = sys.exc_info()
-    fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
-    line_number = exc_tb.tb_lineno
-    tb = traceback.format_exc()
-
-    error_info = {
-        "error": f"{exc_type.__name__}: {e}",
-        "tool_name": func.__name__,
-        "file": fname,
-        "line": line_number,
-        "traceback": tb
-    }
-
-    print("=== Exception caught in inner function ===")
-    for k, v in error_info.items():
-        print(f"{k}: {v}")
-    print("=========================================")
-
-    return error_info
 
 @error_reporter
 def position_vr_player(transform: str, rotation: str, explanation: str):
@@ -93,14 +57,14 @@ def position_vr_player(transform: str, rotation: str, explanation: str):
         return f"Failed to add object player to rotation {rotation} in the scene (json.loads() error) Make sure to pass a correct something that can be loaded with json.loads() into JSON."
     
     global world
-    log(f"Positioning VR experience at {transform} with rotation {rotation}", world.scene_name)
-    log(explanation, world.scene_name)
+    log(f"Positioning VR experience at {transform} with rotation {rotation}")
+    log(explanation)
     world.set_vr_player(json_location, json_rotation)
 
 @error_reporter
 def get_contact_points():
     global world
-    log("Getting contact points...", world.scene_name)
+    log("Getting contact points...")
     print("...end contact points")
     return json.dumps(world.contact_points)
 
@@ -108,34 +72,50 @@ def get_contact_points():
 def get_ground_matrix():
     global world
     print("Recalling ground matrix...")
-    log("Recalling ground heightmap...", world.scene_name)
+    log("Recalling ground heightmap...")
     return {"Grid": world.ground_matrix, "Information": "The ground goes from (0,0) to (-50, 50). That is, the top left of the matrix is -50, 50. All objects should be on over the ground."}   
 
 @error_reporter
 def position_sun(length_of_day: float, time_of_day: float, sun_brightness: float):
     global world
-    log("Positioning the sun in the sky...", world.scene_name)
+    log("Positioning the sun in the sky...")
     
     world.add_sun(length_of_day, time_of_day, sun_brightness)
+    world.add_data(
+        {
+            "World place in solar system": {
+                "time of day": f"{time_of_day} Earth-hours",
+                "length of day": f"{length_of_day} Earth-hours",
+                "sun brightness": f"{sun_brightness} luminosity"
+            }
+        }
+    )
     return f"Successfully added the Sun"
 
 @error_reporter
 async def create_skybox(skybox_description: str):
     global world
 
-    log("Creating skybox...", world.scene_name)
+    log("Creating skybox...")
     agent = SkyboxPlanner()
     prompt = {"Object description": skybox_description,
                 "Available assets": skybox_material_leaves}
     t = time.time()
-    log(f"{agent.name} started creating skybox", world.scene_name)
+    log(f"{agent.name} started creating skybox")
     result = await Runner.run(agent, json.dumps(prompt))
-    log(f"{agent.name}: {time.time() - t} seconds", world.scene_name)
+    log(f"{agent.name}: {time.time() - t} seconds")
     path_str = result.final_output.path
     skybox_name = path_str.split("/")[-1]
     print(f"Proposing relative path with Path {Path(path_str)} from {path_str}")
-    world.propose_object(skybox_name, RelativePath(path=Path(path_str)), world.scene_name)
+    world.propose_object(skybox_name, RelativePath(path=Path(path_str)))
     world.add_skybox(skybox_name)
+    world.add_data(
+        {
+            "Skybox/atmosphere": {
+                "name of skybox": skybox_name
+            }
+        }
+    )
     return f"Successfully added '{skybox_name}' to the scene."
 
 @error_reporter
@@ -146,32 +126,43 @@ async def create_sound(sound_description: str):
     prompt = prompt = {"Object description": sound_leaves,
                 "Available assets": sound_leaves}
     t = time.time()
-    log(f"{agent.name} starting on {sound_description}", world.scene_name)
+    log(f"{agent.name} starting on {sound_description}")
     result = await Runner.run(agent, json.dumps(prompt))
-    log(f"{agent.name} thought for {time.time() - t} seconds.", world.scene_name)
+    log(f"{agent.name} thought for {time.time() - t} seconds.")
     path_str = result.final_output.path
     sound_name = path_str.split("/")[-1]
     world.propose_object(sound_name, RelativePath(path=Path(path_str)))
     world.add_sound(sound_name)
+    world.add_data(
+        {
+            "Sound": {
+                "When?": "On start of scene",
+                "Where?": "Master sound channel",
+                "name": sound_name.split(".")[0],
+                "type": f"digitally encoded as a {sound_name.split(".")[1]}"
+            }
+        }
+    )
     return f"Successfully added '{sound_name}' to the scene."
 
 @error_reporter
 async def create_sun(description_of_sun_behavior: str) -> str:
     global world
-    log("Creating sun...", world.scene_name)
+    log("Creating sun...")
+    from tools.tools import positionSun
     agent = SunPlanner(tools=[positionSun])
     prompt = {"Description of desired sun behavior": description_of_sun_behavior}
 
     t = time.time()
-    log(f"{agent.name} started", world.scene_name)
+    log(f"{agent.name} started")
     await Runner.run(agent, json.dumps(prompt))
-    log(f"{agent.name}: {time.time() - t} seconds", world.scene_name)    
+    log(f"{agent.name}: {time.time() - t} seconds")    
     return f"Successfully placed the Sun in the scene"
 
 @error_reporter
 async def create_ground(steps_to_ground_construction, resolution, scale, procedural):
     global world
-
+    from tools.tools import addTexture
     agent = GroundCreator(tools=[addTexture], set_perimeter_to_0=True, resolution=resolution, scale=scale)
     prompt = {"Steps to plan": steps_to_ground_construction, "Resolution": resolution, "Scale": scale}
     
@@ -180,21 +171,21 @@ async def create_ground(steps_to_ground_construction, resolution, scale, procedu
         prompt["Existing ground scale"] = world.ground_scale
         prompt["Existing texture"] = world.current_texture
     t = time.time()
-    log(f"{agent.name} starting to create ground.", world.scene_name)
+    log(f"{agent.name} starting to create ground.")
     result = await Runner.run(agent, json.dumps(prompt))
-    log(f"{agent.name} finished in {time.time() - t} seconds.", world.scene_name)
+    log(f"{agent.name} finished in {time.time() - t} seconds.")
     
     grid:str = result.final_output.grid
     if procedural:
-        object_path, ground_matrix = surface_construction.obj_from_grid_procedural(asset_project / "Assets" / "Manifest", grid, scale, world.scene_name)
+        object_path, ground_matrix = surface_construction.obj_from_grid_procedural(assets / "Assets" / "Manifest", grid, scale, world.name)
     else:
-        object_path, ground_matrix = surface_construction.obj_from_grid(asset_project / "Assets" / "Manifest", grid, scale)
-    log(f"Ground OBJ written to {object_path}.", world.scene_name)
+        object_path, ground_matrix = surface_construction.obj_from_grid(assets / "Assets" / "Manifest", grid, scale)
+    log(f"Ground OBJ written to {object_path}.")
     try:
         assert len(ground_matrix[0]) == len(ground_matrix)
         
     except AssertionError:
-        log(f"Oops! Ground matrix was not square but {len(ground_matrix[0])} by {len(ground_matrix)}. Retrying...", world.scene_name)
+        log(f"Oops! Ground matrix was not square but {len(ground_matrix[0])} by {len(ground_matrix)}. Retrying...")
         raise AssertionError(f"Ground matrix is not `square but {len(ground_matrix[0])} by {len(ground_matrix)}. Try a smaller resolution to increase performance.")
     ground_name = object_path.name
     world.ground_matrix = ground_matrix
@@ -205,12 +196,12 @@ async def create_ground(steps_to_ground_construction, resolution, scale, procedu
     world.current_texture = texture_path_str
         
     name, asset = world.propose_object(ground_name, {"Ground": RelativePath(object_path), "Texture": RelativePath(Path(texture_path_str))})
-    log(f"Proposed object {name} as {asset}", world.scene_name)
+    log(f"Proposed object {name} as {asset}")
     
     json_location = {"x": 0, "y": 0, "z": 0}
-    log("Adding ground to YAML", world.scene_name)
+    log("Adding ground to YAML")
     world.add_ground(ground_name, json_location)
-    log("Back from adding ground to YAML", world.scene_name)
+    log("Back from adding ground to YAML")
     # Add new contact points under ground
     print("Back from adding ground to scene.")
     world.contact_points["Ground"] = []
@@ -227,27 +218,40 @@ async def create_ground(steps_to_ground_construction, resolution, scale, procedu
 
     # Join all rows with brackets around the entire matrix
     legible_result = "\n[\n" + ",\n".join(formatted_rows) + "\n]"
-    log(explanation, world.scene_name)
+    log(explanation)
+    world.add_data(
+        {
+            "Name": ground_name,
+            "Texture": world.current_texture,
+            "Heightmap": ground_matrix,
+            "Scale": world.ground_scale,
+            "Position": json_location,
+            "Orientation": "The ground goes from (0,0) to (-50, 50). That is, the top left of the matrix is -50, 50. All objects should be on over the ground." # held constant elsewhere?
+        }
+    )
     return f"Successfully placed a ground with heightmap {legible_result} in the +X +Z quadrant (these coordinates correspond to the vertices of the ground mesh). The scale of the Xs and Zs is x5. There is no vertical scaling.\n{explanation}"
 
 @error_reporter
 def populate_horizon(asset_name_list: str):
     global world
-    log("Populating horizon", world.scene_name)
+    log("Populating horizon")
     # I'd like to have a random 2D coordinate generator that excludes numbers that fall within the indices of world.ground_matrix * 
     try:
         asset_name_list = json.loads(asset_name_list)
     except:
         print(f"Failed to load json from {asset_name_list}")
         return f"Failed to json.loads({asset_name_list})."
-    log(f"Assets to populate horizon with: {asset_name_list}", world.scene_name)
+    log(f"Assets to populate horizon with: {asset_name_list}")
     procedural.populate(asset_name_list, world) # adds proposed objects to world randomly up to a limit (camera fov)
+    world.add_data({
+        "Ground off to infinite": f"Outside the {world.ground_scale}x {world.current_texture} ground, there are randomly placed {asset_name_list}"
+    })
     return f"Successfully populated horizon."
 
 @error_reporter
 async def add_texture(material_of_object_description: str):
     global world
-    log("Adding texture for ground...", world.scene_name)
+    log("Adding texture for ground...")
     if len(ground_material_leaves) == 0:
         print("No textures for ground available! Skipping TexturePlanner.")
         return "None"
@@ -255,9 +259,9 @@ async def add_texture(material_of_object_description: str):
     prompt = {"Material description": material_of_object_description,
                 "Available assets": ground_material_leaves}
     t = time.time()
-    log(f"{agent.name} started", world.scene_name)
+    log(f"{agent.name} started")
     result = await Runner.run(agent, json.dumps(prompt))
-    log(f"{agent.name}: {time.time() - t} seconds", world.scene_name)
+    log(f"{agent.name}: {time.time() - t} seconds")
     
     mat_path = result.final_output.path
     print("Found", mat_path, "for", material_of_object_description)
@@ -266,44 +270,45 @@ async def add_texture(material_of_object_description: str):
 
 @error_reporter
 async def propose_object(description: str):
-    if asset_project is None:
+    if assets is None:
         print("Asset project not set. Needed for linking objects.")
-        return f"Somethings wrong. Report to user: 'Asset project not set (is {asset_project}) Needed for linking objects.'"
+        return f"Somethings wrong. Report to user: 'Asset project not set (is {assets}) Needed for linking objects.'"
     global world
     if USE_SHAP_E:
-        object_path = shap_e_test.generate(asset_project, prompt=description)
+        object_path = shap_e_test.generate(assets, prompt=description)
         world.propose_object(description, RelativePath(path=Path(object_path)))
         return {"Object":{"Name":description, "Info": "Assume the origin is at the object's center."}}
+    from tools.tools import getGroundMatrix
     agent = ObjectPlanner(tools=[getGroundMatrix])
     prompt = {"Description of object": description, "Synopses to choose from": list(synopses.keys())}
     t = time.time()
-    log(f"{agent.name} starting to match '{description}'", world.scene_name)
+    log(f"{agent.name} starting to match '{description}'")
     result = await Runner.run(agent, json.dumps(prompt))
-    log(f"{agent.name} matched synopsis '{result.final_output.synopsis}' to the description in {time.time() - t} seconds.", world.scene_name)
+    log(f"{agent.name} matched synopsis '{result.final_output.synopsis}' to the description in {time.time() - t} seconds.")
     synopsis: str = result.final_output.synopsis
     try:
         object_path = Path(synopses[synopsis])
-        log(f"{synopsis} has path {object_path}", world.scene_name)
+        log(f"{synopsis} has path {object_path}")
     except KeyError:
         print(result.final_output, "is not in synopsis file. (Agent problem - the list of synopses were passed to it.)")
         return f"This agent failed to match the description to an object, maybe because the object does not exist in the available assets."
-    log(f"Looking up {object_path} in catalog...", world.scene_name)
+    log(f"Looking up {object_path} in catalog...")
     object_data = asset_lookup(object_path)
     
     if object_data == None:
         raise Exception("We're sorry, no assets could be found to fit that description. Please try again with another slightly different object in mind, or leave the desired object out altogether if it is not crucial to the scene.")
     else:
         print(f"\tGathered info:\n{object_data}")
-    log(f"Catalog says {object_path} is {object_data["Name"]}", world.scene_name)
-    proposed_object_path = asset_project / object_path
-    log(f"Converting path {object_path} to Asset with path {Path(proposed_object_path)}", world.scene_name)
+    log(f"Catalog says {object_path} is {object_data["Name"]}")
+    proposed_object_path = assets / object_path
+    log(f"Converting path {object_path} to Asset with path {Path(proposed_object_path)}")
     object_name, proposed_asset = world.propose_object(object_data["Name"], RelativePath(path=Path(proposed_object_path)))
-    log(f"Proposed object {object_name} as {proposed_asset}", world.scene_name)
+    log(f"Proposed object {object_name} as {proposed_asset}")
     json_blob = {
         "Object": object_data,
         "Note": result.final_output.note
     }
-    log(f"Matcher to conductor: {json_blob["Note"]}", world.scene_name)
+    log(f"Matcher to conductor: {json_blob["Note"]}")
     return json_blob
 
 
@@ -312,9 +317,9 @@ async def propose_object(description: str):
 def position_object(object_name: str, position_of_object_origin: str, rotation: str, explanation: str) -> str:
     global world 
     try:
-        assert object_name in world.unity_file.proposed_objects
+        assert object_name in world.proposed_objects
     except AssertionError:
-        print(f"Object {object_name} is not showing up in {world.unity_file.proposed_objects}")
+        print(f"Object {object_name} is not showing up in {world.proposed_objects}")
         return f"The object {object_name} has not been proposed. Please call proposeObject before positionObject and refer to the proposed object in the arguments of positionObject."
     try:
         json_location = json.loads(position_of_object_origin)
@@ -326,15 +331,15 @@ def position_object(object_name: str, position_of_object_origin: str, rotation: 
     except ValueError:
         print("Error loading given rotation into JSON")
         return f"Failed to add object '{object_name}' to rotation {rotation} in the scene (json.loads() error) Make sure to pass a correct something that can be loaded with json.loads() into JSON."
-    log(f"Positioning {object_name}. Arguments: {position_of_object_origin}, {rotation}", world.scene_name)
-    asset_path = world.get_pathstr_relative_to_asset_project(object_name, asset_project) # (logging in there)
-    log(f"Is {asset_path} in the assest_catalog?", world.scene_name)
+    log(f"Positioning {object_name}. Arguments: {position_of_object_origin}, {rotation}")
+    asset_path = world.get_pathstr_relative_to_assets(object_name, assets) # (logging in there)
+    log(f"Is {asset_path} in the assest_catalog?")
     if asset_path in list(asset_catalog.keys()):
         object_data = asset_catalog[asset_path]
     else:
         object_data = {"Name": object_name}
-    log(f"Successfully parsed location(s) and rotation(s) for proposed {object_name}", world.scene_name)
-    log(explanation, world.scene_name)
+    log(f"Successfully parsed location(s) and rotation(s) for proposed {object_name}")
+    log(explanation)
     
     #HEre we check if its a list or a singleton
     objects_to_sequence = []
@@ -364,18 +369,18 @@ def position_object(object_name: str, position_of_object_origin: str, rotation: 
         print("Positioning...........")
         print(asset_path)       
         print("...........") 
-        log(f"Positioning {object_name} at {json.dumps(json_location)}", world.scene_name)
+        log(f"Positioning {object_name} at {json.dumps(json_location)}")
         if asset_path in list(asset_catalog.keys()):        
             world.add_prefab(object_name, json_location, json_rotation)
         else:
-            log(f"This asset {asset_path} is not in asset_catalog", world.scene_name)
+            log(f"This asset {asset_path} is not in asset_catalog")
             world.add_orphan_prefab(object_name, json_location, json_rotation)
         object_data["Position"] = json_location
         object_data["Rotation"] = json_rotation
         world.add_data(object_data)
     if len(failed_placements) == max_len:
         return f"Failed to place one or all of {object_name}. Failed placements:\n{failed_placements}"
-    log(f"Positioned {object_name} {max_len - len(failed_placements)} times.", world.scene_name)
+    log(f"Positioned {object_name} {max_len - len(failed_placements)} times.")
     if max_len - len(failed_placements) > 1:
         response = f"Added {object_name} objects to the scene. Recall the information of {object_name} at the placed positions."
     else:
@@ -394,5 +399,5 @@ def asset_lookup(path: Path) -> dict:
     else:
         global world
         #return {"Name": "unknown_object"+str(random.randint(100, 999)), "Importances": None}
-        log(f"Oops! {path.as_posix()} not in {list(asset_catalog.keys())}", world.scene_name)
+        log(f"Oops! {path.as_posix()} not in {list(asset_catalog.keys())}")
         return None

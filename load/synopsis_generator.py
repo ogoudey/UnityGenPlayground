@@ -18,11 +18,18 @@ import asyncio
 
 MODEL = (os.getenv("MODEL") or "o3-mini").strip() or "o3-mini"
 
-async def load(assets_folder, asset_catalog, scene_name_for_logging):
-    with open(assets_folder / "synopsis_file.json", "r") as s:
-        v = s.read()
-        synopses = json.loads(v)
-    log(f"Synopsis file loaded with {len(synopses)} entries", scene_name_for_logging)
+async def load(assets_folder, asset_catalog):
+    try:
+        with open(assets_folder / "synopsis_file.json", "r") as s:
+            v = s.read()
+            synopses = json.loads(v)
+    except FileNotFoundError:
+        found = ""
+        for name in os.listdir(assets_folder):
+            if not name.endswith(".meta"):
+                found += f"\n\t{name}"
+        raise FileNotFoundError(f"The specified Assets folder ({assets_folder}) has no synopses file:{found}\n\nIf you would like to generate one, make an empty `synopsis.json` there.")
+    log(f"Synopsis file loaded with {len(synopses)} entries")
     active_synopses = await update_synopsis_file(assets_folder, asset_catalog, synopses)
     return active_synopses
 
@@ -62,7 +69,14 @@ async def update_synopsis_file(assets_folder, asset_catalog, synopses) -> dict[s
         if not found:
             unrepresented_assets.append(ante_asset_path)
     if len(unrepresented_assets) > 0:
-        print(f"The following asset are marked as irrelevant because the assets are not imported:\n{unrepresented_assets}")
+        legible1, legible2 = "", ""
+        for asset in unrepresented_assets:
+            legible1 += f"\n\t{asset}"
+        for asset in list(asset_catalog.keys()):
+            legible2 += f"\n\t{asset}"
+        
+        print(f"Annotated assets: {legible2}")
+        print(f"The following asset are marked as irrelevant because the assets are not imported:\n{legible1}")
     return represented_assets
     # synopses updated
 

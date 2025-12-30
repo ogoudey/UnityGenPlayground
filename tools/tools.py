@@ -1,6 +1,11 @@
 #############################################################################
 #
 #   Module containing all function tools for LLMs. Each is wrapped in an error reporter for debugging.
+# 
+#       LLM -> tools -> API
+#
+#
+#
 #
 #############################################################################
 
@@ -29,10 +34,13 @@ import os
 import traceback
 import asyncio
 
-# get world type
-# then
+WORLD_CLASS = os.environ.get("WORLD_CLASS", "UNITY")
 
-from tools.unity import core
+
+if WORLD_CLASS == "UNITY":
+    from tools.unity import core
+    
+        
 
 ### Form of a Tool ###
 

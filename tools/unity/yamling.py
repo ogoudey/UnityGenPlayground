@@ -23,7 +23,7 @@ from utils.paths import RelativePath
 UNITY_VERSION = (os.getenv("UNITY_VERSION") or "5").strip() or "5"
 VR_HEADSET_TYPE = (os.getenv("VR_HEADSET_TYPE") or "Vive Focus 3").strip() or "Vive Focus 3"
 
-print(f"\nGenerating world for \033[1m\033[36mUnity {UNITY_VERSION}\033[0m. Use \033[1m\033[36mexport UNITY_VERSION='<5|6>'\033[0m")
+print(f"\n[Unity scene file info] Generating world for Unity {UNITY_VERSION}.") # Use \033[1m\033[36mexport UNITY_VERSION='<5|6>'\033[0m")
 
 class UnityFile:
     def __init__(self):
@@ -70,24 +70,24 @@ class UnityFile:
         except Exception:
             print("\rFailed to set skybox.")
             
-    def add_ground_prefab_instance(self, name, metaguid, transform, scene_name_for_logging):
-        log(f"Adding prefab instance {name}", scene_name_for_logging)
+    def add_ground_prefab_instance(self, name, metaguid, transform):
+        log(f"Adding prefab instance {name}")
         node = compose(prefab_init_text)[0]
         wrapped = node_to_python(node)
-        log("Got init text for prefab", scene_name_for_logging)
+        log("Got init text for prefab")
         wrapped, id_out = set_ID(wrapped) # to random ID
-        log("Set ID", scene_name_for_logging)
+        log("Set ID")
         try:
-            log(f"Getting proposal. (Is {name} in propositions?)", scene_name_for_logging)
+            log(f"Getting proposal. (Is {name} in propositions?)")
             proposal = self.proposed_objects[name]
-            log(f"Found proposed object {name} (keys: {list(proposal.keys())}", scene_name_for_logging)
+            log(f"Found proposed object {name} (keys: {list(proposal.keys())}")
             texture_path = proposal["Texture"].path
-            log(f"Found proposal's path: {texture_path}", scene_name_for_logging)
-            texture_metaguid = get_guid(texture_path, scene_name_for_logging)
+            log(f"Found proposal's path: {texture_path}")
+            texture_metaguid = get_guid(texture_path)
         except Exception:
-            log(f"Exception in getting texture GUID or getting proposal: {texture_path}", scene_name_for_logging)
+            log(f"Exception in getting texture GUID or getting proposal: {texture_path}")
             raise Exception(".meta lookup failed. File does not exist?")
-        log("Making modifications...", scene_name_for_logging)
+        log("Making modifications...")
         modifications = wrapped["PrefabInstance"]["m_Modification"]["m_Modifications"]
         for mod in modifications:
             if "target" in mod and "guid" in mod["target"]:
@@ -108,11 +108,11 @@ class UnityFile:
                         mod["value"] = transform["z"]
         wrapped["PrefabInstance"]["m_SourcePrefab"]["guid"] = metaguid
         self.wrapped.append(wrapped)
-        log("Modifications made, added to YAML.", scene_name_for_logging)
+        log("Modifications made, added to YAML.")
         if not UNITY_VERSION == "5":
             sceneroots = self.get_doc("SceneRoots")
             sceneroots["m_Roots"].append({"fileID": id_out})
-            log("Scene roots modified.", scene_name_for_logging)        
+            log("Scene roots modified.")        
     
     def remove_prefab_instance_if_exists(self, name):
         for doc in self.wrapped:
@@ -133,7 +133,7 @@ class UnityFile:
         sceneroots["m_Roots"].remove({"fileID": prefab_id})
         return False
 
-    def add_orphan_prefab_instance(self, name, metaguid, transform, rotation, scene_for_logging):
+    def add_orphan_prefab_instance(self, name, metaguid, transform, rotation):
         node = compose(prefab_init_text)[0]
         wrapped = node_to_python(node)
         wrapped, id_out = set_ID(wrapped) # to random ID
@@ -216,11 +216,11 @@ class UnityFile:
         self.wrapped.append(sound_game_object)
 
 
-    def add_prefab_instance(self, name, transform: dict, rotation, scene_name_for_logging="add_prefab_instance"):
+    def add_prefab_instance(self, name, transform: dict, rotation="add_prefab_instance"):
         composed = compose(prefab_init_text)
         objects: str = node_to_python(composed[0])
         objects, id_out = set_ID(objects) # to random ID
-        #log(f"{name} in {self.proposed_objects.assets}?", scene_name_for_logging)
+        #log(f"{name} in {self.proposed_objects.assets}?")
         try:
             prefab_path = self.proposed_objects[name].path
         except KeyError:
@@ -241,7 +241,7 @@ class UnityFile:
         quaternion = euler_to_xyzw_quaternion(rotation)
         modifications = objects["PrefabInstance"]["m_Modification"]["m_Modifications"]
         x_position_has_been_changed = False # marker for whether the 
-        #log("Making modifications to init_yaml", scene_name_for_logging)
+        #log("Making modifications to init_yaml")
         for mod in modifications:
             if "target" in mod and "guid" in mod["target"]:
                 mod["target"]["guid"] = guid
@@ -254,7 +254,7 @@ class UnityFile:
                     mod["target"]["fileID"] = father_ID
                     if mod.get("propertyPath") == "m_LocalPosition.x":
                         mod["value"] = transform["x"]
-                        #log(f"x position set to {transform['x']}", scene_name_for_logging)
+                        #log(f"x position set to {transform['x']}")
                     if mod.get("propertyPath") == "m_LocalPosition.y":
                         mod["value"] = transform["y"]
                     if mod.get("propertyPath") == "m_LocalPosition.z":
@@ -279,7 +279,7 @@ class UnityFile:
         self.wrapped.append(objects)
         return True
     
-    def set_vr_player(self, transform: dict, rotation: dict, scene_name:str):
+    def set_vr_player(self, transform: dict, rotation: dict):
         """
         Dispatches to the various configurations of VR player. Either:
           a. VIVECameraRig/SteamVR: sufficient for Unity 6(+)
@@ -290,7 +290,7 @@ class UnityFile:
                       "6": {"Vive Focus 3": self.setup_vive_focus},
                       "5": {"Vive Pro 2": self.setup_data_collection}}
         dispatch = dispatcher[UNITY_VERSION][VR_HEADSET_TYPE]
-        log(f"Unity version {UNITY_VERSION} with {VR_HEADSET_TYPE} headset maps to low-level function `{dispatch.__name__}`", scene_name)
+        log(f"Unity version {UNITY_VERSION} with {VR_HEADSET_TYPE} headset maps to low-level function `{dispatch.__name__}`")
         dispatch(transform, rotation)
 
     def setup_vive_focus(self, transform: dict, rotation: dict):
@@ -457,29 +457,29 @@ def node_to_python(node: MappingNode) -> Any:
         print(node)
         return None
 
-def write_obj_meta(rel_path: RelativePath, guid, scene_for_logging: str = "writing_meta"):
-    #log(f"Writing OBJ meta", scene_for_logging)
+def write_obj_meta(rel_path: RelativePath, guid: str = "writing_meta"):
+    #log(f"Writing OBJ meta")
     path = rel_path.path
     node = compose(obj_meta_init_text)[0]
     wrapped = node_to_python(node)
     
     wrapped["guid"] = guid
-    #log("GUID set", scene_for_logging)
+    #log("GUID set")
     reformatted = convert_numbers(wrapped)
-    #log("Dumping YAML...", scene_for_logging)
+    #log("Dumping YAML...")
     yaml_str = pyyaml.dump(
         reformatted, 
         default_flow_style=False, 
         sort_keys=False
     )
-    #log("YAML dumped", scene_for_logging)
-    #log("Writing YAML...", scene_for_logging)
+    #log("YAML dumped")
+    #log("Writing YAML...")
     new_path = path.with_name(path.name + ".meta")
-    #log(f"Writing YAML to {new_path}", scene_for_logging)
-    #log(f"repr(path) {repr(new_path)}", scene_for_logging)
+    #log(f"Writing YAML to {new_path}")
+    #log(f"repr(path) {repr(new_path)}")
     with open(new_path, "w") as f:
         f.write(yaml_str)
-    #log(f"YAML written {new_path}", scene_for_logging)
+    #log(f"YAML written {new_path}")
 
 def euler_to_xyzw_quaternion(rotation: dict) -> tuple:
     x_deg, y_deg, z_deg = rotation["x"], rotation["y"], rotation["z"]
@@ -515,13 +515,13 @@ def set_ID(text: MappingNode, new_id: str="") -> tuple[MappingNode, str]:
         raise ValueError("No anchor to be set!")
     return text, new_id
         
-def get_guid(file: Path, scene_name_for_logging:str="get_guid") -> str:
+def get_guid(file: Path) -> str:
     """Returns the 'guid' property from a file."""
     meta_file = file.with_suffix(file.suffix + ".meta")
-    #log(f"Converting {file} to {meta_file}. Opening META...", scene_name_for_logging)
+    #log(f"Converting {file} to {meta_file}. Opening META...")
     with open(meta_file, "r") as f:
         data = pyyaml.safe_load(f)
-    #log(f"Opened {meta_file} and returning guid", scene_name_for_logging)    # Ensure 'guid' exists
+    #log(f"Opened {meta_file} and returning guid")    # Ensure 'guid' exists
     if "guid" not in data:
         raise KeyError(f"'guid' not found in {meta_file}")
     return data["guid"]
