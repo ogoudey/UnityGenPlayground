@@ -88,10 +88,8 @@ class UnityWorldGen(WorldGen):
         
 
         # Unity specific stuff below
-        
-        self.scene_0 = scene_name
-        
-        instruments.core.world = UnityWorld(world_name, self.scene_0)  
+                
+        instruments.core.world = UnityWorld(world_name, scene_name)  
 
         if assets_folder is None:
             if ASSETS is None:
@@ -131,7 +129,7 @@ class UnityWorldGen(WorldGen):
         """
         result = await Runner.run(self.conductor, prompt, max_turns=20)
         try:
-            scene_path = instruments.core.world.done_and_write(instruments.core.assets / "Generations" / self.scene_0)
+            scene_path = instruments.core.world.done_and_write(instruments.core.assets / "Generations" / instruments.core.world.scene.name)
             return scene_path
         except Exception:
             print(f"Did not write scene:\n{result.final_output}")

@@ -8,7 +8,7 @@
 import sys
 import uuid
 from pathlib import Path
-import tools.unity.yamling as yamling
+import tools.unity.structural_changes as structural_changes
 
 from typing import List
 from logger import log
@@ -79,6 +79,9 @@ class UnityWorld(World):
         self.ground_scale = 5.0
         self.texture = ""
 
+    def __repr__(self):
+        return self.model.__repr__()
+
     def propose_object(self, name: str, asset: RelativePath | dict[str, RelativePath]):
         log(f"Proposing {name} as {asset}")
         name, asset = self.proposed_objects.add(name, asset)
@@ -100,17 +103,21 @@ class UnityWorld(World):
     def post(self):
         post_execute()
 
-    def done_and_write(self, path_to_write: Path): 
-        log(f"{len(self.objects)} objects generated.")
-        if path_to_write.exists():
-            return self.scene.to_unity_yaml(path_to_write)
+    def done_and_write(self, path_to_write: Path | str):
+        self.post()
+        path = Path(path_to_write)
+        if path.exists():
+            return self.scene.commit_scene(path)
         else:
-            log(f"Path {path_to_write} does not exist!")
-            raise Exception(f"Path {path_to_write} does not exist!")
+            print("Making parent directories")
+            path.parent.mkdir(parents=True, exist_ok=True)
+            return self.scene.commit_scene(path)
+            raise Exception(f"Path {path} does not exist!")
 
     @post_write    
     def add_skybox(self, skybox_name):
-        self.scene.add_skybox(skybox_name)
+        mat_path = self.proposed_objects[skybox_name].path
+        self.scene.add_skybox(skybox_name, mat_path)
 
     @post_write
     def add_sun(self, length_of_day, time_of_day, sun_brightness):
@@ -118,7 +125,8 @@ class UnityWorld(World):
 
     @post_write
     def add_sound(self, sound_name):
-        self.scene.add_sound(sound_name)
+        sound_path = self.proposed_objects[sound_name].path
+        self.scene.add_sound(sound_name, sound_path)
 
     @post_write
     def set_vr_player(self, location, rotation):
@@ -126,12 +134,20 @@ class UnityWorld(World):
 
     @post_write      
     def add_prefab(self, name, location: dict, rotation):
-        self.scene.add_prefab(name, location, rotation)
+        prefab_path = self.proposed_objects[name].path
+        self.scene.add_prefab(name, prefab_path, location, rotation)
 
     @post_write
     def add_orphan_prefab(self, name, location, rotation):
-        self.scene.add_orphan_prefab(name, location, rotation)
+        prefab_path = self.proposed_objects[name].path
+        self.scene.add_orphan_prefab(name, prefab_path, location, rotation)
 
     @post_write
     def add_ground(self, ground_name, transform={"x":0.0, "y":0.0, "z":0.0}, rotation={"x":0.0, "y":0.0, "z":0.0}):
-        self.scene.add_ground(ground_name, transform, rotation)
+        if not self.ground_name == "":
+            if self.scene.unity_file.remove_prefab_instance_if_exists(self.ground_name):
+                print(f"Removed existing ground {self.ground_name} from YAML")
+            else:
+                print("Ground exists in YAML - couldn't be removed.")
+        proposal = self.proposed_objects[ground_name]
+        self.scene.add_ground(ground_name, proposal, transform, rotation)

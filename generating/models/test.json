@@ -1,0 +1,21 @@
+{
+  "scene": [
+    {
+      "Info": {
+        "Description": "About 1m cubed.",
+        "Local origin": "at the object 3D center midpoint"
+      },
+      "Name": "Rock1",
+      "Position": {
+        "x": 2,
+        "y": 0,
+        "z": 5
+      },
+      "Rotation": {
+        "x": 0,
+        "y": 90,
+        "z": 0
+      }
+    }
+  ]
+}

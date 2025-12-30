@@ -1,4 +1,5 @@
 import os
+from typing import List
 
 WORLD_CLASS = os.environ.get("WORLD_CLASS", "UNITY")
 
@@ -9,13 +10,13 @@ if WORLD_CLASS == "UNITY":
     elif UNITY_WORLD_TYPE == "UNITY_TWO_STEP":
         MODE = "TWO_STEP"
 
-executions = {}
+executions: List[tuple] = []
 
 def post_write(func):
     # add the {func: args} to executions so that each function can be executed at another time with `k(v) for k,v in executions.items()`
     if MODE == "TWO_STEP":
         def wrapper(*args, **kwargs):
-            executions[func] = (args, kwargs)
+            executions.append((func, (args, kwargs)))
         return wrapper
     else:
         return func
@@ -24,8 +25,14 @@ def post_write(func):
         return nothing
 
 def post_execute():
+    
     if MODE == "TWO_STEP":
-        for func, (args, kwargs) in executions.items():
+        print(f"Building YAML file...")
+        for func, (args, kwargs) in executions:
+            print(f"{func.__name__}")
+        for func, (args, kwargs) in executions:
+            print(f"Calling {func} on {args}, {kwargs}")
             func(*args, **kwargs)
     else:
+        print(f"Not building YAML file... {UNITY_WORLD_TYPE}")
         pass

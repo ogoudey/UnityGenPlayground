@@ -6,13 +6,14 @@ from pathlib import Path
 import asyncio
 import json
 import random
-
+from agents import Runner
 import asyncio
 
 from tools import tools as instruments
 
 from generating.worldgen import AcrophobiaWorldGen
-from pprint import pprint
+from pprint import pformat
+
 async_loop = None
 
 class Test:
@@ -22,7 +23,7 @@ class Test:
         if async_loop is None:
             raise Exception(f"No async loop started...")
         future = asyncio.run_coroutine_threadsafe(
-            self.run(assets_folder),
+            self.spin(assets_folder),
             async_loop
         )
         future.add_done_callback(
@@ -30,12 +31,16 @@ class Test:
         )
 
     def __repr__(self):
-        return json.dumps(self.conductor_tools, indent=4, sort_keys=False)
+        return self.__str__()
 
-    async def run(self, assets_folder: Path):
+    def __str__(self):
+        return pformat(self._conductor_tools, width=120, sort_dicts=False)
+    
+    async def spin(self, assets_folder: Path):
         wg = AcrophobiaWorldGen("test", "test_scene", assets_folder)
         await wg.load()
-        self.conductor_tools = wg.conductor.tools
+        self._conductor = wg.conductor
+        self._conductor_tools = wg.conductor.tools
         self._funcs = {tool.name: tool for tool in wg.conductor.tools}
         print(self)
 
@@ -46,7 +51,7 @@ class Test:
             def _call_tool(*args, **kwargs):
                 
                 try:
-                    return func(*args, **kwargs)  # or tool.invoke(...)
+                    return func(*args, **kwargs)
                 except Exception:
                     json_payload = json.dumps(kwargs)
                     asyncio.run_coroutine_threadsafe(
@@ -57,6 +62,17 @@ class Test:
 
         raise AttributeError(f"{type(self).__name__} has no attribute {name}")
     
+    def conductor(self, prompt: str):
+        async def run_conductor(_prompt: str):
+            await Runner.run(self._conductor, json.dumps(_prompt))
+        asyncio.run_coroutine_threadsafe(
+            run_conductor(prompt),
+            async_loop
+        )
+
+    def write(self):
+        self.result.done_and_write(instruments.core.assets / "Generations" / instruments.core.world.scene.name)
+
     @property
     def result(self):
         return instruments.core.world

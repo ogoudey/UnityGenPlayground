@@ -16,11 +16,12 @@ class UnityWorldModel(WorldModel):
         return json.dumps(self.objects, indent=4, sort_keys=False)
 
     def update(self, object_data: dict):
-        self.objects.append(object_data)
+        self.objects.append(object_data.copy())
+        self.dump_world_model("generating/models/test.json")
     
     def dump_world_model(self, path: str | Path):
         path = Path(path)
-        data = {"objects": self.objects}
+        data = {"scene": self.objects}
         with path.open("w", encoding="utf-8") as f:
             json.dump(
                 data,

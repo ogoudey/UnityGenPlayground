@@ -12,13 +12,8 @@ from ruamel.yaml.nodes import ScalarNode, MappingNode, SequenceNode
 ##### In pipeline #######
 
 def load_structure(structure_type: str) -> str:
-    """ First, load the structure from the set of initial structures """
-    p = Path("structures") / structure_type
-
-    with open(p.with_suffix(".yaml"), "r") as f:
-        data = pyyaml.safe_load(f)
-    # Convert back to YAML string
-    return pyyaml.dump(data, sort_keys=False, default_flow_style=False)
+    p = Path("tools/unity/structures") / structure_type
+    return p.with_suffix(".yaml").read_text()
 
 def compose(initializing_text: str) -> List[MappingNode]:
     """ Then parse the structure into a composition of nodes. """
@@ -125,27 +120,7 @@ def euler_to_xyzw_quaternion(rotation: dict) -> tuple:
 
 ##### Out pipeline #####
 
-def to_unity_yaml(wrapped, path_to_write: Path):
-    file_name = str(path_to_write)
-    if file_name.endswith(".unity"):
-        file_name = file_name.removesuffix(".unity")
-    else:
-        file_name += ".unity"
-    out = ["%YAML 1.1", "%TAG !u! tag:unity3d.com,2011:"]
-    for entry in wrapped:
-        #tag = entry.pop("tag")
-        #anchor = entry.pop("anchor")
-        tag = entry["tag"]
-        anchor = entry["anchor"]
-        objname = list(entry.keys())[2]
-        objdata = entry[objname]
-        out.append(f"--- !u!{tag} &{anchor}")
-        out.append(f"{objname}:")
-        out.extend(dict_to_yaml(objdata, 2))
-    out = "\n".join(out) + "\n"
-    with open(file_name, "w") as f:
-        f.write(out)   
-    return file_name
+
 
 def dict_to_yaml(d, indent=0):
     """Recursively turn dict into Unity-style YAML lines."""

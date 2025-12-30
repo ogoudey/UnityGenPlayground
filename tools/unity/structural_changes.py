@@ -13,7 +13,7 @@ import random
 import os
 import sys
 from logger import log
-
+from pathlib import Path
 
 from utils.paths import RelativePath
 from tools.unity.structural_utils import (
@@ -24,7 +24,8 @@ from tools.unity.structural_utils import (
     get_father_id_of_root_transform_of_prefab,
     set_ID,
     get_guid,
-    euler_to_xyzw_quaternion
+    euler_to_xyzw_quaternion,
+    dict_to_yaml
 )
 
 UNITY_VERSION = (os.getenv("UNITY_VERSION") or "5").strip() or "5"
@@ -44,11 +45,19 @@ class UnityFile:
             raise Exception("Must set Unity version.")
         nodes = compose(scene_init_text)
         self.wrapped: List = [node_to_python(n) for n in nodes]
-        
-        
         self.placed_assets = dict()
 
-    
+    def reset(self):
+        # redund
+        if UNITY_VERSION == "6":
+            scene_init_text = load_structure("sceneU6")
+        elif UNITY_VERSION == "5":
+            scene_init_text = load_structure("sceneU5")
+        else:
+            raise Exception("Must set Unity version.")
+        nodes = compose(scene_init_text)
+        self.wrapped: List = [node_to_python(n) for n in nodes]
+        self.placed_assets = dict()
 
     def set_sun(self, length_of_day: float, time_of_day: float, sun_brightness:float):
         rot = (time_of_day / length_of_day) * 360
@@ -77,8 +86,8 @@ class UnityFile:
         sceneroots = get_doc(self.wrapped, "SceneRoots")
         sceneroots["m_Roots"].append({"fileID": father_id})
         
-    def set_skybox(self, name):
-        mat_path = self.proposed_objects[name].path
+    def set_skybox(self, name, mat_path):
+        
         guid = get_guid(mat_path)
         try:
             render_settings = get_doc(self.wrapped, "RenderSettings")
@@ -86,7 +95,7 @@ class UnityFile:
         except Exception:
             print("\rFailed to set skybox.")
             
-    def add_ground_prefab_instance(self, name, metaguid, transform):
+    def add_ground_prefab_instance(self, name, proposal, metaguid, transform):
         log(f"Adding prefab instance {name}")
         prefab_init_text = load_structure("prefab")
         node = compose(prefab_init_text)[0]
@@ -95,8 +104,6 @@ class UnityFile:
         wrapped, id_out = set_ID(wrapped) # to random ID
         log("Set ID")
         try:
-            log(f"Getting proposal. (Is {name} in propositions?)")
-            proposal = self.proposed_objects[name]
             log(f"Found proposed object {name} (keys: {list(proposal.keys())}")
             texture_path = proposal["Texture"].path
             log(f"Found proposal's path: {texture_path}")
@@ -150,14 +157,14 @@ class UnityFile:
         sceneroots["m_Roots"].remove({"fileID": prefab_id})
         return False
 
-    def add_orphan_prefab_instance(self, name, metaguid, transform, rotation):
+    def add_orphan_prefab_instance(self, name, prefab_path, metaguid, transform, rotation):
         prefab_init_text = load_structure("prefab")
         node = compose(prefab_init_text)[0]
         wrapped = node_to_python(node)
         wrapped, id_out = set_ID(wrapped) # to random ID
         
         try:
-            prefab_path = self.proposed_objects[name].path
+            
             print(f"Found {name} in proposed_objects w path {prefab_path}")
         except KeyError:
             print(name + " not in proposed_objects")
@@ -199,14 +206,14 @@ class UnityFile:
         sceneroots = get_doc(self.wrapped, "SceneRoots")
         sceneroots["m_Roots"].append({"fileID": id_out})        
 
-    def add_sound(self, name):
+    def add_sound(self, name, sound_path):
         sound_init_text = load_structure("sound")
         nodes = compose(sound_init_text)
         sound_game_object = node_to_python(nodes[0])
         audio_source = node_to_python(nodes[1])
         sound_transform = node_to_python(nodes[2])
         try:
-            sound_path = self.proposed_objects[name].path
+            
             print(f"Found {name} in proposed_objects w path {sound_path}")
         except KeyError:
             print(name + " not in proposed_objects")
@@ -235,21 +242,15 @@ class UnityFile:
         self.wrapped.append(sound_game_object)
 
 
-    def add_prefab_instance(self, name, transform: dict, rotation="add_prefab_instance"):
+    def add_prefab_instance(self, name, prefab_path, transform: dict, rotation: dict):
         prefab_init_text = load_structure("prefab")
         composed = compose(prefab_init_text)
         objects: str = node_to_python(composed[0])
         objects, id_out = set_ID(objects) # to random ID
         #log(f"{name} in {self.proposed_objects.assets}?")
         try:
-            prefab_path = self.proposed_objects[name].path
-        except KeyError:
-            print(name + " not in proposed_objects")
-            print("Lookup in proposed_objects has failed.")
-        try:
             father_ID = get_father_id_of_root_transform_of_prefab(prefab_path)
         except Exception:
-            print("Could not find fatherID of root transform for path {prefab_path}")
             raise FileNotFoundError(f"Could not find fatherID of root transform {prefab_path}")
         try:    
             guid = get_guid(prefab_path)
@@ -408,6 +409,28 @@ class UnityFile:
         sceneroots["m_Roots"].append({"fileID": prefab_id})
         self.wrapped.append(wrapped)
     
+    def to_unity_yaml(self, path_to_write: Path):
+        file_name = str(path_to_write)
+        if file_name.endswith(".unity"):
+            file_name = file_name.removesuffix(".unity")
+        else:
+            file_name += ".unity"
+        out = ["%YAML 1.1", "%TAG !u! tag:unity3d.com,2011:"]
+        for entry in self.wrapped:
+            #tag = entry.pop("tag")
+            #anchor = entry.pop("anchor")
+            tag = entry["tag"]
+            anchor = entry["anchor"]
+            objname = list(entry.keys())[2]
+            objdata = entry[objname]
+            out.append(f"--- !u!{tag} &{anchor}")
+            out.append(f"{objname}:")
+            out.extend(dict_to_yaml(objdata, 2))
+        out = "\n".join(out) + "\n"
+        with open(file_name, "w") as f:
+            f.write(out)
+        print(f"Written to {file_name}") 
+        return file_name
     
 def convert_numbers(obj):
     """ Helper """

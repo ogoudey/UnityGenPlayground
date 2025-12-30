@@ -339,6 +339,7 @@ def position_object(object_name: str, position_of_object_origin: str, rotation: 
     else:
         object_data = {"Name": object_name}
     log(f"Successfully parsed location(s) and rotation(s) for proposed {object_name}")
+    log(f"{json_location} {json_rotation}")
     log(explanation)
     
     #HEre we check if its a list or a singleton
