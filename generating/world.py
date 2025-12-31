@@ -77,7 +77,7 @@ class UnityWorld(World):
         self.ground_name = ""
         self.ground_matrix = []
         self.ground_scale = 5.0
-        self.texture = ""
+        self.current_texture = ""
 
     def __repr__(self):
         return self.model.__repr__()
