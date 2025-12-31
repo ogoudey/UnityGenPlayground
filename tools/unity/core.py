@@ -335,7 +335,7 @@ def position_object(object_name: str, position_of_object_origin: str, rotation: 
     asset_path = world.get_pathstr_relative_to_assets(object_name, assets) # (logging in there)
     log(f"Is {asset_path} in the assest_catalog?")
     if asset_path in list(asset_catalog.keys()):
-        object_data = asset_catalog[asset_path]
+        object_data = asset_catalog[asset_path].copy()
     else:
         object_data = {"Name": object_name}
     log(f"Successfully parsed location(s) and rotation(s) for proposed {object_name}")

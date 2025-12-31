@@ -16,6 +16,128 @@
         "y": 90,
         "z": 0
       }
+    },
+    {
+      "Skybox/atmosphere": {
+        "name of skybox": ""
+      }
+    },
+    {
+      "World place in solar system": {
+        "length of day": "24.0 Earth-hours",
+        "sun brightness": "0.02 luminosity",
+        "time of day": "8.0 Earth-hours"
+      }
+    },
+    {
+      "Info": {
+        "Description": "About 1m cubed.",
+        "Local origin": "at the object 3D center midpoint"
+      },
+      "Name": "Rock1",
+      "Position": {
+        "x": 4,
+        "y": 0.5,
+        "z": 5
+      },
+      "Rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    {
+      "Info": {
+        "Description": "About 1m cubed.",
+        "Local origin": "at the object 3D center midpoint"
+      },
+      "Name": "Rock1",
+      "Position": {
+        "x": 4,
+        "y": 1.5,
+        "z": 5
+      },
+      "Rotation": {
+        "x": 0,
+        "y": 30,
+        "z": 0
+      }
+    },
+    {
+      "Info": {
+        "Description": "About 1m cubed.",
+        "Local origin": "at the object 3D center midpoint"
+      },
+      "Name": "Rock1",
+      "Position": {
+        "x": 4,
+        "y": 2.5,
+        "z": 5
+      },
+      "Rotation": {
+        "x": 0,
+        "y": 60,
+        "z": 0
+      }
+    },
+    {
+      "Info": {
+        "Description": "About 1m cubed.",
+        "Local origin": "at the object 3D center midpoint"
+      },
+      "Name": "Rock1",
+      "Position": {
+        "x": 4,
+        "y": 3.5,
+        "z": 5
+      },
+      "Rotation": {
+        "x": 0,
+        "y": 90,
+        "z": 0
+      }
+    },
+    {
+      "Info": {
+        "Description": "About 1m cubed.",
+        "Local origin": "at the object 3D center midpoint"
+      },
+      "Name": "Rock1",
+      "Position": {
+        "x": 4,
+        "y": 4.5,
+        "z": 5
+      },
+      "Rotation": {
+        "x": 0,
+        "y": 120,
+        "z": 0
+      }
+    },
+    {
+      "Info": {
+        "Description": "About 1m cubed.",
+        "Local origin": "at the object 3D center midpoint"
+      },
+      "Name": "Rock1",
+      "Position": {
+        "x": 4,
+        "y": 5.5,
+        "z": 5
+      },
+      "Rotation": {
+        "x": 0,
+        "y": 150,
+        "z": 0
+      }
+    },
+    {
+      "Sound": {
+        "When?": "On start of scene",
+        "Where?": "Master sound channel",
+        "name": "scloudsave",
+        "type": "digitally encoded as a com - Light Breeze White Noise - Dream Shard"
+      }
     }
   ]
 }

@@ -65,8 +65,10 @@ class Test:
     def conductor(self, prompt: str):
         async def run_conductor(_prompt: str):
             await Runner.run(self._conductor, json.dumps(_prompt))
+
+        payload = inject_world_model(prompt, instruments.core.world.model)
         asyncio.run_coroutine_threadsafe(
-            run_conductor(prompt),
+            run_conductor(payload),
             async_loop
         )
 
@@ -76,3 +78,16 @@ class Test:
     @property
     def result(self):
         return instruments.core.world
+    
+
+    ### TEST - should be elsewhere
+def inject_world_model(prompt, world_model):
+    return\
+f"""
+==== World Model ====
+{world_model}
+
+          .
+==== User prompt ====
+{prompt}
+"""

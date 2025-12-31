@@ -104,6 +104,7 @@ class UnityWorld(World):
         post_execute()
 
     def done_and_write(self, path_to_write: Path | str):
+        self.scene.unity_file.reset()
         self.post()
         path = Path(path_to_write)
         if path.exists():

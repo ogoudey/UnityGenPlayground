@@ -46,20 +46,20 @@ def make_quads(matrix, x, y, obj_str, visited=[]):
 
     return new_line, visited
 
-def facify(matrix, scene_name_for_logging="facifier"):
+def facify(matrix):
     lines = ""
-    log("Getting row size...", scene_name_for_logging)
+    log("Getting row size...")
     row_size = len(matrix)
     
     visited = []
-    log("Constructing faces for each row...", scene_name_for_logging)
+    log("Constructing faces for each row...")
     for y in range(0, len(matrix) -1):
         for x in range(0, len(matrix[y]) -1):    
                 if not (x, y) in visited:
                     visited.append((x, y))
                     lines += f"f {y*row_size + x + 1}/{y*row_size + x + 1} {(y+1)*row_size + x + 1}/{(y+1)*row_size + x + 1} {(y+1)*row_size + x + 2}/{(y+1)*row_size + x + 2} {y*row_size + x + 2}/{y*row_size + x + 2}\n"
  
-    log("Returning...", scene_name_for_logging)
+    log("Returning...")
     return lines, visited
 """
 def obj_from_grid(obj_path: Path, grid: str = default_grid, scale=5.0):
@@ -106,7 +106,7 @@ def obj_from_grid(obj_path: Path, grid: str = default_grid, scale=5.0):
                 
 
     obj_str1 = obj_str
-    face_data, visits = facify(matrix, scene_name_for_logging)
+    face_data, visits = facify(matrix)
     obj_str1 += face_data
     print("File contains", len(face_data.split("\n")), "faces.")
     
@@ -121,12 +121,12 @@ def obj_from_grid(obj_path: Path, grid: str = default_grid, scale=5.0):
     return out_path, matrix
     # Generate faces
 """
-def obj_from_grid_procedural(manifest_path: Path, grid: str = default_grid, scale=5.0, scene_name_for_logging:str=""):
-    log(f"Starting to build ground in Manifest {manifest_path}", scene_name_for_logging)
+def obj_from_grid_procedural(manifest_path: Path, grid: str = default_grid, scale=5.0):
+    log(f"Starting to build ground in Manifest {manifest_path}")
     location = {"x": 0.0, "y": 0.0, "z": 0.0}
     obj_str = ""
-    log(f"Splitting...", scene_name_for_logging)
-    log(f"Grid: {grid}", scene_name_for_logging)
+    log(f"Splitting...")
+    log(f"Grid: {grid}")
     lines = grid.split("\n")
 
 
@@ -134,15 +134,15 @@ def obj_from_grid_procedural(manifest_path: Path, grid: str = default_grid, scal
     line = lines[0].split(" ")
     dimension = scale*len(lines) - scale
     print(grid)
-    log(f"Lines split into lines", scene_name_for_logging)
+    log(f"Lines split into lines")
     big_world = []
     small_world = []
 
     if not len(lines) == len(line):
-        log(f"Height {len(lines)} does not equal width {len(line)}", scene_name_for_logging)
+        log(f"Height {len(lines)} does not equal width {len(line)}")
         print(f"Height {len(lines)} does not equal width {len(line)}")
         raise AssertionError(f"Agent did not generate square ground. It was {len(lines)} by {len(line)}. Try a smaller resolution.")
-    log(f"Section I", scene_name_for_logging)
+    log(f"Section I")
     # Section I
     for y in range(0, pad):
         row = []
@@ -152,7 +152,7 @@ def obj_from_grid_procedural(manifest_path: Path, grid: str = default_grid, scal
         big_world.append(row)
         #print(pad + len(lines) - y - 1, ": ",row)
     #print("-----------")
-    log(f"Section II", scene_name_for_logging)
+    log(f"Section II")
     # Section II
     for y in range(0, len(lines)):
         line = lines[y].split(" ")
@@ -177,7 +177,7 @@ def obj_from_grid_procedural(manifest_path: Path, grid: str = default_grid, scal
         big_world.append(row)
         #print((dimension - float(y)*scale)/scale, ": ",row)
     #print("-----------")
-    log(f"Section III", scene_name_for_logging)
+    log(f"Section III")
     # Section III
     for y in range(0, pad):
         row = []
@@ -188,7 +188,7 @@ def obj_from_grid_procedural(manifest_path: Path, grid: str = default_grid, scal
         #print(- y - 1, ": ",row)
 
     
-    log(f"Adding texture UVs", scene_name_for_logging)
+    log(f"Adding texture UVs")
     # Textures
     for y in range(0, len(big_world)):
         for x in range(0, len(big_world[y])):
@@ -198,35 +198,35 @@ def obj_from_grid_procedural(manifest_path: Path, grid: str = default_grid, scal
                 obj_str += f"vt {u:.6f} {v:.6f}\n"
                 
             except Exception:
-                log(f"Could not add texture UV", scene_name_for_logging)
+                log(f"Could not add texture UV")
                 print("Could not add vt")    
     
 
     try:
         obj_str1 = obj_str
-        log(f"Creating faces", scene_name_for_logging)
-        face_data, visits = facify(big_world, scene_name_for_logging)
-        log(f"Adding faces to file", scene_name_for_logging)
+        log(f"Creating faces")
+        face_data, visits = facify(big_world)
+        log(f"Adding faces to file")
         obj_str1 += face_data
-        log(f"File contains {len(face_data.split('\n'))} faces.", scene_name_for_logging)
+        log(f"File contains {len(face_data.split('\n'))} faces.")
         
         
         out_file = f"ground_pro{str(random.randint(100, 999))}.obj"
-        log(f"Outfile: {out_file}", scene_name_for_logging)
+        log(f"Outfile: {out_file}")
         out_path1 = manifest_path / out_file
-        log(f"Making directory if it doesn't already exist: {out_path1}", scene_name_for_logging)
+        log(f"Making directory if it doesn't already exist: {out_path1}")
         manifest_path.resolve()
-        log(f"Making directory if it doesn't already exist (resolved): {out_path1}", scene_name_for_logging)
+        log(f"Making directory if it doesn't already exist (resolved): {out_path1}")
         manifest_path.mkdir(parents=True, exist_ok=True)
-        log(f"Attempting to write to {out_path1}", scene_name_for_logging)
-        #log(f"Writing {obj_str1}", scene_name_for_logging)
+        log(f"Attempting to write to {out_path1}")
+        #log(f"Writing {obj_str1}")
         with open(out_path1, "w") as f:
             f.write(obj_str1)
-        log(f"Written to {out_path1}", scene_name_for_logging)
+        log(f"Written to {out_path1}")
         print("Ground obj written to", out_path1)
         out_path = out_path1
     except Exception as e:
-        log(str(e), scene_name_for_logging)
-        log("Wjat else??", scene_name_for_logging)
+        log(str(e))
+        log("Wjat else??")
         out_path = "BAd path"
     return out_path, small_world
