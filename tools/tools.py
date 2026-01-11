@@ -189,4 +189,13 @@ def positionVRHumanPlayer(transform: str, rotation: str = "{\"x\": 75, \"y\": 10
     Only call this function once, and remember to be careful not to make them floating. Use what you know about the objects and their positionings.
     """
     core.position_vr_player(transform, rotation, explanation)
-    return f"Successfully added player to the scene at {json_location}."
+    return f"Successfully added player to the scene at {transform}."
+
+@function_tool
+def delete(buildID: str):
+    """
+    Deletes an object from the scene. Use to make edits to objects (delete then recreate). Use the exact buildID found in the existing structure of the world.
+    """
+    core.delete_object(buildID)
+    return f"Successfully deleted object with buildID {buildID}."
+

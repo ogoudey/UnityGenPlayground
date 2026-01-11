@@ -1,143 +1,213 @@
 {
   "scene": [
     {
-      "Info": {
-        "Description": "About 1m cubed.",
-        "Local origin": "at the object 3D center midpoint"
+      "Skybox/atmosphere": {
+        "name of skybox": "Cartoon Base NightSky Equirect.mat"
       },
-      "Name": "Rock1",
-      "Position": {
-        "x": 2,
-        "y": 0,
-        "z": 5
-      },
-      "Rotation": {
-        "x": 0,
-        "y": 90,
-        "z": 0
-      }
+      "buildID": "8a50"
     },
     {
       "Skybox/atmosphere": {
-        "name of skybox": ""
-      }
+        "name of skybox": "Cartoon Base NightSky Equirect.mat"
+      },
+      "buildID": "d39c"
     },
     {
       "World place in solar system": {
         "length of day": "24.0 Earth-hours",
         "sun brightness": "0.02 luminosity",
-        "time of day": "8.0 Earth-hours"
-      }
+        "time of day": "11.0 Earth-hours"
+      },
+      "buildID": "9c41"
     },
     {
-      "Info": {
-        "Description": "About 1m cubed.",
-        "Local origin": "at the object 3D center midpoint"
+      "Skybox/atmosphere": {
+        "name of skybox": "Cartoon Base NightSky Equirect.mat"
       },
-      "Name": "Rock1",
+      "buildID": "2928"
+    },
+    {
+      "World place in solar system": {
+        "length of day": "24.0 Earth-hours",
+        "sun brightness": "0.8 luminosity",
+        "time of day": "12.0 Earth-hours"
+      },
+      "buildID": "2cab"
+    },
+    {
+      "Heightmap": [
+        [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.2,
+          0.25,
+          0.3,
+          0.28,
+          0.32,
+          0.3,
+          0.25,
+          0.22,
+          0.2,
+          0.0
+        ],
+        [
+          0.0,
+          0.25,
+          0.5,
+          0.55,
+          0.58,
+          0.6,
+          0.55,
+          0.5,
+          0.45,
+          0.3,
+          0.0
+        ],
+        [
+          0.0,
+          0.3,
+          0.55,
+          0.8,
+          0.75,
+          0.7,
+          0.75,
+          0.6,
+          0.5,
+          0.3,
+          0.0
+        ],
+        [
+          0.0,
+          0.28,
+          0.58,
+          0.75,
+          0.9,
+          0.85,
+          0.8,
+          0.65,
+          0.55,
+          0.25,
+          0.0
+        ],
+        [
+          0.0,
+          0.32,
+          0.6,
+          0.7,
+          0.85,
+          1.0,
+          0.9,
+          0.7,
+          0.6,
+          0.3,
+          0.0
+        ],
+        [
+          0.0,
+          0.3,
+          0.55,
+          0.75,
+          0.8,
+          0.9,
+          0.75,
+          0.6,
+          0.5,
+          0.3,
+          0.0
+        ],
+        [
+          0.0,
+          0.25,
+          0.5,
+          0.6,
+          0.65,
+          0.7,
+          0.6,
+          0.5,
+          0.4,
+          0.25,
+          0.0
+        ],
+        [
+          0.0,
+          0.22,
+          0.45,
+          0.5,
+          0.55,
+          0.6,
+          0.5,
+          0.45,
+          0.4,
+          0.22,
+          0.0
+        ],
+        [
+          0.0,
+          0.2,
+          0.3,
+          0.3,
+          0.25,
+          0.3,
+          0.3,
+          0.3,
+          0.3,
+          0.2,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ]
+      ],
+      "Name": "ground_pro469.obj",
+      "Orientation": "The ground goes from (0,0) to (-50, 50). That is, the top left of the matrix is -50, 50. All objects should be on over the ground.",
       "Position": {
-        "x": 4,
-        "y": 0.5,
-        "z": 5
-      },
-      "Rotation": {
         "x": 0,
         "y": 0,
         "z": 0
-      }
+      },
+      "Scale": 2.0,
+      "Texture": "/home/olin/AcroGen/UnityProject/Assets/Ground Materials/M_YFGM_Clay.mat",
+      "buildID": "b9fe"
     },
     {
       "Info": {
-        "Description": "About 1m cubed.",
+        "Description": "4m along the X axis and 2m along the Z axis. About .5m above and below the Yplane.",
         "Local origin": "at the object 3D center midpoint"
       },
-      "Name": "Rock1",
+      "Name": "Rock2",
       "Position": {
-        "x": 4,
+        "x": 0,
         "y": 1.5,
-        "z": 5
+        "z": 0
       },
       "Rotation": {
         "x": 0,
         "y": 30,
         "z": 0
-      }
-    },
-    {
-      "Info": {
-        "Description": "About 1m cubed.",
-        "Local origin": "at the object 3D center midpoint"
       },
-      "Name": "Rock1",
-      "Position": {
-        "x": 4,
-        "y": 2.5,
-        "z": 5
-      },
-      "Rotation": {
-        "x": 0,
-        "y": 60,
-        "z": 0
-      }
-    },
-    {
-      "Info": {
-        "Description": "About 1m cubed.",
-        "Local origin": "at the object 3D center midpoint"
-      },
-      "Name": "Rock1",
-      "Position": {
-        "x": 4,
-        "y": 3.5,
-        "z": 5
-      },
-      "Rotation": {
-        "x": 0,
-        "y": 90,
-        "z": 0
-      }
-    },
-    {
-      "Info": {
-        "Description": "About 1m cubed.",
-        "Local origin": "at the object 3D center midpoint"
-      },
-      "Name": "Rock1",
-      "Position": {
-        "x": 4,
-        "y": 4.5,
-        "z": 5
-      },
-      "Rotation": {
-        "x": 0,
-        "y": 120,
-        "z": 0
-      }
-    },
-    {
-      "Info": {
-        "Description": "About 1m cubed.",
-        "Local origin": "at the object 3D center midpoint"
-      },
-      "Name": "Rock1",
-      "Position": {
-        "x": 4,
-        "y": 5.5,
-        "z": 5
-      },
-      "Rotation": {
-        "x": 0,
-        "y": 150,
-        "z": 0
-      }
-    },
-    {
-      "Sound": {
-        "When?": "On start of scene",
-        "Where?": "Master sound channel",
-        "name": "scloudsave",
-        "type": "digitally encoded as a com - Light Breeze White Noise - Dream Shard"
-      }
+      "buildID": "ae0b"
     }
   ]
 }

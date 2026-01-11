@@ -31,6 +31,7 @@
 import sys
 from pathlib import Path
 import os
+import json
 import random
 from agents import Runner, function_tool
 from tools import tools as instruments
@@ -39,7 +40,7 @@ from typing import Any, Optional, List
 import load.assets as assets
 import load.synopsis_generator as synopsis_generator
 from llms.orchestra import Conductor
-from tools.tools import getGroundMatrix, proposeObject, positionObject, positionVRHumanPlayer, createSkybox, createGround, getContactPoints, createSun, populateHorizon, createSound, create50mx50mGround
+from tools.tools import getGroundMatrix, proposeObject, positionObject, positionVRHumanPlayer, createSkybox, createGround, getContactPoints, createSun, populateHorizon, createSound, create50mx50mGround, delete
 
 from logger import log
 
@@ -65,31 +66,48 @@ except Exception as e:
 
 class WorldGen:
     def __init__(self, world_name: Optional[Any]=None, conductor_name: str="WorldConductor", conductor_system_prompt: str = "", conductor_tools: List[function_tool]=[]):
+        tools_to_add = [getGroundMatrix, proposeObject, positionObject]
         if world_name:
-            # load preexising world or something - not really used yet
-            pass
+            self.preexisting_world_model_dict = self.open_world_model(world_name)
+            if self.preexisting_world_model_dict:
+                tools_to_add.append(delete)
+                self.inject_world_model = True
+            else:
+                self.inject_world_model = False
         self.world_name = world_name
 
-        self.conductor = Conductor(name="Default", system_prompt=conductor_system_prompt, tools=conductor_tools + [getGroundMatrix, proposeObject, positionObject])
-    
+        self.conductor = Conductor(name=conductor_name, system_prompt=conductor_system_prompt, tools=conductor_tools + tools_to_add)
+        
+
     async def load(self):
         pass
 
     async def run(self, prompt):
+        if self.inject_world_model:
+            prompt = f"{json.dumps(instruments.core.world.model)}\n=======USER PROMPT:=======\n{prompt}"
         result = await Runner.run(self.conductor, prompt)
         print(result.final_output)
         return result.final_output
     
+    def open_world_model(self, world_name: str):
+        supposed_path = Path("generating/models") / f"{world_name}.json"
+        if supposed_path.exists():
+            with open(supposed_path, "r") as f:
+                j = f.read()
+                return json.loads(j)
+        else:
+            return None
+    
 class UnityWorldGen(WorldGen):
     scene: str
     def __init__(self, world_name: str, scene_name: str, assets_folder: Optional[Path]=None, conductor_name: str="UnityWorldConductor", conductor_system_prompt: str="", conductor_tools: List[function_tool]=[]):
-        super().__init__(None, conductor_name, conductor_system_prompt, conductor_tools + [createGround, createSkybox, createSun, createSound, populateHorizon])
+        super().__init__(world_name, conductor_name, conductor_system_prompt, conductor_tools + [createGround, createSkybox, createSun, createSound, populateHorizon])
 
         
 
         # Unity specific stuff below
                 
-        instruments.core.world = UnityWorld(world_name, scene_name)  
+        instruments.core.world = UnityWorld(world_name, scene_name, self.preexisting_world_model_dict)  
 
         if assets_folder is None:
             if ASSETS is None:
@@ -127,9 +145,12 @@ class UnityWorldGen(WorldGen):
         """
             prompt: prompt for Conductor agent to generate world. Example: Generate a fish tank.
         """
+        if self.inject_world_model:
+            prompt = f"{instruments.core.world.model}\n=======USER PROMPT:=======\n{prompt}"
         result = await Runner.run(self.conductor, prompt, max_turns=20)
         try:
             scene_path = instruments.core.world.done_and_write(instruments.core.assets / "Generations" / instruments.core.world.scene.name)
+            log(result.final_output)
             return scene_path
         except Exception:
             print(f"Did not write scene:\n{result.final_output}")
@@ -137,16 +158,16 @@ class UnityWorldGen(WorldGen):
 
     @classmethod
     async def generate(cls, world_name: str, assets_folder: Optional[Path], prompt: str):
-        wg = cls(world_name, f"{world_name}_0", assets_folder)
+        wg = cls(world_name, f"{world_name}", assets_folder)
         await wg.load()
         scene_path = await wg.run(prompt)
         return scene_path
 
     async def regime(self, regime_prompt):
-        log("Starting regime", self.scene_0)
+        log("Starting regime")
         result = await Runner.run(self.conductor_runner, regime_prompt)
-        log(result.final_output, self.scene_0)
-        log("Done", self.scene_0)
+        log(result.final_output)
+        log("Done")
         
 
 class VRWorldGen(UnityWorldGen):

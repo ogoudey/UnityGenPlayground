@@ -1,27 +1,33 @@
 from typing import List 
 import json
 from pathlib import Path
+import random
+import uuid
 
 class WorldModel:
-    pass
+    def __init__(self, world_name, preexisting_world_model_list: List = []):
+        self.name = world_name
+        pass
 
 class UnityWorldModel(WorldModel):
-    objects: List[dict]
+    scene_data: List[dict]
 
-    def __init__(self):
-        super().__init__()
-        self.objects = []
+    def __init__(self, world_name: str, preexisting_world_model_list: List = []):
+        super().__init__(world_name, preexisting_world_model_list)
+        self.scene_data = preexisting_world_model_list
 
     def __repr__(self):
-        return json.dumps(self.objects, indent=4, sort_keys=False)
+        return json.dumps(self.scene_data, indent=4, sort_keys=False)
 
     def update(self, object_data: dict):
-        self.objects.append(object_data.copy())
-        self.dump_world_model("generating/models/test.json")
+        data = object_data.copy()
+        
+        self.scene_data.append(data)
+        self.dump_world_model(f"generating/models/{self.name}.json")
     
     def dump_world_model(self, path: str | Path):
         path = Path(path)
-        data = {"scene": self.objects}
+        data = {"scene": self.scene_data}
         with path.open("w", encoding="utf-8") as f:
             json.dump(
                 data,

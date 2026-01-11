@@ -18,7 +18,7 @@ from utils.paths import RelativePath, AssetsRelativePathStr
 from generating.scene import Scene, UnityScene
 from generating.model import WorldModel, UnityWorldModel
 
-from generating.write_utils import post_write, post_execute
+from generating.write_utils import post_write, post_execute, remove_execution
 
 class Propositions:
     """ A class that's storage for objects not yet placed in the scene. """
@@ -45,12 +45,15 @@ class Propositions:
         return name in self.propositions
 
 class World:
+
     name:str
+    model: WorldModel
+
     def __init__(self, world_name):
         self.name = world_name
         self.proposed_objects: Propositions = Propositions()
         self.contact_points = dict()
-        self.model = WorldModel()
+        self.model = WorldModel(world_name)
     
     def add_data(self, object_data):
         self.model.update(object_data)
@@ -70,10 +73,14 @@ class UnityWorld(World):
 
     
 
-    def __init__(self, world_name:str, scene: str):
+    def __init__(self, world_name:str, scene: str, preexisting_world_model_dict: dict):
         super().__init__(world_name)
+        if preexisting_world_model_dict:
+            preexisting_scene = preexisting_world_model_dict["scene"]
+        else:
+            preexisting_scene = []
         self.scene = UnityScene(scene)
-        self.model = UnityWorldModel()
+        self.model = UnityWorldModel(self.name, preexisting_scene)
         self.ground_name = ""
         self.ground_matrix = []
         self.ground_scale = 5.0
@@ -100,11 +107,15 @@ class UnityWorld(World):
         log(f"Converted relative Path to a Path relative to {assets.name}")
         return assets_relative_path.as_posix()
 
+    def open_build_instructions(self):
+        # use a write util to load the saved build instructions
+
     def post(self):
         post_execute()
 
-    def done_and_write(self, path_to_write: Path | str):
+    def done_and_write(self, path_to_write: Path | str):        
         self.scene.unity_file.reset()
+        # build
         self.post()
         path = Path(path_to_write)
         if path.exists():
@@ -116,35 +127,35 @@ class UnityWorld(World):
             raise Exception(f"Path {path} does not exist!")
 
     @post_write    
-    def add_skybox(self, skybox_name):
+    def add_skybox(self, skybox_name, buildID=None):
         mat_path = self.proposed_objects[skybox_name].path
         self.scene.add_skybox(skybox_name, mat_path)
 
     @post_write
-    def add_sun(self, length_of_day, time_of_day, sun_brightness):
+    def add_sun(self, length_of_day, time_of_day, sun_brightness, buildID=None):
         self.scene.add_sun(length_of_day, time_of_day, sun_brightness)
 
     @post_write
-    def add_sound(self, sound_name):
+    def add_sound(self, sound_name, buildID=None):
         sound_path = self.proposed_objects[sound_name].path
         self.scene.add_sound(sound_name, sound_path)
 
     @post_write
-    def set_vr_player(self, location, rotation):
+    def set_vr_player(self, location, rotation, buildID=None):
         self.scene.set_vr_player(location, rotation)
 
     @post_write      
-    def add_prefab(self, name, location: dict, rotation):
+    def add_prefab(self, name, location: dict, rotation, buildID=None):
         prefab_path = self.proposed_objects[name].path
         self.scene.add_prefab(name, prefab_path, location, rotation)
 
     @post_write
-    def add_orphan_prefab(self, name, location, rotation):
+    def add_orphan_prefab(self, name, location, rotation, buildID=None):
         prefab_path = self.proposed_objects[name].path
         self.scene.add_orphan_prefab(name, prefab_path, location, rotation)
 
     @post_write
-    def add_ground(self, ground_name, transform={"x":0.0, "y":0.0, "z":0.0}, rotation={"x":0.0, "y":0.0, "z":0.0}):
+    def add_ground(self, ground_name, transform={"x":0.0, "y":0.0, "z":0.0}, rotation={"x":0.0, "y":0.0, "z":0.0}, buildID=None):
         if not self.ground_name == "":
             if self.scene.unity_file.remove_prefab_instance_if_exists(self.ground_name):
                 print(f"Removed existing ground {self.ground_name} from YAML")
@@ -152,3 +163,6 @@ class UnityWorld(World):
                 print("Ground exists in YAML - couldn't be removed.")
         proposal = self.proposed_objects[ground_name]
         self.scene.add_ground(ground_name, proposal, transform, rotation)
+
+    def delete_object_by_id(self, buildID):
+        remove_execution(buildID)

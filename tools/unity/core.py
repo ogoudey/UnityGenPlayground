@@ -59,7 +59,25 @@ def position_vr_player(transform: str, rotation: str, explanation: str):
     global world
     log(f"Positioning VR experience at {transform} with rotation {rotation}")
     log(explanation)
-    world.set_vr_player(json_location, json_rotation)
+    buildID = world.set_vr_player(json_location, json_rotation)
+    data = {
+            "Player": {
+                "Position": f"{json_location}",
+                "Rotation": f"{json_rotation}",
+            }
+        }
+    
+    if buildID:
+        data["buildID"] = buildID
+    world.add_data(data)
+
+@error_reporter
+def delete(buildID: str):
+    # delete from world model and # delete from build instructions
+    global world
+    world.delete_object_by_buildID(buildID)
+    
+
 
 @error_reporter
 def get_contact_points():
@@ -80,16 +98,19 @@ def position_sun(length_of_day: float, time_of_day: float, sun_brightness: float
     global world
     log("Positioning the sun in the sky...")
     
-    world.add_sun(length_of_day, time_of_day, sun_brightness)
-    world.add_data(
-        {
+    buildID = world.add_sun(length_of_day, time_of_day, sun_brightness)
+    
+
+    data = {
             "World place in solar system": {
                 "time of day": f"{time_of_day} Earth-hours",
                 "length of day": f"{length_of_day} Earth-hours",
                 "sun brightness": f"{sun_brightness} luminosity"
             }
         }
-    )
+    if buildID:
+        data["buildID"] = buildID
+    world.add_data(data)
     return f"Successfully added the Sun"
 
 @error_reporter
@@ -108,14 +129,16 @@ async def create_skybox(skybox_description: str):
     skybox_name = path_str.split("/")[-1]
     print(f"Proposing relative path with Path {Path(path_str)} from {path_str}")
     world.propose_object(skybox_name, RelativePath(path=Path(path_str)))
-    world.add_skybox(skybox_name)
-    world.add_data(
-        {
+    buildID = world.add_skybox(skybox_name)
+    
+    data = {
             "Skybox/atmosphere": {
                 "name of skybox": skybox_name
             }
         }
-    )
+    if buildID:
+        data["buildID"] = buildID
+    world.add_data(data)
     return f"Successfully added '{skybox_name}' to the scene."
 
 @error_reporter
@@ -132,17 +155,20 @@ async def create_sound(sound_description: str):
     path_str = result.final_output.path
     sound_name = path_str.split("/")[-1]
     world.propose_object(sound_name, RelativePath(path=Path(path_str)))
-    world.add_sound(sound_name)
-    world.add_data(
-        {
+    buildID = world.add_sound(sound_name)
+    
+    
+    data = {
             "Sound": {
                 "When?": "On start of scene",
                 "Where?": "Master sound channel",
-                "name": sound_name.split(".")[0],
-                "type": f"digitally encoded as a {sound_name.split(".")[1]}"
+                "name": sound_name,
+                "type": f"digitally encoded as a {sound_name.split(".")[-1]}"
             }
         }
-    )
+    if buildID:
+        data["buildID"] = buildID
+    world.add_data(data)
     return f"Successfully added '{sound_name}' to the scene."
 
 @error_reporter
@@ -177,7 +203,7 @@ async def create_ground(steps_to_ground_construction, resolution, scale, procedu
     
     grid:str = result.final_output.grid
     if procedural:
-        object_path, ground_matrix = surface_construction.obj_from_grid_procedural(assets / "Assets" / "Manifest", grid, scale, world.name)
+        object_path, ground_matrix = surface_construction.obj_from_grid_procedural(assets / "Assets" / "Manifest", grid, scale)
     else:
         object_path, ground_matrix = surface_construction.obj_from_grid(assets / "Assets" / "Manifest", grid, scale)
     log(f"Ground OBJ written to {object_path}.")
@@ -200,7 +226,7 @@ async def create_ground(steps_to_ground_construction, resolution, scale, procedu
     
     json_location = {"x": 0, "y": 0, "z": 0}
     log("Adding ground to YAML")
-    world.add_ground(ground_name, json_location)
+    buildID = world.add_ground(ground_name, json_location)
     log("Back from adding ground to YAML")
     # Add new contact points under ground
     print("Back from adding ground to scene.")
@@ -219,8 +245,8 @@ async def create_ground(steps_to_ground_construction, resolution, scale, procedu
     # Join all rows with brackets around the entire matrix
     legible_result = "\n[\n" + ",\n".join(formatted_rows) + "\n]"
     log(explanation)
-    world.add_data(
-        {
+    
+    data = {
             "Name": ground_name,
             "Texture": world.current_texture,
             "Heightmap": ground_matrix,
@@ -228,7 +254,9 @@ async def create_ground(steps_to_ground_construction, resolution, scale, procedu
             "Position": json_location,
             "Orientation": "The ground goes from (0,0) to (-50, 50). That is, the top left of the matrix is -50, 50. All objects should be on over the ground." # held constant elsewhere?
         }
-    )
+    if buildID:
+        data["buildID"] = buildID
+    world.add_data(data)
     return f"Successfully placed a ground with heightmap {legible_result} in the +X +Z quadrant (these coordinates correspond to the vertices of the ground mesh). The scale of the Xs and Zs is x5. There is no vertical scaling.\n{explanation}"
 
 @error_reporter
@@ -372,12 +400,14 @@ def position_object(object_name: str, position_of_object_origin: str, rotation: 
         print("...........") 
         log(f"Positioning {object_name} at {json.dumps(json_location)}")
         if asset_path in list(asset_catalog.keys()):        
-            world.add_prefab(object_name, json_location, json_rotation)
+            buildID = world.add_prefab(object_name, json_location, json_rotation)
         else:
             log(f"This asset {asset_path} is not in asset_catalog")
-            world.add_orphan_prefab(object_name, json_location, json_rotation)
+            buildID = world.add_orphan_prefab(object_name, json_location, json_rotation)
         object_data["Position"] = json_location
         object_data["Rotation"] = json_rotation
+        if buildID:
+            object_data["buildID"] = buildID
         world.add_data(object_data)
     if len(failed_placements) == max_len:
         return f"Failed to place one or all of {object_name}. Failed placements:\n{failed_placements}"

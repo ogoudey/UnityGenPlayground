@@ -43,7 +43,7 @@ class ObjectPlanner(Agent):
         )
         
 class SkyboxPlanner(Agent):
-    instructions= "Given the directory structure (asset tree), return the path to the file of the desired asset."
+    instructions= "Given the directory structure (asset tree), return the path to the file of the desired asset. If none of the assets match the request, return the best. You must always return a path."
     
     def __init__(self, name=None, instructions=None):
         super().__init__(
@@ -65,7 +65,7 @@ class SoundDesigner(Agent):
         )
 
 class TexturePlanner(Agent):
-    instructions= "Given the directory structure (asset tree), return the path of a material asset that matches the description."
+    instructions= "Given the directory structure (asset tree), return the path of a material asset that matches the description. If none of the assets match the description, return at least something. You must always return a path."
     
     def __init__(self, name=None, instructions=None):
         super().__init__(

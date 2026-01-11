@@ -4,7 +4,7 @@ from pathlib import Path
 from flask import Flask, request, jsonify
 import sys
 from typing import Optional
-#print(f"sys.path for {__name__}:\n{sys.path}")
+print(f"sys.path for {__name__}:\n{sys.path}")
 
 # common
 os.environ["MODEL"] = "o4-mini"
@@ -57,7 +57,7 @@ def generate():
     prompt = request.args["prompt"]
     assets_folder = Path(request.args["assets"])
 
-    os.environ["LOG"] = F"{world_name}"
+    os.environ["LOG"] = f"{world_name}"
 
     future = asyncio.run_coroutine_threadsafe(
         AcrophobiaWorldGen.generate(world_name, assets_folder, prompt),
