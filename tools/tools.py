@@ -189,4 +189,4 @@ def positionVRHumanPlayer(transform: str, rotation: str = "{\"x\": 75, \"y\": 10
     Only call this function once, and remember to be careful not to make them floating. Use what you know about the objects and their positionings.
     """
     core.position_vr_player(transform, rotation, explanation)
-    return f"Successfully added player to the scene at {json_location}."
+    return f"Successfully added player to the scene at {transform}."
