@@ -130,6 +130,7 @@ class UnityWorldGen(WorldGen):
         result = await Runner.run(self.conductor, prompt, max_turns=20)
         try:
             scene_path = instruments.core.world.done_and_write(instruments.core.assets / "Generations" / instruments.core.world.scene.name)
+            log(f"{result.final_output}")
             return scene_path
         except Exception:
             print(f"Did not write scene:\n{result.final_output}")

@@ -1,44 +1,184 @@
 {
   "scene": [
     {
-      "Info": {
-        "Description": "About 1m cubed.",
-        "Local origin": "at the object 3D center midpoint"
-      },
-      "Name": "Rock1",
-      "Position": {
-        "x": 2,
-        "y": 0,
-        "z": 5
-      },
-      "Rotation": {
-        "x": 0,
-        "y": 90,
-        "z": 0
-      }
-    },
-    {
       "Skybox/atmosphere": {
-        "name of skybox": ""
+        "name of skybox": "Day_BlueSky_Nothing.mat"
       }
     },
     {
       "World place in solar system": {
         "length of day": "24.0 Earth-hours",
         "sun brightness": "0.02 luminosity",
-        "time of day": "8.0 Earth-hours"
+        "time of day": "11.0 Earth-hours"
       }
     },
     {
-      "Info": {
-        "Description": "About 1m cubed.",
-        "Local origin": "at the object 3D center midpoint"
-      },
-      "Name": "Rock1",
+      "Heightmap": [
+        [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ]
+      ],
+      "Name": "ground_pro102.obj",
+      "Orientation": "The ground goes from (0,0) to (-50, 50). That is, the top left of the matrix is -50, 50. All objects should be on over the ground.",
       "Position": {
-        "x": 4,
-        "y": 0.5,
-        "z": 5
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "Scale": 10.0,
+      "Texture": "C:/Users/HRI Lab/AcroGen/UnityProject/Assets/Ground Materials/Materials/T_YFGM_Ground02_d.mat"
+    },
+    {
+      "Info": {
+        "Dimensions": "18 across the x axis, 12m across the z axis, and 40m high",
+        "Important points": "There is a good position for a player at the roof at (0, 41, -8) from this object's origin.",
+        "Local origin": "5m from building's -X side, and right at the objects +Z side"
+      },
+      "Name": "SlenderGrayBuilding36m",
+      "Position": {
+        "x": 46,
+        "y": 0,
+        "z": 56
       },
       "Rotation": {
         "x": 0,
@@ -48,86 +188,73 @@
     },
     {
       "Info": {
-        "Description": "About 1m cubed.",
-        "Local origin": "at the object 3D center midpoint"
+        "Dimensions": "12m x 21.5m x 18m",
+        "Important points": "roof at 18m from base.",
+        "Local origin": "at buildings -X side, -2.5m from the -Z side."
       },
-      "Name": "Rock1",
+      "Name": "GreenBuilding18m",
       "Position": {
-        "x": 4,
-        "y": 1.5,
-        "z": 5
+        "x": 30,
+        "y": 0,
+        "z": 30
       },
       "Rotation": {
         "x": 0,
-        "y": 30,
+        "y": 45,
         "z": 0
       }
     },
     {
       "Info": {
-        "Description": "About 1m cubed.",
-        "Local origin": "at the object 3D center midpoint"
+        "Dimensions": "12m x 21.5m x 18m",
+        "Important points": "roof at 18m from base.",
+        "Local origin": "at buildings -X side, -2.5m from the -Z side."
       },
-      "Name": "Rock1",
+      "Name": "GreenBuilding18m",
       "Position": {
-        "x": 4,
-        "y": 2.5,
-        "z": 5
+        "x": 70,
+        "y": 0,
+        "z": 30
       },
       "Rotation": {
         "x": 0,
-        "y": 60,
+        "y": 315,
         "z": 0
       }
     },
     {
       "Info": {
-        "Description": "About 1m cubed.",
-        "Local origin": "at the object 3D center midpoint"
+        "Dimensions": "12m x 21.5m x 18m",
+        "Important points": "roof at 18m from base.",
+        "Local origin": "at buildings -X side, -2.5m from the -Z side."
       },
-      "Name": "Rock1",
+      "Name": "GreenBuilding18m",
       "Position": {
-        "x": 4,
-        "y": 3.5,
-        "z": 5
+        "x": 30,
+        "y": 0,
+        "z": 70
       },
       "Rotation": {
         "x": 0,
-        "y": 90,
+        "y": 0,
         "z": 0
       }
     },
     {
       "Info": {
-        "Description": "About 1m cubed.",
-        "Local origin": "at the object 3D center midpoint"
+        "Dimensions": "12m x 21.5m x 18m",
+        "Important points": "roof at 18m from base.",
+        "Local origin": "at buildings -X side, -2.5m from the -Z side."
       },
-      "Name": "Rock1",
+      "Name": "GreenBuilding18m",
       "Position": {
-        "x": 4,
-        "y": 4.5,
-        "z": 5
+        "x": 70,
+        "y": 0,
+        "z": 70
       },
       "Rotation": {
         "x": 0,
-        "y": 120,
-        "z": 0
-      }
-    },
-    {
-      "Info": {
-        "Description": "About 1m cubed.",
-        "Local origin": "at the object 3D center midpoint"
-      },
-      "Name": "Rock1",
-      "Position": {
-        "x": 4,
-        "y": 5.5,
-        "z": 5
-      },
-      "Rotation": {
-        "x": 0,
-        "y": 150,
+        "y": 180,
         "z": 0
       }
     },
@@ -138,6 +265,9 @@
         "name": "scloudsave",
         "type": "digitally encoded as a com - Light Breeze White Noise - Dream Shard"
       }
+    },
+    {
+      "Ground off to infinite": "Outside the 10.0x C:/Users/HRI Lab/AcroGen/UnityProject/Assets/Ground Materials/Materials/T_YFGM_Ground02_d.mat ground, there are randomly placed ['SlenderGrayBuilding36m', 'GreenBuilding18m']"
     }
   ]
 }
