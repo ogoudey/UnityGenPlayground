@@ -6,6 +6,16 @@ import sys
 from typing import Optional
 print(f"sys.path for {__name__}:\n{sys.path}")
 
+#############################
+#   A server is set up to generate worlds of a certain type.
+#
+#
+#
+#
+##############################
+
+
+
 # common
 os.environ["MODEL"] = "o4-mini"
 
@@ -15,13 +25,13 @@ os.environ["LOG"] = "tbd"
 
 # Unity configs
 os.environ["UNITY_WORLD_TYPE"] = "UNITY_TWO_STEP"
-os.environ["UNITY_VERSION"] = "6"
+os.environ["UNITY_VERSION"] = "5" # "6"
 os.environ["SKYBOX_MATERIALS"] = "Skybox Materials"
 os.environ["GROUND_MATERIALS"] = "Ground Materials"
 os.environ["SOUNDS"] = "Sounds"
 
 # Unity subclass configs
-os.environ["VR_HEADSET_TYPE"] = "Vive Focus 3"
+os.environ["VR_HEADSET_TYPE"] = "Vive Pro 2" # "Vive Focus 3"
 
 from generating.worldgen import AcrophobiaWorldGen
 
@@ -51,9 +61,16 @@ threading.Thread(
     daemon=True
 ).start()
 
+# To protect generating
+worlds_being_generated = []
+
 @app.route('/generate')
 def generate():
     world_name = request.args["world_name"]
+    if world_name in worlds_being_generated:
+        return jsonify({"started": False})
+    else:
+        worlds_being_generated.append(world_name)
     prompt = request.args["prompt"]
     assets_folder = Path(request.args["assets"])
 
@@ -65,7 +82,7 @@ def generate():
     )
 
     future.add_done_callback(
-        lambda f: print("Worldgen:", f.result())
+        lambda f: worlds_being_generated.remove(world_name)
     )
 
     return jsonify({"started": True})

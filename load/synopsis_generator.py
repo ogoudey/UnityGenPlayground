@@ -20,7 +20,7 @@ MODEL = (os.getenv("MODEL") or "o3-mini").strip() or "o3-mini"
 
 async def load(assets_folder, asset_catalog):
     try:
-        with open(assets_folder / "synopsis_file.json", "r") as s:
+        with open(assets_folder / "synopses.json", "r") as s:
             v = s.read()
             synopses = json.loads(v)
     except FileNotFoundError:
@@ -28,12 +28,13 @@ async def load(assets_folder, asset_catalog):
         for name in os.listdir(assets_folder):
             if not name.endswith(".meta"):
                 found += f"\n\t{name}"
-        raise FileNotFoundError(f"The specified Assets folder ({assets_folder}) has no synopses file:{found}\n\nIf you would like to generate one, make an empty `synopsis.json` there.")
-    log(f"Synopsis file loaded with {len(synopses)} entries")
-    active_synopses = await update_synopsis_file(assets_folder, asset_catalog, synopses)
+        log(f"The specified Assets folder ({assets_folder}) has no synopses file:{found}\n\nIf you would like to generate one, make an empty `synopses.json` there.")
+        raise FileNotFoundError(f"The specified Assets folder ({assets_folder}) has no synopses file:{found}\n\nIf you would like to generate one, make an empty `synopses.json` there.")
+    log(f"Synopes loaded with {len(synopses)} entries")
+    active_synopses = await update_synopses(assets_folder, asset_catalog, synopses)
     return active_synopses
 
-async def update_synopsis_file(assets_folder, asset_catalog, synopses) -> dict[str, str]:
+async def update_synopses(assets_folder, asset_catalog, synopses) -> dict[str, str]:
     i = 0
     updates_needed = len(asset_catalog) - len(synopses)
     for asset_path, asset_info in asset_catalog.items():
@@ -52,12 +53,12 @@ async def update_synopsis_file(assets_folder, asset_catalog, synopses) -> dict[s
             synopses[new_synopsis] = asset_path
             print(asset_info)
             print("------>", new_synopsis)
-    print("Synopsis file up to date.")
+    print("Synopses up to date.")
     if updates_needed > 0:
-        with open(assets_folder / "synopsis_file.json", "w") as s:
+        with open(assets_folder / "synopses.json", "w") as s:
             output_str = json.dumps(synopses, indent=2)
             s.write(output_str)
-            print("Synopsis file updated.")
+            print("Synopses updated.")
     represented_assets = dict()
     unrepresented_assets = []
     for synopsis, ante_asset_path in synopses.copy().items():

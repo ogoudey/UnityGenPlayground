@@ -189,6 +189,7 @@ def positionVRHumanPlayer(transform: str, rotation: str = "{\"x\": 75, \"y\": 10
     Only call this function once, and remember to be careful not to make them floating. Use what you know about the objects and their positionings.
     """
     core.position_vr_player(transform, rotation, explanation)
+<<<<<<< HEAD
     return f"Successfully added player to the scene at {transform}."
 
 @function_tool
@@ -199,3 +200,6 @@ def delete(buildID: str):
     core.delete_object(buildID)
     return f"Successfully deleted object with buildID {buildID}."
 
+=======
+    return f"Successfully added player to the scene at {transform}."
+>>>>>>> 645fe225b05492ae321c72e859803effd9b451ab
