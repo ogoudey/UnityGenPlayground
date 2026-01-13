@@ -6,6 +6,9 @@ if sys.platform == "win32":
     # On Windows, use perlin-noise
     from perlin_noise import PerlinNoise as Noise2D
     WINDOWS_PNOISE = True
+
+    #from noise import pnoise2 as noise2d
+    #WINDOWS_PNOISE = False
 else:
     # On other OSes, use noise package's pnoise2
     from noise import pnoise2 as noise2d
