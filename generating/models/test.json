@@ -8,8 +8,8 @@
     {
       "World place in solar system": {
         "length of day": "24.0 Earth-hours",
-        "sun brightness": "0.02 luminosity",
-        "time of day": "11.0 Earth-hours"
+        "sun brightness": "0.01 luminosity",
+        "time of day": "12.0 Earth-hours"
       }
     },
     {
@@ -25,15 +25,6 @@
           0.0,
           0.0,
           0.0,
-          0.0
-        ],
-        [
-          0.0,
-          0.0,
-          0.0,
-          0.0,
-          0.0,
-          0.0,
           0.0,
           0.0,
           0.0,
@@ -42,15 +33,223 @@
         ],
         [
           0.0,
+          4.0,
+          3.0,
+          2.0,
+          1.0,
+          -1.0,
+          -3.0,
+          -5.0,
+          -3.0,
+          -1.0,
+          1.0,
+          2.0,
+          3.0,
+          4.0,
+          0.0
+        ],
+        [
           0.0,
+          4.0,
+          3.0,
+          2.0,
+          1.0,
+          -1.0,
+          -3.0,
+          -5.0,
+          -3.0,
+          -1.0,
+          1.0,
+          2.0,
+          3.0,
+          4.0,
+          0.0
+        ],
+        [
           0.0,
+          4.0,
+          3.0,
+          2.0,
+          1.0,
+          -1.0,
+          -3.0,
+          -5.0,
+          -3.0,
+          -1.0,
+          1.0,
+          2.0,
+          3.0,
+          4.0,
+          0.0
+        ],
+        [
           0.0,
+          4.0,
+          3.0,
+          2.0,
+          1.0,
+          -1.0,
+          -3.0,
+          -5.0,
+          -3.0,
+          -1.0,
+          1.0,
+          2.0,
+          3.0,
+          4.0,
+          0.0
+        ],
+        [
           0.0,
+          4.0,
+          3.0,
+          2.0,
+          1.0,
+          -1.0,
+          -3.0,
+          -5.0,
+          -3.0,
+          -1.0,
+          1.0,
+          2.0,
+          3.0,
+          4.0,
+          0.0
+        ],
+        [
           0.0,
+          4.0,
+          3.0,
+          2.0,
+          1.0,
+          -1.0,
+          -3.0,
+          -5.0,
+          -3.0,
+          -1.0,
+          1.0,
+          2.0,
+          3.0,
+          4.0,
+          0.0
+        ],
+        [
           0.0,
+          4.0,
+          3.0,
+          2.0,
+          1.0,
+          -1.0,
+          -3.0,
+          -5.0,
+          -3.0,
+          -1.0,
+          1.0,
+          2.0,
+          3.0,
+          4.0,
+          0.0
+        ],
+        [
           0.0,
+          4.0,
+          3.0,
+          2.0,
+          1.0,
+          -1.0,
+          -3.0,
+          -5.0,
+          -3.0,
+          -1.0,
+          1.0,
+          2.0,
+          3.0,
+          4.0,
+          0.0
+        ],
+        [
           0.0,
+          4.0,
+          3.0,
+          2.0,
+          1.0,
+          -1.0,
+          -3.0,
+          -5.0,
+          -3.0,
+          -1.0,
+          1.0,
+          2.0,
+          3.0,
+          4.0,
+          0.0
+        ],
+        [
           0.0,
+          4.0,
+          3.0,
+          2.0,
+          1.0,
+          -1.0,
+          -3.0,
+          -5.0,
+          -3.0,
+          -1.0,
+          1.0,
+          2.0,
+          3.0,
+          4.0,
+          0.0
+        ],
+        [
+          0.0,
+          4.0,
+          3.0,
+          2.0,
+          1.0,
+          -1.0,
+          -3.0,
+          -5.0,
+          -3.0,
+          -1.0,
+          1.0,
+          2.0,
+          3.0,
+          4.0,
+          0.0
+        ],
+        [
+          0.0,
+          4.0,
+          3.0,
+          2.0,
+          1.0,
+          -1.0,
+          -3.0,
+          -5.0,
+          -3.0,
+          -1.0,
+          1.0,
+          2.0,
+          3.0,
+          4.0,
+          0.0
+        ],
+        [
+          0.0,
+          4.0,
+          3.0,
+          2.0,
+          1.0,
+          -1.0,
+          -3.0,
+          -5.0,
+          -3.0,
+          -1.0,
+          1.0,
+          2.0,
+          3.0,
+          4.0,
           0.0
         ],
         [
@@ -58,93 +257,6 @@
           0.0,
           0.0,
           0.0,
-          0.0,
-          0.0,
-          0.0,
-          0.0,
-          0.0,
-          0.0,
-          0.0
-        ],
-        [
-          0.0,
-          0.0,
-          0.0,
-          0.0,
-          0.0,
-          0.0,
-          0.0,
-          0.0,
-          0.0,
-          0.0,
-          0.0
-        ],
-        [
-          0.0,
-          0.0,
-          0.0,
-          0.0,
-          0.0,
-          0.0,
-          0.0,
-          0.0,
-          0.0,
-          0.0,
-          0.0
-        ],
-        [
-          0.0,
-          0.0,
-          0.0,
-          0.0,
-          0.0,
-          0.0,
-          0.0,
-          0.0,
-          0.0,
-          0.0,
-          0.0
-        ],
-        [
-          0.0,
-          0.0,
-          0.0,
-          0.0,
-          0.0,
-          0.0,
-          0.0,
-          0.0,
-          0.0,
-          0.0,
-          0.0
-        ],
-        [
-          0.0,
-          0.0,
-          0.0,
-          0.0,
-          0.0,
-          0.0,
-          0.0,
-          0.0,
-          0.0,
-          0.0,
-          0.0
-        ],
-        [
-          0.0,
-          0.0,
-          0.0,
-          0.0,
-          0.0,
-          0.0,
-          0.0,
-          0.0,
-          0.0,
-          0.0,
-          0.0
-        ],
-        [
           0.0,
           0.0,
           0.0,
@@ -158,45 +270,366 @@
           0.0
         ]
       ],
-      "Name": "ground_pro102.obj",
+      "Name": "ground_pro676.obj",
       "Orientation": "The ground goes from (0,0) to (-50, 50). That is, the top left of the matrix is -50, 50. All objects should be on over the ground.",
       "Position": {
         "x": 0,
         "y": 0,
         "z": 0
       },
-      "Scale": 10.0,
-      "Texture": "C:/Users/HRI Lab/AcroGen/UnityProject/Assets/Ground Materials/Materials/T_YFGM_Ground02_d.mat"
+      "Scale": 5.0,
+      "Texture": "C:/Users/HRI Lab/AcroGen/UnityProject/Assets/Ground Materials/Materials/T_YFGM_Grass02_d.mat"
+    },
+    {
+      "Heightmap": [
+        [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          5.0,
+          3.5,
+          2.0,
+          1.5,
+          0.0,
+          -3.0,
+          -5.0,
+          -3.0,
+          0.0,
+          1.5,
+          2.0,
+          3.5,
+          5.0,
+          0.0
+        ],
+        [
+          0.0,
+          5.0,
+          3.5,
+          2.0,
+          1.5,
+          0.0,
+          -3.0,
+          -5.0,
+          -3.0,
+          0.0,
+          1.5,
+          2.0,
+          3.5,
+          5.0,
+          0.0
+        ],
+        [
+          0.0,
+          5.0,
+          3.5,
+          2.0,
+          1.5,
+          0.0,
+          -3.0,
+          -5.0,
+          -3.0,
+          0.0,
+          1.5,
+          2.0,
+          3.5,
+          5.0,
+          0.0
+        ],
+        [
+          0.0,
+          5.0,
+          3.5,
+          2.0,
+          1.5,
+          0.0,
+          -3.0,
+          -5.0,
+          -3.0,
+          0.0,
+          1.5,
+          2.0,
+          3.5,
+          5.0,
+          0.0
+        ],
+        [
+          0.0,
+          5.0,
+          3.5,
+          2.0,
+          1.5,
+          0.0,
+          -3.0,
+          -5.0,
+          -3.0,
+          0.0,
+          1.5,
+          2.0,
+          3.5,
+          5.0,
+          0.0
+        ],
+        [
+          0.0,
+          5.0,
+          3.5,
+          2.0,
+          1.5,
+          0.0,
+          -3.0,
+          -5.0,
+          -3.0,
+          0.0,
+          1.5,
+          2.0,
+          3.5,
+          5.0,
+          0.0
+        ],
+        [
+          0.0,
+          5.0,
+          3.5,
+          2.0,
+          1.5,
+          0.0,
+          -3.0,
+          -5.0,
+          -3.0,
+          0.0,
+          1.5,
+          2.0,
+          3.5,
+          5.0,
+          0.0
+        ],
+        [
+          0.0,
+          5.0,
+          3.5,
+          2.0,
+          1.5,
+          0.0,
+          -3.0,
+          -5.0,
+          -3.0,
+          0.0,
+          1.5,
+          2.0,
+          3.5,
+          5.0,
+          0.0
+        ],
+        [
+          0.0,
+          5.0,
+          3.5,
+          2.0,
+          1.5,
+          0.0,
+          -3.0,
+          -5.0,
+          -3.0,
+          0.0,
+          1.5,
+          2.0,
+          3.5,
+          5.0,
+          0.0
+        ],
+        [
+          0.0,
+          5.0,
+          3.5,
+          2.0,
+          1.5,
+          0.0,
+          -3.0,
+          -5.0,
+          -3.0,
+          0.0,
+          1.5,
+          2.0,
+          3.5,
+          5.0,
+          0.0
+        ],
+        [
+          0.0,
+          5.0,
+          3.5,
+          2.0,
+          1.5,
+          0.0,
+          -3.0,
+          -5.0,
+          -3.0,
+          0.0,
+          1.5,
+          2.0,
+          3.5,
+          5.0,
+          0.0
+        ],
+        [
+          0.0,
+          5.0,
+          3.5,
+          2.0,
+          1.5,
+          0.0,
+          -3.0,
+          -5.0,
+          -3.0,
+          0.0,
+          1.5,
+          2.0,
+          3.5,
+          5.0,
+          0.0
+        ],
+        [
+          0.0,
+          5.0,
+          3.5,
+          2.0,
+          1.5,
+          0.0,
+          -3.0,
+          -5.0,
+          -3.0,
+          0.0,
+          1.5,
+          2.0,
+          3.5,
+          5.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ]
+      ],
+      "Name": "ground_pro384.obj",
+      "Orientation": "The ground goes from (0,0) to (-50, 50). That is, the top left of the matrix is -50, 50. All objects should be on over the ground.",
+      "Position": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "Scale": 5.0,
+      "Texture": "C:/Users/HRI Lab/AcroGen/UnityProject/Assets/Ground Materials/Materials/T_YFGM_Grass01_d.mat"
     },
     {
       "Info": {
-        "Dimensions": "18 across the x axis, 12m across the z axis, and 40m high",
-        "Important points": "There is a good position for a player at the roof at (0, 41, -8) from this object's origin.",
-        "Local origin": "5m from building's -X side, and right at the objects +Z side"
+        "Description": "A low poly bridge. The posts on either side are the starts and ends of the crossing. Very small cracks in teh bridge.",
+        "Dimensions": "6 m long in the Z dimension over the crossing. The walkway is 2m wide. The railings are 1 meter off the surface of the bridge.",
+        "Local origin": "Y is 1m below the posts and 0.5m below the lowest part of the crossing. Midpoint Z, midpoint x."
       },
-      "Name": "SlenderGrayBuilding36m",
+      "Name": "SimpleWoodenBridge",
       "Position": {
-        "x": 46,
+        "x": 28,
         "y": 0,
-        "z": 56
+        "z": 35
       },
       "Rotation": {
         "x": 0,
-        "y": 0,
+        "y": 90,
         "z": 0
       }
     },
     {
       "Info": {
-        "Dimensions": "12m x 21.5m x 18m",
-        "Important points": "roof at 18m from base.",
-        "Local origin": "at buildings -X side, -2.5m from the -Z side."
+        "Description": "A low poly bridge. The posts on either side are the starts and ends of the crossing. Very small cracks in teh bridge.",
+        "Dimensions": "6 m long in the Z dimension over the crossing. The walkway is 2m wide. The railings are 1 meter off the surface of the bridge.",
+        "Local origin": "Y is 1m below the posts and 0.5m below the lowest part of the crossing. Midpoint Z, midpoint x."
       },
-      "Name": "GreenBuilding18m",
+      "Name": "SimpleWoodenBridge",
       "Position": {
-        "x": 30,
+        "x": 34,
         "y": 0,
-        "z": 30
+        "z": 35
+      },
+      "Rotation": {
+        "x": 0,
+        "y": 90,
+        "z": 0
+      }
+    },
+    {
+      "Info": {
+        "Description": "A low poly bridge. The posts on either side are the starts and ends of the crossing. Very small cracks in teh bridge.",
+        "Dimensions": "6 m long in the Z dimension over the crossing. The walkway is 2m wide. The railings are 1 meter off the surface of the bridge.",
+        "Local origin": "Y is 1m below the posts and 0.5m below the lowest part of the crossing. Midpoint Z, midpoint x."
+      },
+      "Name": "SimpleWoodenBridge",
+      "Position": {
+        "x": 40,
+        "y": 0,
+        "z": 35
+      },
+      "Rotation": {
+        "x": 0,
+        "y": 90,
+        "z": 0
+      }
+    },
+    {
+      "Info": {
+        "Description": "A low poly bridge. The posts on either side are the starts and ends of the crossing. Very small cracks in teh bridge.",
+        "Dimensions": "6 m long in the Z dimension over the crossing. The walkway is 2m wide. The railings are 1 meter off the surface of the bridge.",
+        "Local origin": "Y is 1m below the posts and 0.5m below the lowest part of the crossing. Midpoint Z, midpoint x."
+      },
+      "Name": "SimpleWoodenBridge",
+      "Position": {
+        "x": 46,
+        "y": 0,
+        "z": 35
+      },
+      "Rotation": {
+        "x": 0,
+        "y": 90,
+        "z": 0
+      }
+    },
+    {
+      "Info": {
+        "Local origin": "at the very bottom of the object and the midpoint along the X and Z. If you place me at a point, that is correctly the base of my trunk. Make sure my Y position = the height of the ground at my X, Z.",
+        "Recommendation": "You should probably scatter me across the ground to promote a natural looking forest."
+      },
+      "Name": "Spruce 1",
+      "Position": {
+        "x": 10,
+        "y": 3.5,
+        "z": 10
       },
       "Rotation": {
         "x": 0,
@@ -206,55 +639,120 @@
     },
     {
       "Info": {
-        "Dimensions": "12m x 21.5m x 18m",
-        "Important points": "roof at 18m from base.",
-        "Local origin": "at buildings -X side, -2.5m from the -Z side."
+        "Local origin": "at the very bottom of the object and the midpoint along the X and Z. If you place me at a point, that is correctly the base of my trunk. Make sure my Y position = the height of the ground at my X, Z.",
+        "Recommendation": "You should probably scatter me across the ground to promote a natural looking forest."
       },
-      "Name": "GreenBuilding18m",
+      "Name": "Spruce 1",
       "Position": {
-        "x": 70,
-        "y": 0,
-        "z": 30
+        "x": 60,
+        "y": 3.5,
+        "z": 15
       },
       "Rotation": {
         "x": 0,
-        "y": 315,
+        "y": 90,
         "z": 0
       }
     },
     {
       "Info": {
-        "Dimensions": "12m x 21.5m x 18m",
-        "Important points": "roof at 18m from base.",
-        "Local origin": "at buildings -X side, -2.5m from the -Z side."
+        "Local origin": "at the very bottom of the object and the midpoint along the X and Z. If you place me at a point, that is correctly the base of my trunk. Make sure my Y position = the height of the ground at my X, Z.",
+        "Recommendation": "You should probably scatter me across the ground to promote a natural looking forest."
       },
-      "Name": "GreenBuilding18m",
+      "Name": "Spruce 1",
       "Position": {
-        "x": 30,
-        "y": 0,
-        "z": 70
+        "x": 20,
+        "y": 4.0,
+        "z": 60
       },
       "Rotation": {
         "x": 0,
-        "y": 0,
+        "y": 135,
         "z": 0
       }
     },
     {
       "Info": {
-        "Dimensions": "12m x 21.5m x 18m",
-        "Important points": "roof at 18m from base.",
-        "Local origin": "at buildings -X side, -2.5m from the -Z side."
+        "Local origin": "at the very bottom of the object and the midpoint along the X and Z. If you place me at a point, that is correctly the base of my trunk. Make sure my Y position = the height of the ground at my X, Z.",
+        "Recommendation": "You should probably scatter me across the ground to promote a natural looking forest."
       },
-      "Name": "GreenBuilding18m",
+      "Name": "Spruce 1",
       "Position": {
-        "x": 70,
-        "y": 0,
-        "z": 70
+        "x": 55,
+        "y": 4.5,
+        "z": 55
       },
       "Rotation": {
         "x": 0,
-        "y": 180,
+        "y": 200,
+        "z": 0
+      }
+    },
+    {
+      "Info": {
+        "Local origin": "at the very bottom of the object and the midpoint along the X and Z. If you place me at a point, that is correctly the base of my trunk. Make sure my Y position = the height of the ground at my X, Z.",
+        "Recommendation": "You should probably scatter me across the ground to promote a natural looking forest."
+      },
+      "Name": "Spruce 1",
+      "Position": {
+        "x": 35,
+        "y": 4.0,
+        "z": 5
+      },
+      "Rotation": {
+        "x": 0,
+        "y": 300,
+        "z": 0
+      }
+    },
+    {
+      "Info": {
+        "Description": "About 1m cubed.",
+        "Local origin": "at the object 3D center midpoint"
+      },
+      "Name": "Rock1",
+      "Position": {
+        "x": 27,
+        "y": 0.5,
+        "z": 32
+      },
+      "Rotation": {
+        "x": 0,
+        "y": 15,
+        "z": 0
+      }
+    },
+    {
+      "Info": {
+        "Description": "About 1m cubed.",
+        "Local origin": "at the object 3D center midpoint"
+      },
+      "Name": "Rock1",
+      "Position": {
+        "x": 43,
+        "y": 0.5,
+        "z": 38
+      },
+      "Rotation": {
+        "x": 0,
+        "y": 200,
+        "z": 0
+      }
+    },
+    {
+      "Info": {
+        "Description": "About 1m cubed.",
+        "Local origin": "at the object 3D center midpoint"
+      },
+      "Name": "Rock1",
+      "Position": {
+        "x": 32,
+        "y": 0.5,
+        "z": 40
+      },
+      "Rotation": {
+        "x": 0,
+        "y": 45,
         "z": 0
       }
     },
@@ -263,11 +761,11 @@
         "When?": "On start of scene",
         "Where?": "Master sound channel",
         "name": "scloudsave",
-        "type": "digitally encoded as a com - Light Breeze White Noise - Dream Shard"
+        "type": "digitally encoded as a com - Strong Nature - Wind Sounds"
       }
     },
     {
-      "Ground off to infinite": "Outside the 10.0x C:/Users/HRI Lab/AcroGen/UnityProject/Assets/Ground Materials/Materials/T_YFGM_Ground02_d.mat ground, there are randomly placed ['SlenderGrayBuilding36m', 'GreenBuilding18m']"
+      "Ground off to infinite": "Outside the 5.0x C:/Users/HRI Lab/AcroGen/UnityProject/Assets/Ground Materials/Materials/T_YFGM_Grass01_d.mat ground, there are randomly placed ['Spruce 1', 'Rock1']"
     }
   ]
 }

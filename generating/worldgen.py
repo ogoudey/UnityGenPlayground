@@ -132,13 +132,13 @@ class UnityWorldGen(WorldGen):
             scene_path = instruments.core.world.done_and_write(instruments.core.assets / "Generations" / instruments.core.world.scene.name)
             log(f"{result.final_output}")
             return scene_path
-        except Exception:
-            print(f"Did not write scene:\n{result.final_output}")
+        except Exception as e:
+            print(f"Did not write scene because {e}.")
             return f"Did not write scene:\n{result.final_output}."
 
     @classmethod
     async def generate(cls, world_name: str, assets_folder: Optional[Path], prompt: str):
-        wg = cls(world_name, f"{world_name}_0", assets_folder)
+        wg = cls(world_name, f"{world_name}", assets_folder)
         await wg.load()
         scene_path = await wg.run(prompt)
         return scene_path

@@ -41,20 +41,17 @@ class UnityScene(Scene):
         log(f"Writing meta (from world) for {name}")
         guid = uuid.uuid4().hex
 
-        rel_path = self.get_asset(name)
-        log(f"Writing meta for {rel_path}")
-        structural_changes.write_obj_meta(rel_path, guid)
-        log(f"Done writing meta for {rel_path}")
+        log(f"Writing meta for {prefab_path}")
+        structural_changes.write_obj_meta(prefab_path, guid)
+        log(f"Done writing meta for {prefab_path}")
         self.unity_file.add_orphan_prefab_instance(name, prefab_path, guid, location, rotation)
 
     def add_ground(self, ground_name, ground_path, transform={"x":0.0, "y":0.0, "z":0.0}, rotation={"x":0.0, "y":0.0, "z":0.0}):
         log("Adding ground...")
         
         guid = uuid.uuid4().hex
-        log("Geting proposed asset...")
-        ground_proposition = self.get_asset(ground_name)
-        log(f"PRoposition:  {ground_proposition}")
-        ground_OBJ_rel_path = ground_proposition["Ground"]
+        log(f"Proposition:  {ground_path}")
+        ground_OBJ_rel_path = ground_path["Ground"]
         log(f"GUID: {guid}")
         log(f"Writing meta file to relative path:  {ground_OBJ_rel_path}")
         structural_changes.write_obj_meta(ground_OBJ_rel_path, guid)

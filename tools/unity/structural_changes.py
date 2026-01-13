@@ -143,7 +143,7 @@ class UnityFile:
             if "PrefabInstance" in doc:
                 for mod in doc["PrefabInstance"]["m_Modification"]["m_Modifications"]:
                     if mod.get("propertyPath") == "m_Name":
-                        if mod["target"]["value"] == name:
+                        if name in mod["target"]["value"]: # A non-ideal way to detect if a ground is already in the YAML.
                             self.wrapped.remove(doc)
                             if UNITY_VERSION == "5":
                                 return True
@@ -310,7 +310,10 @@ class UnityFile:
         dispatcher = {"6": {"Vive Pro 2": self.setup_VIVE},
                       "6": {"Vive Focus 3": self.setup_vive_focus},
                       "5": {"Vive Pro 2": self.setup_data_collection}}
-        dispatch = dispatcher[UNITY_VERSION][VR_HEADSET_TYPE]
+        try:
+            dispatch = dispatcher[UNITY_VERSION][VR_HEADSET_TYPE]
+        except KeyError:
+            print(f"Could not place VR player! No structure for {VR_HEADSET_TYPE} in Unity {UNITY_VERSION}!")
         log(f"Unity version {UNITY_VERSION} with {VR_HEADSET_TYPE} headset maps to low-level function `{dispatch.__name__}`")
         dispatch(transform, rotation)
 

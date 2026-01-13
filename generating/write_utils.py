@@ -32,7 +32,10 @@ def post_execute():
             print(f"{func.__name__}")
         for func, (args, kwargs) in executions:
             #print(f"Calling {func} on {args}, {kwargs}")
-            func(*args, **kwargs)
+            try:
+                func(*args, **kwargs)
+            except Exception as e:
+                print(f"Failed on {func.__name__}({args}, {kwargs}): {e}")
     else:
         print(f"Not building YAML file... {UNITY_WORLD_TYPE}")
         pass
