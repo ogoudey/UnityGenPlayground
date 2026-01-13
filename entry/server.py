@@ -69,8 +69,8 @@ def generate():
     world_name = request.args["world_name"]
     if world_name in worlds_being_generated:
         return jsonify({"started": False})
-    else:
-        worlds_being_generated.append(world_name)
+    worlds_being_generated.append(world_name)
+
     prompt = request.args["prompt"]
     assets_folder = Path(request.args["assets"])
 
