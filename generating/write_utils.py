@@ -31,7 +31,7 @@ def post_execute():
         for func, (args, kwargs) in executions:
             print(f"{func.__name__}")
         for func, (args, kwargs) in executions:
-            print(f"Calling {func} on {args}, {kwargs}")
+            #print(f"Calling {func} on {args}, {kwargs}")
             func(*args, **kwargs)
     else:
         print(f"Not building YAML file... {UNITY_WORLD_TYPE}")
