@@ -72,6 +72,7 @@ class WorldGen:
             if self.preexisting_world_model_dict:
                 tools_to_add.append(delete)
                 self.inject_world_model = True
+                
             else:
                 self.inject_world_model = False
         self.world_name = world_name
@@ -90,10 +91,13 @@ class WorldGen:
         return result.final_output
     
     def open_world_model(self, world_name: str):
+        
         supposed_path = Path("generating/models") / f"{world_name}.json"
+        print(f"Checking {str(supposed_path)} for existing world model...")
         if supposed_path.exists():
             with open(supposed_path, "r") as f:
                 j = f.read()
+                print(f"... found existing world model.")
                 return json.loads(j)
         else:
             return None
@@ -103,12 +107,15 @@ class UnityWorldGen(WorldGen):
     def __init__(self, world_name: str, scene_name: str, assets_folder: Optional[Path]=None, conductor_name: str="UnityWorldConductor", conductor_system_prompt: str="", conductor_tools: List[function_tool]=[]):
         super().__init__(world_name, conductor_name, conductor_system_prompt, conductor_tools + [createGround, createSkybox, createSun, createSound, populateHorizon])
 
-        
 
         # Unity specific stuff below
                 
-        instruments.core.world = UnityWorld(world_name, scene_name, self.preexisting_world_model_dict)  
-
+        instruments.core.world = UnityWorld(world_name, scene_name, self.preexisting_world_model_dict) 
+        try: 
+            if self.preexisting_world_model_dict:
+                instruments.core.world.open_build_instructions()
+        except Exception:
+            print("Failed to open build instructions, if any...")
         if assets_folder is None:
             if ASSETS is None:
                 raise EnvironmentError(f"\nCannot locate Assets folder. Tried:\n\tUnityWorldGen arg: {assets_folder}\n\tASSETS env variable: {ASSETS}.\nPlease set at least one to a Unity Project/Assets folder.")
@@ -146,7 +153,12 @@ class UnityWorldGen(WorldGen):
             prompt: prompt for Conductor agent to generate world. Example: Generate a fish tank.
         """
         if self.inject_world_model:
-            prompt = f"{instruments.core.world.model}\n=======USER PROMPT:=======\n{prompt}"
+            info_of_proposed_objects = {}
+            for asset_name in list(instruments.core.world.proposed_objects.propositions.keys()):
+                if asset_name in instruments.core.asset_catalog:
+                    info_of_proposed_objects[asset_name] = instruments.core.asset_catalog[asset_name]
+
+            prompt = f"{instruments.core.world.model}\n\nProposed objects:\n{info_of_proposed_objects}\n\n=======USER PROMPT:=======\n{prompt}"
         result = await Runner.run(self.conductor, prompt, max_turns=20)
         try:
             scene_path = instruments.core.world.done_and_write(instruments.core.assets / "Generations" / instruments.core.world.scene.name)
@@ -158,6 +170,7 @@ class UnityWorldGen(WorldGen):
 
     @classmethod
     async def generate(cls, world_name: str, assets_folder: Optional[Path], prompt: str):
+        print("In Worldgen class method...")
         wg = cls(world_name, f"{world_name}", assets_folder)
         await wg.load()
         scene_path = await wg.run(prompt)

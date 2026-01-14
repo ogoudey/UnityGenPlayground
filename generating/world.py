@@ -9,8 +9,8 @@ import sys
 import uuid
 from pathlib import Path
 import tools.unity.structural_changes as structural_changes
-
-from typing import List
+from dataclasses import dataclass, field
+from typing import List, Union, Optional
 from logger import log
 
 from utils.paths import RelativePath, AssetsRelativePathStr
@@ -18,13 +18,13 @@ from utils.paths import RelativePath, AssetsRelativePathStr
 from generating.scene import Scene, UnityScene
 from generating.model import WorldModel, UnityWorldModel
 
-from generating.write_utils import post_write, post_execute, remove_execution
+from generating.write_utils import post_write, post_execute, remove_execution, dump_build_instructions, recall_build_instructions, recall_propositions, dump_propositions
 
 class Propositions:
     """ A class that's storage for objects not yet placed in the scene. """
     propositions: dict[str, RelativePath | dict[str, RelativePath]]
-    def __init__(self):
-        self.propositions = dict()
+    def __init__(self, props: Optional[dict]=dict()):
+        self.propositions = props
         
     def add(self, name: str, proposition: RelativePath | dict):
         if isinstance(proposition, RelativePath):
@@ -43,6 +43,29 @@ class Propositions:
     
     def __contains__(self, name: str) -> bool:
         return name in self.propositions
+
+    def to_dict(self) -> dict:
+        def serialize(v):
+            if isinstance(v, RelativePath):
+                return v.to_dict()
+            elif isinstance(v, dict):
+                return {k: serialize(vv) for k, vv in v.items()}
+            else:
+                raise TypeError(f"Unsupported type: {type(v)}")
+
+        return {k: serialize(v) for k, v in self.propositions.items()}
+
+    @classmethod
+    def from_dict(cls, d: dict) -> "Propositions":
+        def deserialize(v):
+            if isinstance(v, dict) and v.get("__type__") == "RelativePath":
+                return RelativePath.from_dict(v)
+            elif isinstance(v, dict):
+                return {k: deserialize(vv) for k, vv in v.items()}
+            else:
+                raise TypeError(f"Unsupported value: {v}")
+
+        return cls({k: deserialize(v) for k, v in d.items()})
 
 class World:
 
@@ -75,6 +98,7 @@ class UnityWorld(World):
 
     def __init__(self, world_name:str, scene: str, preexisting_world_model_dict: dict):
         super().__init__(world_name)
+        print(f"World model:\n{preexisting_world_model_dict}")
         if preexisting_world_model_dict:
             preexisting_scene = preexisting_world_model_dict["scene"]
         else:
@@ -85,6 +109,7 @@ class UnityWorld(World):
         self.ground_matrix = []
         self.ground_scale = 5.0
         self.current_texture = ""
+
 
     def __repr__(self):
         return self.model.__repr__()
@@ -108,16 +133,26 @@ class UnityWorld(World):
         return assets_relative_path.as_posix()
 
     def open_build_instructions(self):
-        # use a write util to load the saved build instructions
-        pass
+        try:
+            recall_build_instructions(Path(f"generating/builds/{self.scene.name}.json"))
+            
+        except Exception as e:
+            print(f"Couldn't reload build instructions. ({e})")
+        try:
+            self.proposed_objects = Propositions.from_dict(recall_propositions(Path(f"generating/propositions/{self.scene.name}.json")))
+        except Exception as e:
+            print(f"Couldn't reload propositions. Build is likely to fail... ({e})")
 
     def post(self):
-        post_execute()
+        dump_propositions(Path(f"generating/propositions/{self.scene.name}.json"), self.proposed_objects)
+        dump_build_instructions(Path(f"generating/builds/{self.scene.name}.json"))
+        post_execute(self)
 
     def done_and_write(self, path_to_write: Path | str):        
         self.scene.unity_file.reset()
         # build
         self.post()
+        
         path = Path(path_to_write)
         if path.exists():
             return self.scene.commit_scene(path)
@@ -164,5 +199,8 @@ class UnityWorld(World):
         proposal = self.proposed_objects[ground_name]
         self.scene.add_ground(ground_name, proposal, transform, rotation)
 
-    def delete_object_by_id(self, buildID):
-        remove_execution(buildID)
+    def delete_object_by_buildID(self, buildID):
+        try:
+            remove_execution(buildID)
+        except Exception as e:
+            print(f"Failed to delete object by ID... {e}")

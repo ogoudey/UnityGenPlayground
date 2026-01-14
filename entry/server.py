@@ -67,8 +67,11 @@ worlds_being_generated = []
 
 @app.route('/generate')
 def generate():
+    print(f"Received generate request... already generating {worlds_being_generated}")
     world_name = request.args["world_name"]
     if world_name in worlds_being_generated:
+        print(worlds_being_generated)
+        print("Not generated.")
         return jsonify({"started": False})
     worlds_being_generated.append(world_name)
 

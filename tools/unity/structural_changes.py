@@ -158,6 +158,9 @@ class UnityFile:
         return False
 
     def add_orphan_prefab_instance(self, name, prefab_path, metaguid, transform, rotation):
+        """
+        Creating a new asset. The scene needs a reference to an imported asset, so we manually import it, writing a .meta file.
+        """
         prefab_init_text = load_structure("prefab")
         node = compose(prefab_init_text)[0]
         wrapped = node_to_python(node)
@@ -241,8 +244,10 @@ class UnityFile:
         self.wrapped.append(audio_source)
         self.wrapped.append(sound_game_object)
 
-
     def add_prefab_instance(self, name, prefab_path, transform: dict, rotation: dict):
+        """
+        A preimported asset. Must identify the .meta file.
+        """
         prefab_init_text = load_structure("prefab")
         composed = compose(prefab_init_text)
         objects: str = node_to_python(composed[0])
