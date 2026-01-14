@@ -252,7 +252,7 @@ async def create_ground(steps_to_ground_construction, resolution, scale, procedu
             "Heightmap": ground_matrix,
             "Scale": world.ground_scale,
             "Position": json_location,
-            "Orientation": "The ground goes from (0,0) to (-50, 50). That is, the top left of the matrix is -50, 50. All objects should be on over the ground." # held constant elsewhere?
+            "Orientation": "The ground goes from (0,0) to (-50, 50). That is, the top left of the matrix is -50, 50. All objects should be positioned over the ground." # held constant elsewhere?
         }
     if buildID:
         data["buildID"] = buildID
