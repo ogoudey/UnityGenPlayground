@@ -109,6 +109,7 @@ class UnityWorld(World):
 
     def open_build_instructions(self):
         # use a write util to load the saved build instructions
+        pass
 
     def post(self):
         post_execute()
@@ -124,7 +125,6 @@ class UnityWorld(World):
             print("Making parent directories")
             path.parent.mkdir(parents=True, exist_ok=True)
             return self.scene.commit_scene(path)
-            raise Exception(f"Path {path} does not exist!")
 
     @post_write    
     def add_skybox(self, skybox_name, buildID=None):

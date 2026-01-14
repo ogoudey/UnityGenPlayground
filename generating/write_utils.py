@@ -30,21 +30,12 @@ def post_execute():
         print(f"Building YAML file...")
         for buildID, func, (args, kwargs) in executions:
             print(f"{func.__name__}")
-<<<<<<< HEAD
         for buildID, func, (args, kwargs) in executions:
-            print(f"Calling {func} on {args}, {kwargs}")
-            try:
-                func(*args, **kwargs)
-            except Exception as e:
-                print(f"FAILED to build on {func.__name__}({args}, {kwargs}):\n\n\t{e}")
-=======
-        for func, (args, kwargs) in executions:
             #print(f"Calling {func} on {args}, {kwargs}")
             try:
                 func(*args, **kwargs)
             except Exception as e:
-                print(f"Failed on {func.__name__}({args}, {kwargs}): {e}")
->>>>>>> 645fe225b05492ae321c72e859803effd9b451ab
+                print(f"FAILED to build on {func.__name__}({args}, {kwargs}):\n\n\t{e}")
     else:
         print(f"Not building YAML file... {UNITY_WORLD_TYPE}")
         pass
