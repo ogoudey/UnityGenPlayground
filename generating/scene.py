@@ -46,6 +46,10 @@ class UnityScene(Scene):
         log(f"Done writing meta for {prefab_path}")
         self.unity_file.add_orphan_prefab_instance(name, prefab_path, guid, location, rotation)
 
+    def add_agent(self, name, location, rotation):
+        self.unity_file.add_agent_cylinder(name, location, rotation)
+
+
     def add_ground(self, ground_name, ground_path, transform={"x":0.0, "y":0.0, "z":0.0}, rotation={"x":0.0, "y":0.0, "z":0.0}):
         log("Adding ground...")
         

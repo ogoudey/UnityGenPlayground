@@ -26,11 +26,10 @@ class UnityWorldModel(WorldModel):
         self.dump_world_model(f"generating/models/{self.name}.json")
     
     def remove_object_by_buildID(self, buildID:str):
-        for item in self.scene_data:
-            if "buildID" in item:
-                if item["buildID"] == buildID:
-                    del item
-                    return
+        for i, d in enumerate(self.scene_data):
+            if d.get("buildID") == buildID:
+                del self.scene_data[i]
+                return
 
     def dump_world_model(self, path: str | Path):
         path = Path(path)

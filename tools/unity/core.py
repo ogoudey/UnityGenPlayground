@@ -72,10 +72,44 @@ def position_vr_player(transform: str, rotation: str, explanation: str):
     world.add_data(data)
 
 @error_reporter
+def position_agent(name: str, transform: str, rotation: str):
+    try:
+        json_location = json.loads(transform)
+    except ValueError:
+        print("Error loading given transform into JSON")
+        return f"Failed to add agent to location {transform} in the scene (json.loads() error). Make sure to pass a correct something that can be loaded with json.loads() into JSON."
+    try:
+        json_rotation = json.loads(rotation)
+    except ValueError:
+        print("Error loading given rotation into JSON")
+        return f"Failed to add agent to rotation {rotation} in the scene (json.loads() error) Make sure to pass a correct something that can be loaded with json.loads() into JSON."
+    
+    global world
+    log(f"Positioning agent at {transform} with rotation {rotation}")
+    buildID = world.set_agent(name, json_location, json_rotation)
+    data = {
+            "Agent": {
+                "Position": f"{json_location}",
+                "Rotation": f"{json_rotation}",
+            }
+        }
+    
+    if buildID:
+        data["buildID"] = buildID
+    world.add_data(data)
+
+@error_reporter
 def delete(buildID: str):
     # delete from world model and # delete from build instructions
     global world
-    world.delete_object_by_buildID(buildID)
+    try:
+        # Is list?
+        buildIDs = json.loads(buildID)
+        for buildID in buildIDs:
+            world.delete_object_by_buildID(buildID)
+    except Exception:
+        # Not a list...
+        world.delete_object_by_buildID(buildID)
     
 
 
@@ -154,6 +188,8 @@ async def create_sound(sound_description: str):
     log(f"{agent.name} thought for {time.time() - t} seconds.")
     path_str = result.final_output.path
     sound_name = path_str.split("/")[-1]
+    if sound_name == "":
+        return f"Unsuccessful adding sound."
     world.propose_object(sound_name, RelativePath(path=Path(path_str)))
     buildID = world.add_sound(sound_name)
     
@@ -162,7 +198,7 @@ async def create_sound(sound_description: str):
             "Sound": {
                 "When?": "On start of scene",
                 "Where?": "Master sound channel",
-                "name": sound_name,
+                "Name": sound_name,
                 "type": f"digitally encoded as a {sound_name.split(".")[-1]}"
             }
         }
@@ -336,7 +372,7 @@ async def propose_object(description: str):
         "Object": object_data,
         "Note": result.final_output.note
     }
-    log(f"Matcher to conductor: {json_blob["Note"]}")
+    print(f"\tMatcher to conductor: {json_blob["Note"]}")
     return json_blob
 
 
@@ -368,7 +404,7 @@ def position_object(object_name: str, position_of_object_origin: str, rotation: 
         object_data = {"Name": object_name}
     log(f"Successfully parsed location(s) and rotation(s) for proposed {object_name}")
     log(f"{json_location} {json_rotation}")
-    log(explanation)
+    print(f"\tExplanation: {explanation}")
     
     #HEre we check if its a list or a singleton
     objects_to_sequence = []

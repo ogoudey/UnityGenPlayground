@@ -81,6 +81,8 @@ class World:
     def add_data(self, object_data):
         self.model.update(object_data)
 
+    
+
         
 class UnityWorld(World):
     """
@@ -144,15 +146,19 @@ class UnityWorld(World):
             print(f"Couldn't reload propositions. Build is likely to fail... ({e})")
 
     def post(self):
-        dump_propositions(Path(f"generating/propositions/{self.scene.name}.json"), self.proposed_objects)
-        dump_build_instructions(Path(f"generating/builds/{self.scene.name}.json"))
-        post_execute(self)
-
-    def done_and_write(self, path_to_write: Path | str):        
+        print("Posting:")
+        print(f"\tResetting Unity File")
         self.scene.unity_file.reset()
-        # build
-        self.post()
+        print(f"\tSaving propositions")
+        dump_propositions(Path(f"generating/propositions/{self.scene.name}.json"), self.proposed_objects)
+        print(f"\tSaving build instructions")
+        dump_build_instructions(Path(f"generating/builds/{self.scene.name}.json"))
         
+
+    def done_and_write(self, path_to_write: Path | str):   
+        
+        self.post()
+        post_execute(self)
         path = Path(path_to_write)
         if path.exists():
             return self.scene.commit_scene(path)
@@ -179,6 +185,10 @@ class UnityWorld(World):
     def set_vr_player(self, location, rotation, buildID=None):
         self.scene.set_vr_player(location, rotation)
 
+    @post_write
+    def set_agent(self, name, location, rotation, buildID=None):
+        self.scene.add_agent(name, location, rotation)
+
     @post_write      
     def add_prefab(self, name, location: dict, rotation, buildID=None):
         prefab_path = self.proposed_objects[name].path
@@ -203,4 +213,23 @@ class UnityWorld(World):
         try:
             remove_execution(buildID)
         except Exception as e:
-            print(f"Failed to delete object by ID... {e}")
+            print(f"Failed to delete object by ID in build instructions... {e}")
+        try:
+            self.model.remove_object_by_buildID(buildID)
+        except Exception as e:
+            print(f"Failed to delete object by ID in worlds model... {e}")
+        for potential_antecedent in list(self.proposed_objects.propositions):
+            exists_referent = False
+
+            for obj in self.model.scene_data:
+                if "Name" in obj:
+                    if obj["Name"] == potential_antecedent:
+                        exists_referent = True
+                        break
+                elif "Sound" in obj:
+                    if obj["Sound"]["Name"] == potential_antecedent:
+                        exists_referent = True
+                        break
+
+            if not exists_referent:
+                del self.proposed_objects.propositions[potential_antecedent]

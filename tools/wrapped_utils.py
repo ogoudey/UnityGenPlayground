@@ -7,7 +7,7 @@ import asyncio
 
 def error_reporter(func):
     async def handle_async(*args, **kwargs):
-        print(f"Agent called {func.__name__}")
+        print(f"Called {func.__name__}")
         try:
             
             return await func(*args, **kwargs)
@@ -15,7 +15,7 @@ def error_reporter(func):
             return _format_error(func, e)
 
     def handle_sync(*args, **kwargs):
-        print(f"Agent called {func.__name__}")
+        print(f"Called {func.__name__}")
         try:
             return func(*args, **kwargs)
         except Exception as e:

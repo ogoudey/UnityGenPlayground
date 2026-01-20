@@ -5,10 +5,10 @@ import json
 WORLD_CLASS = os.environ.get("WORLD_CLASS", "UNITY")
 
 if WORLD_CLASS == "UNITY":
-    UNITY_WORLD_TYPE = os.environ.get("WORLD_TYPE", "UNITY_TWO_STEP")
-    if UNITY_WORLD_TYPE == "UNITY_GRADUAL":
+    WORLD_GEN_TECHNIQUE = os.environ.get("WORLD_GEN_TECHNIQUE", "UNITY_TWO_STEP")
+    if WORLD_GEN_TECHNIQUE == "UNITY_GRADUAL":
         MODE = "GRADUAL"
-    elif UNITY_WORLD_TYPE == "UNITY_TWO_STEP":
+    elif WORLD_GEN_TECHNIQUE == "UNITY_TWO_STEP":
         MODE = "TWO_STEP"
 
 executions: List[tuple] = []
@@ -20,6 +20,7 @@ def post_write(func):
     if MODE == "TWO_STEP":
         def wrapper(*args, **kwargs):
             buildID = str(uuid.uuid4())[-4:] 
+            print(f"Appending {str(len(executions) + 1)}. {func.__name__} (ID: {buildID})")
             executions.append((buildID, func, (args[1:], kwargs))) # Stays in build instructions. Removed __self__
             return buildID # Goes to core -> world model
         return wrapper
@@ -27,27 +28,37 @@ def post_write(func):
         return func
 
 def post_execute(world_instance):
-    
+    global executions
     if MODE == "TWO_STEP":
-        print(f"Building YAML file...")
+        i = 1
+        print(f"Building YAML file with these functions:")
         for buildID, func, (args, kwargs) in executions:
-            print(f"{func.__name__}")
+            print(f"\t{i}. {func.__name__}")
+            i += 1
+        i = 1
+        print(f"Executing:")
         for buildID, func, (args, kwargs) in executions:
             #print(f"Calling {func} on {world_instance}, {args}, {kwargs}")
             try:
+                print(f"\t{i}. {func.__name__}")
                 func(world_instance, *args, **kwargs)
+                i += 1
             except Exception as e:
                 print(f"FAILED to build on {func.__name__}({args}, {kwargs}):\n\n\t{e}")
+        print(f"Clearing executions")
+        executions = []
     else:
-        print(f"Not building YAML file... {UNITY_WORLD_TYPE}")
+        print(f"Not building YAML file... {WORLD_GEN_TECHNIQUE}")
         pass
 
 def remove_execution(buildID: str):
     print(f"Removing object with buildID {buildID}")
-    for item in executions:
+    for i, item in enumerate(executions):
         if item[0] == buildID:
-            del item
-    print(f"Removed object with buildID {buildID}:\n {executions}")
+            del executions[i]
+            print(f"Removed object with buildID {buildID}.")
+            return
+    print(f"Could not find object with buildID {buildID}")
 
 def dump_build_instructions(file_path):
     """
@@ -55,10 +66,12 @@ def dump_build_instructions(file_path):
     Each entry: (buildID, func_name, (args, kwargs))
     """
     with open(file_path, "w") as f:
+        i = 1
         # Convert args/kwargs to JSON-serializable
         serializable = []
         for buildID, func, (args, kwargs) in executions:
-            print(f"Dumping {func.__name__}")
+            print(f"\t\t{str(i)}. {func.__name__}")
+            i += 1
             serializable.append({
                 "buildID": buildID,
                 "func": func.__name__,
@@ -68,11 +81,13 @@ def dump_build_instructions(file_path):
         json.dump(serializable, f, indent=2)
 
 def dump_propositions(file_path, propositions):
-    print(f"Dumping propositions")
+    dict_props = propositions.to_dict()
+    for k, v in dict_props.items():
+        print(f"\t\t{k}: {v}")
+
     with open(file_path, "w") as f:
         # Convert args/kwargs to JSON-serializable
-        serializable = []
-        json.dump(propositions.to_dict(), f, indent=2)
+        json.dump(dict_props, f, indent=2)
 
 def recall_build_instructions(file_path):
     """
@@ -81,20 +96,20 @@ def recall_build_instructions(file_path):
     """
     with open(file_path, "r") as f:
         serializable = json.load(f)
-    
+    global executions
     executions = []
     for entry in serializable:
         buildID = entry["buildID"]
         func_name = entry["func"]
         args = entry["args"]
         kwargs = entry["kwargs"]
-        print(f"Recalling {func_name}")
+        print(f"Recalling {len(executions) + 1} {func_name}")
         func = func_registry.get(func_name)
         if func is None:
             raise ValueError(f"Function '{func_name}' not registered in func_registry")
         
         executions.append((buildID, func, (args, kwargs)))
-        print(f"Executions {executions}")
+        
 
 def recall_propositions(file_path):
     with open(file_path, "r") as f:

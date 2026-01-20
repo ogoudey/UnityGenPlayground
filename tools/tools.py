@@ -177,7 +177,7 @@ async def positionObject(object_name: str, position_of_object_origin: str, rotat
     return core.position_object(object_name, position_of_object_origin, rotation, explanation)
 
 @function_tool
-def positionVRHumanPlayer(transform: str, rotation: str = "{\"x\": 75, \"y\": 10, \"z\": 70}", explanation: str=""):
+def positionVRHumanPlayer(transform: str, rotation: str = "{\"x\": 0, \"y\": 0, \"z\": 0}", explanation: str=""):
     """
     This function places the VR headset of the human player in the scene. It places the camera/head, so make it 2m above the ground below them. The player can walk around 1m from where they are placed.
     transform: Must be a JSON-encoded string. Example:
@@ -192,9 +192,25 @@ def positionVRHumanPlayer(transform: str, rotation: str = "{\"x\": 75, \"y\": 10
     return f"Successfully added player to the scene at {transform}."
 
 @function_tool
+def positionAgent(name: str, transform: str, rotation: str = "{\"x\": 0, \"y\": 0, \"z\": 0}", explanation: str=""):
+    """
+    This function places an autonomous path finding agent in the scene.
+    name: Any name. (Example: Rob The Robot)
+    transform: Must be a JSON-encoded string. Example:
+        "{\"x\": 75, \"y\": 10, \"z\": 70}"
+    rotation: Must be a JSON-encoded string (only use \" around the variables). All axes at 0 means the player faces dead ahead in the +X direction. Example:
+        "{\"x\": 45, \"y\": 0, \"z\": -45}" 
+
+    Only call this function once, and remember to be careful not to make it floating. Use what you know about the objects and their positionings.
+    """
+    core.position_agent(name, transform, rotation)
+    return f"Successfully added agent to the scene at {transform}."
+
+@function_tool
 def delete(buildID: str):
     """
-    Deletes an object from the scene. Use to make edits to objects (delete then recreate). Use the exact buildID found in the existing structure of the world.
+    Deletes objects from the scene. Use to make edits to objects (delete then recreate), or simply erase. Use the exact buildIDs found in the existing structures (world model) of the world.
+    Pass a list of such buildIDs to delete multiple objects. (Example: "[\"ah1c\", \"23d1\", \"ef63\"]") Try not to use multiple delete() calls where you could use one, passing a list.
     """
     core.delete(buildID)
     return f"Successfully deleted object with buildID {buildID}."

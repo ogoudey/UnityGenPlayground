@@ -96,9 +96,9 @@ def euler_to_xyzw_quaternion(rotation: dict) -> tuple:
     x_deg, y_deg, z_deg = rotation["x"], rotation["y"], rotation["z"]
 
     # Convert degrees to radians
-    x = math.radians(x_deg)
-    y = math.radians(y_deg)
-    z = math.radians(z_deg)
+    x = math.radians(float(x_deg))
+    y = math.radians(float(y_deg))
+    z = math.radians(float(z_deg))
 
     cx = math.cos(x/2)
     sx = math.sin(x/2)

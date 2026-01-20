@@ -1,10 +1,17 @@
 #############################################################################
 #
 #   Module that contains the class that stands for the Unity scene file.
+# 
+#   Recommended test with 
+#   `import structural_changes as s
+#   x=s.UnityFile()
+#   x.setup_keyboard_player() ...
+#   x.
+#   print(json.dumps(g, indent=2))
 #
 #############################################################################
 
-from typing import List, Any
+from typing import List, Optional
 
 import yaml as pyyaml
 
@@ -43,9 +50,7 @@ class UnityFile:
             scene_init_text = load_structure("sceneU5")
         else:
             raise Exception("Must set Unity version.")
-        nodes = compose(scene_init_text)
-        self.wrapped: List = [node_to_python(n) for n in nodes]
-        self.placed_assets = dict()
+        self.reset
 
     def reset(self):
         # redund
@@ -58,6 +63,7 @@ class UnityFile:
         nodes = compose(scene_init_text)
         self.wrapped: List = [node_to_python(n) for n in nodes]
         self.placed_assets = dict()
+        print(f"\t\tUnity YAML file cleared.")
 
     def set_sun(self, length_of_day: float, time_of_day: float, sun_brightness:float):
         rot = (time_of_day / length_of_day) * 360
@@ -97,11 +103,12 @@ class UnityFile:
             
     def add_ground_prefab_instance(self, name, proposal, metaguid, transform):
         log(f"Adding prefab instance {name}")
-        prefab_init_text = load_structure("prefab")
-        node = compose(prefab_init_text)[0]
-        wrapped = node_to_python(node)
+        prefab_init_text = load_structure("prefab_nav_surface")
+        nodes = compose(prefab_init_text)
+        wrapped = [node_to_python(n) for n in nodes]
+        prefab = wrapped[0]
         log("Got init text for prefab")
-        wrapped, id_out = set_ID(wrapped) # to random ID
+        prefab, id_out = set_ID(prefab) # to random ID
         log("Set ID")
         try:
             log(f"Found proposed object {name} (keys: {list(proposal.keys())}")
@@ -112,7 +119,7 @@ class UnityFile:
             log(f"Exception in getting texture GUID or getting proposal: {texture_path}")
             raise Exception(".meta lookup failed. File does not exist?")
         log("Making modifications...")
-        modifications = wrapped["PrefabInstance"]["m_Modification"]["m_Modifications"]
+        modifications = prefab["PrefabInstance"]["m_Modification"]["m_Modifications"]
         for mod in modifications:
             if "target" in mod and "guid" in mod["target"]:
                 mod["target"]["guid"] = metaguid
@@ -130,8 +137,23 @@ class UnityFile:
                         mod["value"] = transform["y"]
                     if mod.get("propertyPath") == "m_LocalPosition.z":
                         mod["value"] = transform["z"]
-        wrapped["PrefabInstance"]["m_SourcePrefab"]["guid"] = metaguid
-        self.wrapped.append(wrapped)
+                        
+        for added_component in prefab["PrefabInstance"]["m_Modification"]["m_AddedComponents"]:
+            added_component["targetCorrespondingSourceObject"]["guid"] = metaguid
+
+        prefab["PrefabInstance"]["m_SourcePrefab"]["guid"] = metaguid
+
+        game_object = wrapped[1]
+        game_object["GameObject"]["m_PrefabInstance"]["fileID"] = id_out
+        game_object["GameObject"]["m_CorrespondingSourceObject"]["guid"] = metaguid
+
+        mesh_collider = wrapped[2]
+        mesh_collider["MeshCollider"]["m_Mesh"]["guid"] = metaguid
+
+        for wrap in wrapped:
+            print(f"\tGround doc: {list(wrap.keys())[2:]}")
+            self.wrapped.append(wrap)
+        
         log("Modifications made, added to YAML.")
         if not UNITY_VERSION == "5":
             sceneroots = get_doc(self.wrapped, "SceneRoots")
@@ -139,6 +161,7 @@ class UnityFile:
             log("Scene roots modified.")        
     
     def remove_prefab_instance_if_exists(self, name):
+
         for doc in self.wrapped:
             if "PrefabInstance" in doc:
                 for mod in doc["PrefabInstance"]["m_Modification"]["m_Modifications"]:
@@ -156,6 +179,26 @@ class UnityFile:
         sceneroots = get_doc(self.wrapped, "SceneRoots")
         sceneroots["m_Roots"].remove({"fileID": prefab_id})
         return False
+
+    def add_agent_cylinder(self, name, transform, rotation):
+        # 1. Get relevant docs
+        agent_init_text = load_structure("cylinder_nav_agent")
+        composed = compose(agent_init_text)
+        wrapped = [node_to_python(n) for n in composed]
+        game_object_node = wrapped[0]
+        transform_node = wrapped[4]
+        # 2. Change name
+        game_object_node["GameObject"]["m_Name"] = name
+        # 3. Edit transform
+        transform_node["Transform"]["m_LocalPosition"] = transform
+        quaternion = euler_to_xyzw_quaternion(rotation)
+        transform_node["Transform"]["m_LocalRotation"]["x"] = quaternion[0]
+        transform_node["Transform"]["m_LocalRotation"]["y"] = quaternion[1]
+        transform_node["Transform"]["m_LocalRotation"]["z"] = quaternion[2]
+        transform_node["Transform"]["m_LocalRotation"]["w"] = quaternion[3]
+        # 4. That's it
+        for doc in wrapped: # could also use .extend(coll)
+            self.wrapped.append(doc)
 
     def add_orphan_prefab_instance(self, name, prefab_path, metaguid, transform, rotation):
         """
@@ -312,15 +355,40 @@ class UnityFile:
           b. SteamVRUnityPlugin/SteamVR + VIVESR: for data collection. Needs Unity 2019 (what I often refer to as Unity 5) Must consider movement (hopefully through SteamVR)
           c. SteamVRUnityPlugin/SteamVR: w/o data collection, Unity 5.    # Not needed I guess...
         """
-        dispatcher = {"6": {"Vive Pro 2": self.setup_VIVE},
-                      "6": {"Vive Focus 3": self.setup_vive_focus},
-                      "5": {"Vive Pro 2": self.setup_data_collection}}
+        dispatcher = {
+                        "6": {
+                            "Vive Pro 2": self.setup_VIVE,
+                            "No VR": self.setup_keyboard_player,
+                            "Vive Focus 3": self.setup_vive_focus
+                            },
+                        "5": {
+                            "Vive Pro 2": self.setup_data_collection,
+                            "No VR": self.setup_keyboard_player
+                            }
+                    }
         try:
             dispatch = dispatcher[UNITY_VERSION][VR_HEADSET_TYPE]
         except KeyError:
-            print(f"Could not place VR player! No structure for {VR_HEADSET_TYPE} in Unity {UNITY_VERSION}!")
+            print(f"Could not place VR player! No structure for {VR_HEADSET_TYPE} in Unity {UNITY_VERSION}:\n{dispatcher}")
+
         log(f"Unity version {UNITY_VERSION} with {VR_HEADSET_TYPE} headset maps to low-level function `{dispatch.__name__}`")
         dispatch(transform, rotation)
+
+    def setup_keyboard_player(self, transform: dict, rotation: dict):
+        player = load_structure("player")
+        nodes = compose(player)
+        coll = [node_to_python(n) for n in nodes]
+        
+        transform_node = coll[10]
+
+        transform_node["Transform"]["m_LocalPosition"] = transform
+        quaternion = euler_to_xyzw_quaternion(rotation)
+        transform_node["Transform"]["m_LocalRotation"]["x"] = quaternion[0]
+        transform_node["Transform"]["m_LocalRotation"]["y"] = quaternion[1]
+        transform_node["Transform"]["m_LocalRotation"]["z"] = quaternion[2]
+        transform_node["Transform"]["m_LocalRotation"]["w"] = quaternion[3]
+        for doc in coll: # could also use .extend(coll)
+            self.wrapped.append(doc)
 
     def setup_vive_focus(self, transform: dict, rotation: dict):
         raise NotImplementedError("OOps! Must get the init text from Hector.")
@@ -417,10 +485,12 @@ class UnityFile:
         sceneroots["m_Roots"].append({"fileID": prefab_id})
         self.wrapped.append(wrapped)
     
-    def to_unity_yaml(self, path_to_write: Path):
+    def to_unity_yaml(self, path_to_write: Optional[Path]=None):
+        if path_to_write is None:
+            path_to_write = Path(os.environ.get("ASSETS", "UnityProject/Assets/Generations/test"))
         file_name = str(path_to_write)
         if file_name.endswith(".unity"):
-            file_name = file_name.removesuffix(".unity")
+            pass
         else:
             file_name += ".unity"
         out = ["%YAML 1.1", "%TAG !u! tag:unity3d.com,2011:"]

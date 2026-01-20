@@ -40,7 +40,7 @@ from typing import Any, Optional, List
 import load.assets as assets
 import load.synopsis_generator as synopsis_generator
 from llms.orchestra import Conductor
-from tools.tools import getGroundMatrix, proposeObject, positionObject, positionVRHumanPlayer, createSkybox, createGround, getContactPoints, createSun, populateHorizon, createSound, create50mx50mGround, delete
+from tools.tools import getGroundMatrix, proposeObject, positionObject, positionVRHumanPlayer, createSkybox, createGround, getContactPoints, createSun, populateHorizon, createSound, positionAgent, delete
 
 from logger import log
 
@@ -78,7 +78,10 @@ class WorldGen:
         self.world_name = world_name
 
         self.conductor = Conductor(name=conductor_name, system_prompt=conductor_system_prompt, tools=conductor_tools + tools_to_add)
-        
+
+    @classmethod
+    async def generate(cls):
+        pass  
 
     async def load(self):
         pass
@@ -158,7 +161,7 @@ class UnityWorldGen(WorldGen):
                 if asset_name in instruments.core.asset_catalog:
                     info_of_proposed_objects[asset_name] = instruments.core.asset_catalog[asset_name]
 
-            prompt = f"{instruments.core.world.model}\n\nProposed objects:\n{info_of_proposed_objects}\n\n=======USER PROMPT:=======\n{prompt}"
+            prompt = f"======World Model:======\nThese things are already in the world, no need to position them again. If you wish to reposition (or if you want to erase from the world), use `delete()`.\n{instruments.core.world.model}\n\n======Proposed objects:======\n(For reference - refer to by exact name).\n{info_of_proposed_objects}\n\n=======USER PROMPT:=======\n{prompt}"
         result = await Runner.run(self.conductor, prompt, max_turns=20)
         try:
             scene_path = instruments.core.world.done_and_write(instruments.core.assets / "Generations" / instruments.core.world.scene.name)
@@ -199,3 +202,7 @@ class AcrophobiaWorldGen(VRWorldGen):
 
     def __init__(self, world_name: str, scene_name: str, assets_folder: Optional[Path]=None, conductor_name: str="AcrophobiaConductor", conductor_system_prompt: str=Conductor.acrophobia_v1[MODEL], conductor_tools: List[function_tool]=[]):
         super().__init__(world_name, scene_name, assets_folder, conductor_name, conductor_system_prompt, conductor_tools)
+
+class HRIWorldGen(VRWorldGen):
+    def __init__(self, world_name: str, scene_name: str, assets_folder: Optional[Path]=None, conductor_name: str="HRIWorldConductor", conductor_system_prompt: str=Conductor.acrophobia_v1[MODEL], conductor_tools: List[function_tool]=[]):
+        super().__init__(world_name, scene_name, assets_folder, conductor_name, conductor_system_prompt, conductor_tools + [positionAgent])
