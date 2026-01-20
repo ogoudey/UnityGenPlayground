@@ -100,7 +100,27 @@ class UnityFile:
             render_settings["m_SkyboxMaterial"] = {"fileID": "2100000", "guid": guid, "type": 2}
         except Exception:
             print("\rFailed to set skybox.")
-            
+
+    def add_tf(self, name, transform):
+        empty_tf = load_structure("empty")
+        nodes = compose(empty_tf)
+        wrapped = [node_to_python(n) for n in nodes]
+        go = wrapped[0]
+        tf = wrapped[1]
+        go, id_go = set_ID(go)
+        tf, id_tf = set_ID(tf)
+        go["GameObject"]["m_Name"] = name
+        go["GameObject"]["m_TagString"] = "Destination"
+        go["GameObject"]["m_Component"][0]["fileID"] = id_tf
+        print(f"Setting {tf} to {transform}")
+        tf["Transform"]["m_LocalPosition"]["x"] = str(transform["x"])
+        tf["Transform"]["m_LocalPosition"]["y"] = str(transform["y"])
+        tf["Transform"]["m_LocalPosition"]["z"] = str(transform["z"])
+        tf["Transform"]["m_GameObject"] = id_go
+        print(f"{wrapped}")
+        for wrap in wrapped:
+            self.wrapped.append(wrap)
+
     def add_ground_prefab_instance(self, name, proposal, metaguid, transform):
         log(f"Adding prefab instance {name}")
         prefab_init_text = load_structure("prefab_nav_surface")

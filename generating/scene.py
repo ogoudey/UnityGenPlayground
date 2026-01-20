@@ -49,6 +49,8 @@ class UnityScene(Scene):
     def add_agent(self, name, location, rotation):
         self.unity_file.add_agent_cylinder(name, location, rotation)
 
+    def add_destination(self, name, transform):
+        self.unity_file.add_tf(name, transform)
 
     def add_ground(self, ground_name, ground_path, transform={"x":0.0, "y":0.0, "z":0.0}, rotation={"x":0.0, "y":0.0, "z":0.0}):
         log("Adding ground...")

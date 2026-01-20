@@ -209,6 +209,12 @@ class UnityWorld(World):
         proposal = self.proposed_objects[ground_name]
         self.scene.add_ground(ground_name, proposal, transform, rotation)
 
+    @post_write
+    def add_destination(self, name, desc, tf):
+        # do something with the desc like save to a context file
+        print(f"\t\tUse \"{desc}\"")
+        self.scene.add_destination(name, tf)
+
     def delete_object_by_buildID(self, buildID):
         try:
             remove_execution(buildID)

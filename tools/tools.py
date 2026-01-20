@@ -194,7 +194,7 @@ def positionVRHumanPlayer(transform: str, rotation: str = "{\"x\": 0, \"y\": 0, 
 @function_tool
 def positionAgent(name: str, transform: str, rotation: str = "{\"x\": 0, \"y\": 0, \"z\": 0}", explanation: str=""):
     """
-    This function places an autonomous path finding agent in the scene.
+    This function places an autonomous path finding agent in the scene. DON'T use propose_object for this.
     name: Any name. (Example: Rob The Robot)
     transform: Must be a JSON-encoded string. Example:
         "{\"x\": 75, \"y\": 10, \"z\": 70}"
@@ -205,6 +205,19 @@ def positionAgent(name: str, transform: str, rotation: str = "{\"x\": 0, \"y\": 
     """
     core.position_agent(name, transform, rotation)
     return f"Successfully added agent to the scene at {transform}."
+
+@function_tool
+def provideDestinationsForAgent(destination_dicts: str):
+    """
+    Provide (no fewer than 2) destinations for an autonomous path finding agent to navigate to. Provide a stringified (json.load-able) list of dicts with information about each such destination. Be thorough and generous with the allocations, giving the robot opportunities to move all around important parts of the world.
+    Don't forget to provide all three categories in each dict in the argument.
+
+    transforms: JSON-encoded string representing the destinations. Data should only include name, description (\"desc\"), and transform (\"tf\").
+        {\"name\": a label for the destination, \"desc\": a descriptive phrase, \"tf\": {\"x\": float, \"y\": float, \"z\": float}}Examples:
+        (for a kitchen): "[{\"name\": \"dishwasher\", \"desc\": \"in front of\"}, \"tf\": {\"x\": 1.28, \"y\": 0.25, \"z\": -4.5}}, {\"name\": \"middle of floor\", \"desc\": \"a good spot to be the center of attention\"}, \"tf\": {\"x\": 1.28, \"y\": 0.25, \"z\": -4.5}}]"
+        (for a mountain): "[{\"name\": \"summit\", \"desc\": \"top of the mountain\"}, \"tf\": {\"x\": 25, \"y\": 10, \"z\": 25}}, {\"name\": \"North\", \"desc\": \"North side of the mountain\"}, \"tf\": {\"x\": 0, \"y\": 0.1, \"z\": 120}}]"
+    """
+    return core.supply_agent_destinations(destination_dicts)
 
 @function_tool
 def delete(buildID: str):

@@ -453,7 +453,32 @@ def position_object(object_name: str, position_of_object_origin: str, rotation: 
     else:
         response = f"Added {object_name} to the scene. Recall the information of {object_name} at the placed position."
     return response
-    
+
+@error_reporter
+def supply_agent_destinations(destinations: str):
+    try:
+        destinations_json = json.loads(destinations)
+    except ValueError:
+        print("Error loading given destinations into JSON")
+        return "Error loading given destinations into JSON. Make sure it is loadable with Python json.loads()"
+    destination_list = []
+    for destination in destinations_json:
+        try:
+            destination_name = destination["name"]
+            destination_desc = destination["desc"]
+            transform = destination["tf"]
+        except Exception as e:
+            print(f"Error unpacking JSON\n{destination}\n\n{destinations_json}")
+            return f"ERROR. Make sure to provide, \"name\", \"desc\", and \"tf\" keys."
+        buildID = world.add_destination(destination_name, destination_desc, transform)
+        data = destination.copy()
+        data["buildID"] = buildID
+        destination_list.append(data)
+    world.add_data({
+        "Agent destinations": destination_list
+    })
+
+    return "Successfully provided destinations to agent."
 
     
 
