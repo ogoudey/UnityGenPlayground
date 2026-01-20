@@ -50,7 +50,7 @@ class UnityFile:
             scene_init_text = load_structure("sceneU5")
         else:
             raise Exception("Must set Unity version.")
-        self.reset
+        self.reset()
 
     def reset(self):
         # redund
@@ -111,15 +111,14 @@ class UnityFile:
         tf, id_tf = set_ID(tf)
         go["GameObject"]["m_Name"] = name
         go["GameObject"]["m_TagString"] = "Destination"
-        go["GameObject"]["m_Component"][0]["fileID"] = id_tf
-        print(f"Setting {tf} to {transform}")
-        tf["Transform"]["m_LocalPosition"]["x"] = str(transform["x"])
-        tf["Transform"]["m_LocalPosition"]["y"] = str(transform["y"])
-        tf["Transform"]["m_LocalPosition"]["z"] = str(transform["z"])
+        go["GameObject"]["m_Component"][0]["component"]["fileID"] = id_tf
+        tf["Transform"]["m_LocalPosition"] = transform
         tf["Transform"]["m_GameObject"] = id_go
-        print(f"{wrapped}")
         for wrap in wrapped:
             self.wrapped.append(wrap)
+        if not UNITY_VERSION == "5":
+            sceneroots = get_doc(self.wrapped, "SceneRoots")
+            sceneroots["m_Roots"].append({"fileID": id_tf})
 
     def add_ground_prefab_instance(self, name, proposal, metaguid, transform):
         log(f"Adding prefab instance {name}")
@@ -219,6 +218,7 @@ class UnityFile:
         # 4. That's it
         for doc in wrapped: # could also use .extend(coll)
             self.wrapped.append(doc)
+        # should add to scene_roots for consistency...
 
     def add_orphan_prefab_instance(self, name, prefab_path, metaguid, transform, rotation):
         """
