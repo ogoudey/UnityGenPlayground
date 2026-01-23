@@ -156,9 +156,9 @@ async def getContactPoints() -> str:
 async def proposeObject(description: str):
     """ 
         Args:
-            description: Some text describing that the object should be like, refering to a singular object that's likely to be selected from a common asset library. For example, "water", "a rock", "a house", etc.
+            description: Some text describing what the object should be like, refering to a singular object that's likely to be selected from a common asset library. For example, "water", "a rock", "a house", etc.
         If you don't get an object you want, its because there's nothing like the desired asset in the library of available assets. In this case, get creative and find a new solution. You don't NEED to place the object returned, which is the object-planner's best guess.
-        By the way, water is one of the objects.
+        By the way, water is one of the objects, and an artificial agent/robot is NOT (for that use positionAgent)
     """
     return await core.propose_object(description)
 
@@ -192,7 +192,7 @@ def positionVRHumanPlayer(transform: str, rotation: str = "{\"x\": 0, \"y\": 0, 
     return f"Successfully added player to the scene at {transform}."
 
 @function_tool
-def positionAgent(name: str, transform: str, rotation: str = "{\"x\": 0, \"y\": 0, \"z\": 0}", explanation: str=""):
+def createAgent(name: str, transform: str, rotation: str = "{\"x\": 0, \"y\": 0, \"z\": 0}", explanation: str=""):
     """
     This function places an autonomous path finding agent in the scene. DON'T use propose_object for this.
     name: Any name. (Example: Rob The Robot)
@@ -203,14 +203,14 @@ def positionAgent(name: str, transform: str, rotation: str = "{\"x\": 0, \"y\": 
 
     Only call this function once, and remember to be careful not to make it floating. Use what you know about the objects and their positionings.
     """
-    core.position_agent(name, transform, rotation)
-    return f"Successfully added agent to the scene at {transform}."
+    
+    return core.position_agent(name, transform, rotation)
 
 @function_tool
 def provideDestinationsForAgent(destination_dicts: str):
     """
     Provide (no fewer than 2) destinations for an autonomous path finding agent to navigate to. Provide a stringified (json.load-able) list of dicts with information about each such destination. Be thorough and generous with the allocations, giving the robot opportunities to move all around important parts of the world.
-    Don't forget to provide all three categories in each dict in the argument.
+    Don't forget to provide all three categories in each dict in the argument. Must use this to complete an agent.
 
     transforms: JSON-encoded string representing the destinations. Data should only include name, description (\"desc\"), and transform (\"tf\").
         {\"name\": a label for the destination, \"desc\": a descriptive phrase, \"tf\": {\"x\": float, \"y\": float, \"z\": float}}Examples:

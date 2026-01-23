@@ -97,6 +97,7 @@ def position_agent(name: str, transform: str, rotation: str):
     if buildID:
         data["buildID"] = buildID
     world.add_data(data)
+    return f"Successfully added agent to the scene at {transform}. Make sure I'm supplied with destinations."
 
 @error_reporter
 def delete(buildID: str):

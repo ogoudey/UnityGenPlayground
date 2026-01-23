@@ -40,7 +40,7 @@ from typing import Any, Optional, List
 import load.assets as assets
 import load.synopsis_generator as synopsis_generator
 from llms.orchestra import Conductor
-from tools.tools import getGroundMatrix, proposeObject, positionObject, positionVRHumanPlayer, createSkybox, createGround, getContactPoints, createSun, populateHorizon, createSound, positionAgent, provideDestinationsForAgent, delete
+from tools.tools import getGroundMatrix, proposeObject, positionObject, positionVRHumanPlayer, createSkybox, createGround, getContactPoints, createSun, populateHorizon, createSound, createAgent, provideDestinationsForAgent, delete
 
 from logger import log
 
@@ -205,4 +205,4 @@ class AcrophobiaWorldGen(VRWorldGen):
 
 class HRIWorldGen(VRWorldGen):
     def __init__(self, world_name: str, scene_name: str, assets_folder: Optional[Path]=None, conductor_name: str="HRIWorldConductor", conductor_system_prompt: str=Conductor.hri_v1[MODEL], conductor_tools: List[function_tool]=[]):
-        super().__init__(world_name, scene_name, assets_folder, conductor_name, conductor_system_prompt, conductor_tools + [positionAgent, provideDestinationsForAgent])
+        super().__init__(world_name, scene_name, assets_folder, conductor_name, conductor_system_prompt, conductor_tools + [createAgent, provideDestinationsForAgent])

@@ -22,7 +22,7 @@ os.environ["MODEL"] = "o4-mini"
 
 # class type
 os.environ["WORLD_CLASS"] = "UNITY"
-os.environ["UNITY_WORLD_TYPE"] = os.environ.get("UNITY_WORLD_TYPE", "ACROPHOBIA") # Update fromo the CLI
+os.environ["UNITY_WORLD_TYPE"] = os.environ.get("UNITY_WORLD_TYPE", "HRI") # Update fromo the CLI
 os.environ["LOG"] = "tbd"
 
 # Unity configs
@@ -123,7 +123,7 @@ def get_class_from_env() -> WorldGen:
 
 if __name__ == "__main__": 
    
-
+    print(f"Starting server within the following environment:\n{os.environ}")
     app.run(debug=True) # 
 else:
     print("Running server module in test mode")
