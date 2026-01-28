@@ -150,8 +150,8 @@ GameObject:
   - component: {fileID: 1813935344}
   - component: {fileID: 1813935349}
   m_Layer: 0
-  m_Name: Capsule
-  m_TagString: Untagged
+  m_Name: MainPlayer
+  m_TagString: Destination
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
