@@ -209,6 +209,8 @@ class UnityFile:
         # 2. Change name
         game_object_node["GameObject"]["m_Name"] = name
         # 3. Edit transform
+        # 3.5 Push up the cylinder to its not in the ground. Origin at midway, 2m tall. We dont tell the LLM
+        transform["y"] += 1
         transform_node["Transform"]["m_LocalPosition"] = transform
         quaternion = euler_to_xyzw_quaternion(rotation)
         transform_node["Transform"]["m_LocalRotation"]["x"] = quaternion[0]
@@ -400,8 +402,9 @@ class UnityFile:
         coll = [node_to_python(n) for n in nodes]
         
         transform_node = coll[10]
-
+        transform["y"] -= 1
         transform_node["Transform"]["m_LocalPosition"] = transform
+
         quaternion = euler_to_xyzw_quaternion(rotation)
         transform_node["Transform"]["m_LocalRotation"]["x"] = quaternion[0]
         transform_node["Transform"]["m_LocalRotation"]["y"] = quaternion[1]
