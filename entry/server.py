@@ -27,13 +27,13 @@ os.environ["LOG"] = "tbd"
 
 # Unity configs
 os.environ["UNITY_GEN_TECHNIQUE"] = "UNITY_TWO_STEP"
-os.environ["UNITY_VERSION"] = "6" # "6"
+os.environ["UNITY_VERSION"] = os.environ.get("UNITY_VERSION", "6")
 os.environ["SKYBOX_MATERIALS"] = "Skybox Materials"
 os.environ["GROUND_MATERIALS"] = "Ground Materials"
 os.environ["SOUNDS"] = "Sounds"
 
 # Unity subclass configs
-os.environ["VR_HEADSET_TYPE"] = "No VR" #"Vive Pro 2" # "Vive Focus 3"
+os.environ["VR_HEADSET_TYPE"] = os.environ.get("VR_HEADSET_TYPE", "Vive Pro 2") #"No VR" #"Vive Pro 2" # "Vive Focus 3"
 
 from generating.worldgen import WorldGen, AcrophobiaWorldGen, HRIWorldGen
 
