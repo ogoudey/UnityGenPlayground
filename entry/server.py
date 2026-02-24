@@ -75,6 +75,37 @@ def generate():
         print("Not generated.")
         return jsonify({"started": False})
     worlds_being_generated.append(world_name)
+    multi_scene_mode = request.args["multi_scene_mode"] 
+    prompt = request.args["prompt"]
+    subject_type = request.args["subject_type"]
+    os.environ["VR_HEADSET_TYPE"] = subject_type # Enumerate plz
+    assets_folder = Path(request.args["assets"])
+
+
+
+    os.environ["LOG"] = f"{world_name}"
+
+    cls = get_class_from_env()
+    future = asyncio.run_coroutine_threadsafe(
+        cls.generate(world_name, assets_folder, prompt),
+        async_loop
+    )
+
+    future.add_done_callback(
+        lambda f: worlds_being_generated.remove(world_name)
+    )
+
+    return jsonify({"started": True})
+
+@app.route('/generate_deprecated')
+def generate_deprecated():
+    print(f"Received generate request... already generating {worlds_being_generated}")
+    world_name = request.args["world_name"]
+    if world_name in worlds_being_generated:
+        print(worlds_being_generated)
+        print("Not generated.")
+        return jsonify({"started": False})
+    worlds_being_generated.append(world_name)
 
     prompt = request.args["prompt"]
     assets_folder = Path(request.args["assets"])
