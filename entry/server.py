@@ -22,7 +22,7 @@ os.environ["MODEL"] = "o4-mini"
 
 # class type
 os.environ["WORLD_CLASS"] = "UNITY"
-os.environ["UNITY_WORLD_TYPE"] = os.environ.get("UNITY_WORLD_TYPE", "HRI") # Update fromo the CLI
+os.environ["UNITY_WORLD_TYPE"] = os.environ.get("UNITY_WORLD_TYPE", "ACROPHOBIA") # Update fromo the CLI
 os.environ["LOG"] = "tbd"
 
 # Unity configs
@@ -69,30 +69,35 @@ worlds_being_generated = []
 @app.route('/generate')
 def generate():
     print(f"Received generate request... already generating {worlds_being_generated}")
-    world_name = request.args["world_name"]
-    if world_name in worlds_being_generated:
+    input_world_name = request.args["world_name"]
+    output_world_name = request.args["output_world_name"]
+    if output_world_name in worlds_being_generated:
         print(worlds_being_generated)
         print("Not generated.")
         return jsonify({"started": False})
-    worlds_being_generated.append(world_name)
-    multi_scene_mode = request.args["multi_scene_mode"] 
+    worlds_being_generated.append(output_world_name)
+    multi_scene_mode = request.args["multi_scene_mode"]
     prompt = request.args["prompt"]
     subject_type = request.args["subject_type"]
-    os.environ["VR_HEADSET_TYPE"] = subject_type # Enumerate plz
+    use_data_collection_assets = request.args["use_data_collection_assets"]
+    if subject_type == "None":
+        os.environ["VR_HEADSET_TYPE"] = "No Player"
+    elif subject_type == "Player":
+        os.environ["VR_HEADSET_TYPE"] = "No VR"
     assets_folder = Path(request.args["assets"])
 
 
 
-    os.environ["LOG"] = f"{world_name}"
+    os.environ["LOG"] = f"{output_world_name}"
 
     cls = get_class_from_env()
     future = asyncio.run_coroutine_threadsafe(
-        cls.generate(world_name, assets_folder, prompt),
+        cls.generate(input_world_name, output_world_name, assets_folder, prompt),
         async_loop
     )
 
     future.add_done_callback(
-        lambda f: worlds_being_generated.remove(world_name)
+        lambda f: worlds_being_generated.remove(output_world_name)
     )
 
     return jsonify({"started": True})

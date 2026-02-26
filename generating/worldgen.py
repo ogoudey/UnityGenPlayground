@@ -65,17 +65,16 @@ except Exception as e:
 
 
 class WorldGen:
-    def __init__(self, world_name: Optional[Any]=None, conductor_name: str="WorldConductor", conductor_system_prompt: str = "", conductor_tools: List[function_tool]=[]):
+    def __init__(self, input_world_name, output_world_name: Optional[Any]=None, conductor_name: str="WorldConductor", conductor_system_prompt: str = "", conductor_tools: List[function_tool]=[]):
         tools_to_add = [getGroundMatrix, proposeObject, positionObject]
-        if world_name:
-            self.preexisting_world_model_dict = self.open_world_model(world_name)
+        if input_world_name:
+            self.preexisting_world_model_dict = self.open_world_model(input_world_name)
             if self.preexisting_world_model_dict:
                 tools_to_add.append(delete)
                 self.inject_world_model = True
-                
             else:
                 self.inject_world_model = False
-        self.world_name = world_name
+        self.input_world_name = input_world_name
 
         self.conductor = Conductor(name=conductor_name, system_prompt=conductor_system_prompt, tools=conductor_tools + tools_to_add)
 
@@ -93,9 +92,9 @@ class WorldGen:
         print(result.final_output)
         return result.final_output
     
-    def open_world_model(self, world_name: str):
+    def open_world_model(self, input_world_name: str):
         
-        supposed_path = Path("generating/models") / f"{world_name}.json"
+        supposed_path = Path("generating/models") / f"{input_world_name}.json"
         print(f"Checking {str(supposed_path)} for existing world model...")
         if supposed_path.exists():
             with open(supposed_path, "r") as f:
@@ -107,13 +106,12 @@ class WorldGen:
     
 class UnityWorldGen(WorldGen):
     scene: str
-    def __init__(self, world_name: str, scene_name: str, assets_folder: Optional[Path]=None, conductor_name: str="UnityWorldConductor", conductor_system_prompt: str="", conductor_tools: List[function_tool]=[]):
-        super().__init__(world_name, conductor_name, conductor_system_prompt, conductor_tools + [createGround, createSkybox, createSun, createSound, populateHorizon])
-
+    def __init__(self, input_world_name: str, output_world_name: str, scene_name: str, assets_folder: Optional[Path]=None, conductor_name: str="UnityWorldConductor", conductor_system_prompt: str="", conductor_tools: List[function_tool]=[]):
+        super().__init__(input_world_name, output_world_name, conductor_name, conductor_system_prompt, conductor_tools + [createGround, createSkybox, createSun, createSound, populateHorizon])
 
         # Unity specific stuff below
                 
-        instruments.core.world = UnityWorld(world_name, scene_name, self.preexisting_world_model_dict) 
+        instruments.core.world = UnityWorld(input_world_name, output_world_name, scene_name, self.preexisting_world_model_dict) 
         try: 
             if self.preexisting_world_model_dict:
                 instruments.core.world.open_build_instructions()
@@ -172,9 +170,9 @@ class UnityWorldGen(WorldGen):
             return f"Did not write scene:\n{result.final_output}."
 
     @classmethod
-    async def generate(cls, world_name: str, assets_folder: Optional[Path], prompt: str):
+    async def generate(cls, input_world_name: str, output_world_name: str, assets_folder: Optional[Path], prompt: str):
         print("In Worldgen class method...")
-        wg = cls(world_name, f"{world_name}", assets_folder)
+        wg = cls(input_world_name, output_world_name, f"{output_world_name} initial scene", assets_folder)
         await wg.load()
         scene_path = await wg.run(prompt)
         return scene_path
@@ -188,8 +186,10 @@ class UnityWorldGen(WorldGen):
 
 class VRWorldGen(UnityWorldGen):
     
-    def __init__(self, world_name: str, scene_name: str, assets_folder: Optional[Path]=None, conductor_name: str="VRExperienceConductor", conductor_system_prompt: str="...", conductor_tools: List[function_tool]=[], ):
-        super().__init__(world_name, scene_name, assets_folder, conductor_name, conductor_system_prompt, conductor_tools + [positionVRHumanPlayer])
+    def __init__(self, input_world_name: str, output_world_name: str, scene_name: str, assets_folder: Optional[Path]=None, conductor_name: str="VRExperienceConductor", conductor_system_prompt: str="...", conductor_tools: List[function_tool]=[], ):
+        if not os.getenv("VR_HEADSET_TYPE") == "No Player":
+            conductor_tools.append(positionVRHumanPlayer)
+        super().__init__(input_world_name, output_world_name, scene_name, assets_folder, conductor_name, conductor_system_prompt, conductor_tools)
                 
 class AcrophobiaWorldGen(VRWorldGen):
     bridge_prompt="Generate a world that triggers acrophobia while crossing a bridge."
@@ -200,9 +200,9 @@ class AcrophobiaWorldGen(VRWorldGen):
     platform_prompt="Generate a world that triggers a very sensitive acrophobia by placing a player on a platform."
     bridge_regime_prompt="Generate multiple stages of worlds that trigger acrophobia while crossing a bridge. Have the stages get progressively harder. Let there be three stages and let the heights of the bridges in each stage progress as 2m, 5m, 10m above ground or sea level."
 
-    def __init__(self, world_name: str, scene_name: str, assets_folder: Optional[Path]=None, conductor_name: str="AcrophobiaConductor", conductor_system_prompt: str=Conductor.acrophobia_v1[MODEL], conductor_tools: List[function_tool]=[]):
-        super().__init__(world_name, scene_name, assets_folder, conductor_name, conductor_system_prompt, conductor_tools)
+    def __init__(self, input_world_name: str, output_world_name: str, scene_name: str, assets_folder: Optional[Path]=None, conductor_name: str="AcrophobiaConductor", conductor_system_prompt: str=Conductor.acrophobia_v1[MODEL], conductor_tools: List[function_tool]=[]):
+        super().__init__(input_world_name, output_world_name, scene_name, assets_folder, conductor_name, conductor_system_prompt, conductor_tools)
 
 class HRIWorldGen(VRWorldGen):
-    def __init__(self, world_name: str, scene_name: str, assets_folder: Optional[Path]=None, conductor_name: str="HRIWorldConductor", conductor_system_prompt: str=Conductor.hri_v1[MODEL], conductor_tools: List[function_tool]=[]):
-        super().__init__(world_name, scene_name, assets_folder, conductor_name, conductor_system_prompt, conductor_tools + [createAgent, provideDestinationsForAgent])
+    def __init__(self, input_world_name: str, output_world_name: str, scene_name: str, assets_folder: Optional[Path]=None, conductor_name: str="HRIWorldConductor", conductor_system_prompt: str=Conductor.hri_v1[MODEL], conductor_tools: List[function_tool]=[]):
+        super().__init__(input_world_name, output_world_name, scene_name, assets_folder, conductor_name, conductor_system_prompt, conductor_tools + [createAgent, provideDestinationsForAgent])

@@ -371,6 +371,8 @@ class UnityFile:
         return True
     
     def set_vr_player(self, transform: dict, rotation: dict):
+        VR_HEADSET_TYPE = (os.getenv("VR_HEADSET_TYPE") or "No VR").strip() or "No VR" # Just to be sure.
+
         """
         Dispatches to the various configurations of VR player. Either:
           a. VIVECameraRig/SteamVR: sufficient for Unity 6(+)

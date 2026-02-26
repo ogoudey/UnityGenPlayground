@@ -72,11 +72,11 @@ class World:
     name:str
     model: WorldModel
 
-    def __init__(self, world_name):
-        self.name = world_name
+    def __init__(self, output_world_name):
+        self.name = output_world_name
         self.proposed_objects: Propositions = Propositions()
         self.contact_points = dict()
-        self.model = WorldModel(world_name)
+        self.model = WorldModel(output_world_name)
     
     def add_data(self, object_data):
         self.model.update(object_data)
@@ -96,17 +96,17 @@ class UnityWorld(World):
     ground_scale: float
     current_texture: str
 
-    
-
-    def __init__(self, world_name:str, scene: str, preexisting_world_model_dict: dict):
-        super().__init__(world_name)
-        print(f"World model:\n{preexisting_world_model_dict}")
+    def __init__(self, input_world_name:str, output_world_name:str, scene: str, preexisting_world_model_dict: dict):
+        super().__init__(output_world_name)
+        self.input_world_name = input_world_name
         if preexisting_world_model_dict:
-            preexisting_scene = preexisting_world_model_dict["scene"]
+            print(f"World model:\n{preexisting_world_model_dict}")
+            preexisting_world = preexisting_world_model_dict["scene"]
         else:
-            preexisting_scene = []
+            print(f"No existing world model. Starting fresh.")
+            preexisting_world = []
         self.scene = UnityScene(scene)
-        self.model = UnityWorldModel(self.name, preexisting_scene)
+        self.model = UnityWorldModel(self.name, preexisting_world)
         self.ground_name = ""
         self.ground_matrix = []
         self.ground_scale = 5.0
@@ -136,12 +136,11 @@ class UnityWorld(World):
 
     def open_build_instructions(self):
         try:
-            recall_build_instructions(Path(f"generating/builds/{self.scene.name}.json"))
-            
+            recall_build_instructions(Path(f"generating/builds/{self.input_world_name}.json"))
         except Exception as e:
             print(f"Couldn't reload build instructions. ({e})")
         try:
-            self.proposed_objects = Propositions.from_dict(recall_propositions(Path(f"generating/propositions/{self.scene.name}.json")))
+            self.proposed_objects = Propositions.from_dict(recall_propositions(Path(f"generating/propositions/{self.input_world_name}.json")))
         except Exception as e:
             print(f"Couldn't reload propositions. Build is likely to fail... ({e})")
 
@@ -150,9 +149,9 @@ class UnityWorld(World):
         print(f"\tResetting Unity File")
         self.scene.unity_file.reset()
         print(f"\tSaving propositions")
-        dump_propositions(Path(f"generating/propositions/{self.scene.name}.json"), self.proposed_objects)
+        dump_propositions(Path(f"generating/propositions/{self.name}.json"), self.proposed_objects)
         print(f"\tSaving build instructions")
-        dump_build_instructions(Path(f"generating/builds/{self.scene.name}.json"))
+        dump_build_instructions(Path(f"generating/builds/{self.name}.json"))
         
 
     def done_and_write(self, path_to_write: Path | str):   
