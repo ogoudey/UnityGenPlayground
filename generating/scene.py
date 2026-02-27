@@ -52,6 +52,9 @@ class UnityScene(Scene):
     def add_destination(self, name, transform):
         self.unity_file.add_tf(name, transform)
 
+    def add_stage_point(self, location, rotation):
+        self.unity_file.add_stage_point(location, rotation)
+
     def add_ground(self, ground_name, ground_path, transform={"x":0.0, "y":0.0, "z":0.0}, rotation={"x":0.0, "y":0.0, "z":0.0}):
         log("Adding ground...")
         

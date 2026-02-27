@@ -478,11 +478,78 @@ def supply_agent_destinations(destinations: str):
     world.add_data({
         "Agent destinations": destination_list
     })
+    return "Successfully added agent destinations to world."
 
-    return "Successfully provided destinations to agent."
-
+@error_reporter
+def position_stage_points(position_of_object_origin: str, rotation: str, explanation: str) -> str:
+    global world 
+    try:
+        json_location = json.loads(position_of_object_origin)
+    except ValueError:
+        print("Error loading given position into JSON")
+        return f"Failed to add object to location {position_of_object_origin} in the scene (json.loads() error). Make sure to pass a correct something that can be loaded with json.loads() into JSON."
+    try:
+        json_rotation = json.loads(rotation)
+    except ValueError:
+        print("Error loading given rotation into JSON")
+        return f"Failed to add object to rotation {rotation} in the scene (json.loads() error) Make sure to pass a correct something that can be loaded with json.loads() into JSON."
+    log(f"Stage points: {json_location} {json_rotation}")
+    print(f"\tExplanation: {explanation}")
     
+    #HEre we check if its a list or a singleton
+    objects_to_sequence = []
+    if type(json_location) == list:
+        if type(json_rotation) == list:
+            for i in range(0, len(json_location)):
+                objects_to_sequence.append((json_location[i], json_rotation[i])) # a zip
+        else:
+            return f"If you sequentially place the location/placement of origin, you must pass that amount of rotations too."
+    else:
+        if type(json_rotation) == list:
+            return f"If you sequentially place the rotation, you must pass that amount of locations too."
+        else:
+            objects_to_sequence = [(json_location, json_rotation)]
+         
+    failed_placements = [] 
+    max_len = len(objects_to_sequence)
 
+    while len(objects_to_sequence) > 0:
+        json_location, json_rotation = objects_to_sequence.pop(0)
+
+        buildID = world.add_stage_point(json_location, json_rotation)
+        object_data = {
+            "Position": json_location,
+            "Rotation": json_rotation
+        }
+        if buildID:
+            object_data["buildID"] = buildID
+        world.add_data(object_data)
+    return "Successfully provided destinations to agent."
+# needs `add_stage_point`
+
+@error_reporter
+def position_stage_points(object_name: str, position_of_object_origin: str, rotation: str, explanation: str) -> str:
+    try:
+        destinations_json = json.loads(destinations)
+    except ValueError:
+        print("Error loading given destinations into JSON")
+        return "Error loading given destinations into JSON. Make sure it is loadable with Python json.loads()"
+    destination_list = []
+    for destination in destinations_json:
+        try:
+            destination_name = destination["name"]
+            destination_desc = destination["desc"]
+            transform = destination["tf"]
+        except Exception as e:
+            print(f"Error unpacking JSON\n{destination}\n\n{destinations_json}")
+            return f"ERROR. Make sure to provide, \"name\", \"desc\", and \"tf\" keys."
+        buildID = world.add_destination(destination_name, destination_desc, transform)
+        data = destination.copy()
+        data["buildID"] = buildID
+        destination_list.append(data)
+    world.add_data({
+        "Agent destinations": destination_list
+    })
 
 """ Helpers """
 def asset_lookup(path: Path) -> dict:

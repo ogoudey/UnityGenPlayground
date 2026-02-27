@@ -34,6 +34,7 @@ os.environ["SOUNDS"] = "Sounds"
 
 # Unity subclass configs
 os.environ["VR_HEADSET_TYPE"] = os.environ.get("VR_HEADSET_TYPE", "Vive Pro 2") #"No VR" #"Vive Pro 2" # "Vive Focus 3"
+os.environ["MULTI_STAGE_MODE"] = os.environ.get("MULTI_STAGE_MODE", "MULTI") #MULTI #SINGLE
 
 from generating.worldgen import WorldGen, AcrophobiaWorldGen, HRIWorldGen
 
@@ -76,15 +77,26 @@ def generate():
         print("Not generated.")
         return jsonify({"started": False})
     worlds_being_generated.append(output_world_name)
-    multi_scene_mode = request.args["multi_scene_mode"]
+    multi_stage_mode = request.args["multi_stage_mode"]
     prompt = request.args["prompt"]
     subject_type = request.args["subject_type"]
     use_data_collection_assets = request.args["use_data_collection_assets"]
+    assets_folder = Path(request.args["assets"])
+    # override env variables with request args
+
     if subject_type == "None":
         os.environ["VR_HEADSET_TYPE"] = "No Player"
-    elif subject_type == "Player":
+    elif subject_type == "VR":
         os.environ["VR_HEADSET_TYPE"] = "No VR"
-    assets_folder = Path(request.args["assets"])
+    elif subject_type == "Vive Pro 2":
+        os.environ["VR_HEADSET_TYPE"] = "No VR"
+
+    if multi_stage_mode == "MULTI":
+        os.environ["VR_HEADSET_TYPE"] = "MULTI"
+    elif multi_stage_mode == "SINGLE":
+        os.environ["VR_HEADSET_TYPE"] = "SINGLE"
+
+    
 
 
 
@@ -92,7 +104,7 @@ def generate():
 
     cls = get_class_from_env()
     future = asyncio.run_coroutine_threadsafe(
-        cls.generate(input_world_name, output_world_name, assets_folder, prompt),
+        cls.generate(input_world_name, output_world_name, multi_stage_mode, assets_folder, prompt),
         async_loop
     )
 

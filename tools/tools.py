@@ -184,12 +184,28 @@ def positionVRHumanPlayer(transform: str, rotation: str = "{\"x\": 0, \"y\": 0, 
         "{\"x\": 75, \"y\": 10, \"z\": 70}"
     rotation: Must be a JSON-encoded string (only use \" around the variables). All axes at 0 means the player faces dead ahead in the +X direction. Example:
         "{\"x\": 90, \"y\": 0, \"z\": 45}" 
-    explanation: A human-readable explanation of the placement(s). Example: "I put the water here to be above the height y=0.5 along the riverbed", or "I put a patch of trees in this section". Be sure to explain the height with regard to the contact points and the open spaces of the heightmap."
+    explanation: A human-readable explanation of the placement. Example: "I put the player here by the edge to scare them. "
 
-    Only call this function once, and remember to be careful not to make them floating. Use what you know about the objects and their positionings.
+    Only call this function once, and remember to be careful not to make the player float.
     """
     core.position_vr_player(transform, rotation, explanation)
     return f"Successfully added player to the scene at {transform}."
+
+@function_tool
+def positionStagePoints(transform: str, rotation: str = "[{\"x\": 0, \"y\": 0, \"z\": 0}]", explanation: str=""):
+    """
+    This function places points at which the player (a VR headset) can go in the scene. The player will cycle through the points, experiencing each location as they go. Each places the camera/head, so make it 2m above the ground below them. The player can walk around 1m from each point they are placed.
+    transform: Must be a list of JSON-encoded strings. Example:
+        "[{\"x\": 73, \"y\": 2, \"z\": 20}, {\"x\": 50, \"y\": 162.2, \"z\": 72}, ...]"
+    rotation: Must be a JSON-encoded string (only use \" around the variables). All axes at 0 means the player faces dead ahead in the +X direction. Example:
+        "[{\"x\": 180, \"y\": 0, \"z\": 0}, {\"x\": 0, \"y\": 0, \"z\": 270}, ...]" 
+    explanation: A human-readable explanation of the placements. Example:
+        "The player first experiences the tree, then they experience being on a cloud..."
+
+    Only call this function once, and remember to be careful not to make the points floating. Obviously, pass lists with as many rotations as locations, as they are paired.
+    """
+    core.position_stage_points(transform, rotation, explanation)
+    return f"Successfully added stage points to the scene at {transform}."
 
 @function_tool
 def createAgent(name: str, transform: str, rotation: str = "{\"x\": 0, \"y\": 0, \"z\": 0}", explanation: str=""):

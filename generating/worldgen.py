@@ -40,7 +40,7 @@ from typing import Any, Optional, List
 import load.assets as assets
 import load.synopsis_generator as synopsis_generator
 from llms.orchestra import Conductor
-from tools.tools import getGroundMatrix, proposeObject, positionObject, positionVRHumanPlayer, createSkybox, createGround, getContactPoints, createSun, populateHorizon, createSound, createAgent, provideDestinationsForAgent, delete
+from tools.tools import getGroundMatrix, proposeObject, positionObject, positionVRHumanPlayer, createSkybox, createGround, getContactPoints, createSun, populateHorizon, createSound, createAgent, provideDestinationsForAgent, delete, positionStagePoints
 
 from logger import log
 
@@ -170,7 +170,7 @@ class UnityWorldGen(WorldGen):
             return f"Did not write scene:\n{result.final_output}."
 
     @classmethod
-    async def generate(cls, input_world_name: str, output_world_name: str, assets_folder: Optional[Path], prompt: str):
+    async def generate(cls, input_world_name: str, output_world_name: str, multi_stage_mode: bool, assets_folder: Optional[Path], prompt: str):
         print("In Worldgen class method...")
         wg = cls(input_world_name, output_world_name, f"{output_world_name} initial scene", assets_folder)
         await wg.load()
@@ -183,23 +183,17 @@ class UnityWorldGen(WorldGen):
         log(result.final_output)
         log("Done")
         
-
+# Class definitions and their tweaks
 class VRWorldGen(UnityWorldGen):
-    
     def __init__(self, input_world_name: str, output_world_name: str, scene_name: str, assets_folder: Optional[Path]=None, conductor_name: str="VRExperienceConductor", conductor_system_prompt: str="...", conductor_tools: List[function_tool]=[], ):
         if not os.getenv("VR_HEADSET_TYPE") == "No Player":
-            conductor_tools.append(positionVRHumanPlayer)
+            if os.getenv("MULTI_STAGE_MODE") == "MULTI":
+                conductor_tools.append(positionStagePoints)
+            else:
+                conductor_tools.append(positionVRHumanPlayer)
         super().__init__(input_world_name, output_world_name, scene_name, assets_folder, conductor_name, conductor_system_prompt, conductor_tools)
                 
 class AcrophobiaWorldGen(VRWorldGen):
-    bridge_prompt="Generate a world that triggers acrophobia while crossing a bridge."
-    mountain_prompt="Generate a world that triggers acrophobia on the summit of a mountain."
-    skyscraper_prompt="Generate a world that triggers acrophobia on a tall skyscraper."
-    building_prompt="Generate a world that triggers acrophobia on a medium-sized building - not too scary."
-    roof_prompt="Generate a world that triggers a very sensitive acrophobia by placing a player on the roof of a low house/building."
-    platform_prompt="Generate a world that triggers a very sensitive acrophobia by placing a player on a platform."
-    bridge_regime_prompt="Generate multiple stages of worlds that trigger acrophobia while crossing a bridge. Have the stages get progressively harder. Let there be three stages and let the heights of the bridges in each stage progress as 2m, 5m, 10m above ground or sea level."
-
     def __init__(self, input_world_name: str, output_world_name: str, scene_name: str, assets_folder: Optional[Path]=None, conductor_name: str="AcrophobiaConductor", conductor_system_prompt: str=Conductor.acrophobia_v1[MODEL], conductor_tools: List[function_tool]=[]):
         super().__init__(input_world_name, output_world_name, scene_name, assets_folder, conductor_name, conductor_system_prompt, conductor_tools)
 

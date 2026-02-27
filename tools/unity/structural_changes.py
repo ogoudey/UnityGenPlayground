@@ -309,6 +309,10 @@ class UnityFile:
         self.wrapped.append(audio_source)
         self.wrapped.append(sound_game_object)
 
+    def add_state_point(self, location, rotation):
+        #[TODO]
+        pass
+
     def add_prefab_instance(self, name, prefab_path, transform: dict, rotation: dict):
         """
         A preimported asset. Must identify the .meta file.
@@ -395,7 +399,7 @@ class UnityFile:
         except KeyError:
             print(f"Could not place VR player! No structure for {VR_HEADSET_TYPE} in Unity {UNITY_VERSION}:\n{dispatcher}")
 
-        log(f"Unity version {UNITY_VERSION} with {VR_HEADSET_TYPE} headset maps to low-level function `{dispatch.__name__}`")
+        print(f"Unity version {UNITY_VERSION} with {VR_HEADSET_TYPE} headset maps to low-level function `{dispatch.__name__}`")
         dispatch(transform, rotation)
 
     def setup_keyboard_player(self, transform: dict, rotation: dict):

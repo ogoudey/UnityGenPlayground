@@ -214,6 +214,10 @@ class UnityWorld(World):
         print(f"\t\tUse \"{desc}\"")
         self.scene.add_destination(name, tf)
 
+    @post_write
+    def add_stage_point(self, location, rotation, buildID=None):
+        self.scene.add_stage_point(location, rotation)
+
     def delete_object_by_buildID(self, buildID):
         try:
             remove_execution(buildID)
