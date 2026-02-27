@@ -25,7 +25,7 @@ def load(assets_folder: Path) -> dict[str, str]:
         for name in os.listdir(assets_folder):
             if not name.endswith(".meta"):
                 found += f"\n\t{name}"
-        log(f"The specified Assets folder ({assets_folder}) has no asset catalog:{found}\n\nYou must provide an `asset_catalog.json` there.")
+        print(f"The specified Assets folder ({assets_folder}) has no asset catalog:{found}\n\nYou must provide an `asset_catalog.json` there.")
         raise FileNotFoundError(f"The specified Assets folder ({assets_folder}) has no asset catalog:{found}\n\nYou must provide an `asset_catalog.json` there.")
     print(f"In asset project folder {assets_folder}")
     log(f"In asset project folder {assets_folder}, asset catalog loaded with {len(asset_catalog)} entries")

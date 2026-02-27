@@ -181,7 +181,7 @@ class UnityWorld(World):
         self.scene.add_sound(sound_name, sound_path)
 
     @post_write
-    def set_vr_player(self, location, rotation, buildID=None):
+    def set_vr_player(self, location={"x":0.0, "y":0.0, "z":0.0}, rotation={"x":0.0, "y":0.0, "z":0.0}, buildID=None):
         self.scene.set_vr_player(location, rotation)
 
     @post_write
@@ -215,8 +215,8 @@ class UnityWorld(World):
         self.scene.add_destination(name, tf)
 
     @post_write
-    def add_stage_point(self, location, rotation, buildID=None):
-        self.scene.add_stage_point(location, rotation)
+    def add_stage_point(self, name, location, rotation, buildID=None):
+        self.scene.add_stage_point(name, location, rotation)
 
     def delete_object_by_buildID(self, buildID):
         try:

@@ -50,7 +50,10 @@ class UnityFile:
             scene_init_text = load_structure("sceneU5")
         else:
             raise Exception("Must set Unity version.")
+        self.stager = None
         self.reset()
+
+        
 
     def reset(self):
         # redund
@@ -64,6 +67,14 @@ class UnityFile:
         self.wrapped: List = [node_to_python(n) for n in nodes]
         self.placed_assets = dict()
         print(f"\t\tUnity YAML file cleared.")
+        if os.environ["MULTI_STAGE_MODE"] == "MULTI":
+            stager_init_text = load_structure("stager")
+            nodes = compose(stager_init_text)
+            wrapped = [node_to_python(n) for n in nodes]
+            self.stager = wrapped[1]
+            for doc in wrapped:
+                self.wrapped.append(doc)
+        print("YAML file initialized")
 
     def set_sun(self, length_of_day: float, time_of_day: float, sun_brightness:float):
         rot = (time_of_day / length_of_day) * 360
@@ -309,9 +320,27 @@ class UnityFile:
         self.wrapped.append(audio_source)
         self.wrapped.append(sound_game_object)
 
-    def add_state_point(self, location, rotation):
-        #[TODO]
-        pass
+    def add_stage_point(self, name, location, rotation):
+        empty_tf = load_structure("empty")
+        nodes = compose(empty_tf)
+        wrapped = [node_to_python(n) for n in nodes]
+        go = wrapped[0]
+        tf = wrapped[1]
+        go, id_go = set_ID(go)
+        tf, id_tf = set_ID(tf)
+        go["GameObject"]["m_Name"] = name
+        go["GameObject"]["m_TagString"] = "Destination"
+        go["GameObject"]["m_Component"][0]["component"]["fileID"] = id_tf
+        tf["Transform"]["m_LocalPosition"] = location
+        tf["Transform"]["m_GameObject"] = id_go
+        for wrap in wrapped:
+            self.wrapped.append(wrap)
+        if self.stager is not None:
+            stage_points = self.stager["MonoBehaviour"]["stagePoints"]
+            stage_points.append({"transform": {"fileID": id_tf}, "period": 10})
+        if not UNITY_VERSION == "5":
+            sceneroots = get_doc(self.wrapped, "SceneRoots")
+            sceneroots["m_Roots"].append({"fileID": id_tf})
 
     def add_prefab_instance(self, name, prefab_path, transform: dict, rotation: dict):
         """
@@ -457,7 +486,7 @@ class UnityFile:
         SRanipal_and_SteamVR_setup_init_text = load_structure("sranipal_vr")
         nodes = compose(SRanipal_and_SteamVR_setup_init_text)
         coll = [node_to_python(n) for n in nodes]
-        camera_rig = coll[5]
+        camera_rig = coll[9]
 
         if camera_rig is None:
             print("Cannot find [CameraRig] prefab in init text (??)")

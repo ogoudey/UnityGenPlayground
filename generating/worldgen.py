@@ -136,8 +136,10 @@ class UnityWorldGen(WorldGen):
         instruments.core.assets = assets_folder
         
         self.conductor_runner = ConductorRunner(run_conductor_function=self.run)
+        print("Worldgen initialized")
 
     async def load(self):
+        print("Loading...")
         instruments.core.asset_catalog = assets.load(instruments.core.assets)
         instruments.core.synopses = await synopsis_generator.load(instruments.core.assets, instruments.core.asset_catalog)
         instruments.core.skybox_material_leaves =  assets.get_found(".mat", instruments.core.assets / SKYBOX)
@@ -187,14 +189,13 @@ class UnityWorldGen(WorldGen):
 class VRWorldGen(UnityWorldGen):
     def __init__(self, input_world_name: str, output_world_name: str, scene_name: str, assets_folder: Optional[Path]=None, conductor_name: str="VRExperienceConductor", conductor_system_prompt: str="...", conductor_tools: List[function_tool]=[], ):
         if not os.getenv("VR_HEADSET_TYPE") == "No Player":
+            conductor_tools.append(positionVRHumanPlayer)
             if os.getenv("MULTI_STAGE_MODE") == "MULTI":
                 conductor_tools.append(positionStagePoints)
-            else:
-                conductor_tools.append(positionVRHumanPlayer)
         super().__init__(input_world_name, output_world_name, scene_name, assets_folder, conductor_name, conductor_system_prompt, conductor_tools)
                 
 class AcrophobiaWorldGen(VRWorldGen):
-    def __init__(self, input_world_name: str, output_world_name: str, scene_name: str, assets_folder: Optional[Path]=None, conductor_name: str="AcrophobiaConductor", conductor_system_prompt: str=Conductor.acrophobia_v1[MODEL], conductor_tools: List[function_tool]=[]):
+    def __init__(self, input_world_name: str, output_world_name: str, scene_name: str, assets_folder: Optional[Path]=None, conductor_name: str="AcrophobiaConductor", conductor_system_prompt: str=Conductor.acrophobia_v2[MODEL], conductor_tools: List[function_tool]=[]):
         super().__init__(input_world_name, output_world_name, scene_name, assets_folder, conductor_name, conductor_system_prompt, conductor_tools)
 
 class HRIWorldGen(VRWorldGen):

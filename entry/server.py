@@ -86,15 +86,15 @@ def generate():
 
     if subject_type == "None":
         os.environ["VR_HEADSET_TYPE"] = "No Player"
+    elif subject_type == "No VR":
+        os.environ["VR_HEADSET_TYPE"] = "No VR"
     elif subject_type == "VR":
-        os.environ["VR_HEADSET_TYPE"] = "No VR"
-    elif subject_type == "Vive Pro 2":
-        os.environ["VR_HEADSET_TYPE"] = "No VR"
+        os.environ["VR_HEADSET_TYPE"] = "Vive Pro 2"
 
-    if multi_stage_mode == "MULTI":
-        os.environ["VR_HEADSET_TYPE"] = "MULTI"
-    elif multi_stage_mode == "SINGLE":
-        os.environ["VR_HEADSET_TYPE"] = "SINGLE"
+    if multi_stage_mode == "Multi":
+        os.environ["MULTI_STAGE_MODE"] = "MULTI"
+    elif multi_stage_mode == "Single":
+        os.environ["MULTI_STAGE_MODE"] = "SINGLE"
 
     
 

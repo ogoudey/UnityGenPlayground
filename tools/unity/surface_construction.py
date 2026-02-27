@@ -23,6 +23,7 @@ mini_grid = """1 1 1
 1 2 1
 1 1 1"""
 
+scale = 0
 pad = 100
 
 def make_quads(matrix, x, y, obj_str, visited=[]):
@@ -121,14 +122,15 @@ def obj_from_grid(obj_path: Path, grid: str = default_grid, scale=5.0):
     return out_path, matrix
     # Generate faces
 """
-def obj_from_grid_procedural(manifest_path: Path, grid: str = default_grid, scale=5.0):
+def obj_from_grid_procedural(manifest_path: Path, grid: str = default_grid, scale_override=5.0):
     log(f"Starting to build ground in Manifest {manifest_path}")
     location = {"x": 0.0, "y": 0.0, "z": 0.0}
     obj_str = ""
     log(f"Splitting...")
     log(f"Grid: {grid}")
     lines = grid.split("\n")
-
+    global scale
+    scale = scale_override
 
 
     line = lines[0].split(" ")

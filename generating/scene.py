@@ -52,22 +52,22 @@ class UnityScene(Scene):
     def add_destination(self, name, transform):
         self.unity_file.add_tf(name, transform)
 
-    def add_stage_point(self, location, rotation):
-        self.unity_file.add_stage_point(location, rotation)
+    def add_stage_point(self, name, location, rotation):
+        self.unity_file.add_stage_point(name, location, rotation)
 
     def add_ground(self, ground_name, ground_path, transform={"x":0.0, "y":0.0, "z":0.0}, rotation={"x":0.0, "y":0.0, "z":0.0}):
         log("Adding ground...")
         
         guid = uuid.uuid4().hex
-        log(f"Proposition:  {ground_path}")
+        print(f"Proposition:  {ground_path}")
         ground_OBJ_rel_path = ground_path["Ground"]
-        log(f"GUID: {guid}")
-        log(f"Writing meta file to relative path:  {ground_OBJ_rel_path}")
+        print(f"GUID: {guid}")
+        print(f"Writing meta file to relative path:  {ground_OBJ_rel_path}")
         structural_changes.write_obj_meta(ground_OBJ_rel_path, guid)
-        log(f"Done writing META {ground_OBJ_rel_path}.")
-        log(f"Adding prefab instance to YAML")
+        print(f"Done writing META {ground_OBJ_rel_path}.")
+        print(f"Adding prefab instance to YAML")
         self.unity_file.add_ground_prefab_instance(ground_name, ground_path, guid, transform)
-        log(f"Done adding prefab instance")
+        print(f"Done adding prefab instance")
     
     def commit_scene(self, destination: Path):
         self.unity_file.to_unity_yaml(destination)

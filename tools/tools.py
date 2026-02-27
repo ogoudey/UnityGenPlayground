@@ -192,9 +192,10 @@ def positionVRHumanPlayer(transform: str, rotation: str = "{\"x\": 0, \"y\": 0, 
     return f"Successfully added player to the scene at {transform}."
 
 @function_tool
-def positionStagePoints(transform: str, rotation: str = "[{\"x\": 0, \"y\": 0, \"z\": 0}]", explanation: str=""):
+def positionStagePoints(stage_names: str, transforms: str, rotations: str = "[{\"x\": 0, \"y\": 0, \"z\": 0}]", explanation: str=""):
     """
     This function places points at which the player (a VR headset) can go in the scene. The player will cycle through the points, experiencing each location as they go. Each places the camera/head, so make it 2m above the ground below them. The player can walk around 1m from each point they are placed.
+    stage_names: A list of names for each stage point. Each is associated with a transform and rotation from the other args.
     transform: Must be a list of JSON-encoded strings. Example:
         "[{\"x\": 73, \"y\": 2, \"z\": 20}, {\"x\": 50, \"y\": 162.2, \"z\": 72}, ...]"
     rotation: Must be a JSON-encoded string (only use \" around the variables). All axes at 0 means the player faces dead ahead in the +X direction. Example:
@@ -204,8 +205,8 @@ def positionStagePoints(transform: str, rotation: str = "[{\"x\": 0, \"y\": 0, \
 
     Only call this function once, and remember to be careful not to make the points floating. Obviously, pass lists with as many rotations as locations, as they are paired.
     """
-    core.position_stage_points(transform, rotation, explanation)
-    return f"Successfully added stage points to the scene at {transform}."
+    core.position_stage_points(stage_names, transforms, rotations, explanation)
+    return f"Successfully added stage points to the scene at {transforms}."
 
 @function_tool
 def createAgent(name: str, transform: str, rotation: str = "{\"x\": 0, \"y\": 0, \"z\": 0}", explanation: str=""):

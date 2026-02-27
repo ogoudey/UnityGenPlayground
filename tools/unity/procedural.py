@@ -34,14 +34,15 @@ def populate(asset_path_list, unity):
             
     for asset in asset_path_list:
         world_pad = surface_construction.pad
-        x_range = (int(-world_pad), int(world_pad + dimension))
-        y_range = (int(-world_pad), int(world_pad + dimension))
+        scale = surface_construction.scale
+        x_range = (scale*int(-world_pad), scale*int(world_pad + dimension))
+        y_range = (scale*int(-world_pad), scale*int(world_pad + dimension))
         # noise
         
         if WINDOWS_PNOISE:
-            p_noise_list = generate_points(100, x_range, y_range, scale=0.1, threshold=0.0)
+            p_noise_list = generate_points(100, x_range, y_range, scale=1.0, threshold=0.0)
         else:
-            p_noise_list = perlin_points_2d(x_range, y_range, n_points=100, scale=0.1, threshold=0.0)
+            p_noise_list = perlin_points_2d(x_range, y_range, n_points=100, scale=1.0, threshold=0.0)
         for point in p_noise_list:
             if not in_no_pose_zone(point):
                 unity.add_prefab(asset, {"x": point[0], "y": 0.0, "z": point[1]}, {"x": 0.0, "y": random.random()*360, "z": 0.0})
@@ -55,7 +56,7 @@ def generate_points(n_points, x_range, y_range, scale=1.0, threshold=0.1):
         x = np.random.uniform(*x_range)
         y = np.random.uniform(*y_range)
 
-        # perlin-noise takes a list of coordinates scaled to [0, 1] or any range you like
+        # perlin-noise takes a list of coordinates scaled to [0, 1] or any range
         n = noise([x * scale, y * scale])
 
         if n > threshold:
